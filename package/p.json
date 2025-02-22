@@ -1,0 +1,223 @@
+{
+    "Components": {
+        "H2S": {
+            "Name": "H2S",
+            "Parameters": {
+                "va0": 0.347972,
+                "vb": 0.0285e-3,
+                "vtc": 373.56,
+                "vc1": 0.41107,
+                "epsilon": 80.8884e2,
+                "beta": 0.08581,
+                "scheme": "2B"
+            }
+        },
+        "N2": {
+            "Name": "N2",
+            "Parameters": {
+                "va0": 0.136626,
+                "vb": 0.0264e-3,
+                "vtc": 126.10,
+                "vc1": 0.54733,
+                "epsilon": 0.0,
+                "beta": 0.0, 
+                "scheme": "inert" 
+
+            }
+        },
+        "CO2": {
+            "Name": "CO2",
+            "Parameters": {
+                "va0": 0.35079,
+                "vb": 0.0272e-3,
+                "vtc": 304.12,
+                "vc1": 0.76,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme": "solvation"
+            }
+        },
+        "CH4": {
+            "Name": "CH4",
+            "Parameters": {
+                "va0": 0.23204,
+                "vb": 0.0291e-3,
+                "vtc": 190.56,
+                "vc1": 0.447,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme": "inert" 
+
+            }
+        },
+        "C2": {
+            "Name": "C2",
+            "Parameters": {
+                "va0": 0.550926,
+                "vb": 0.0429e-3,
+                "vtc": 305.3,
+                "vc1": 0.58463,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+            }
+        },
+        "C3": {
+            "Name": "C3",
+            "Parameters": {
+                "va0": 0.911875,
+                "vb": 0.057834e-3,
+                "vtc": 369.83,
+                "vc1": 0.6307,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "C4": {
+            "Name": "C4",
+            "Parameters": {
+                "va0": 1.314274,
+                "vb": 0.072081e-3,
+                "vtc": 425.12,
+                "vc1": 0.70771,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "IC4": {
+            "Name": "IC4",
+            "Parameters": {
+                "va0": 1.29094,
+                "vb": 0.0747e-3,
+                "vtc": 408.14,
+                "vc1": 0.7021,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "C5": {
+            "Name": "C5",
+            "Parameters": {
+                "va0": 1.8198,
+                "vb": 0.091e-3,
+                "vtc": 469.70,
+                "vc1": 0.79858,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "IC5": {
+            "Name": "IC5",
+            "Parameters": {
+                "va0": 1.82862,
+                "vb": 0.096812e-3,
+                "vtc": 460.43,
+                "vc1": 0.829,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "C6": {
+            "Name": "C6",
+            "Parameters": {
+                "va0": 2.3681,
+                "vb": 0.10789e-3,
+                "vtc": 507.60,
+                "vc1": 0.8313,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "C7": {
+            "Name": "C7",
+            "Parameters": {
+                "va0": 2.9178,
+                "vb": 0.12535e-3,
+                "vtc": 540.20,
+                "vc1": 0.9137,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "C8": {
+            "Name": "C8",
+            "Parameters": {
+                "va0": 3.4875,
+                "vb": 0.14244e-3,
+                "vtc": 568.8,
+                "vc1": 0.99415,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "C9": {
+            "Name": "C9",
+            "Parameters": {
+                "va0": 4.125061,
+                "vb": 0.16035e-3,
+                "vtc": 595.65,
+                "vc1": 1.04628,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "C10": {
+            "Name": "C10",
+            "Parameters": {
+                "va0": 4.7389,
+                "vb": 0.17865e-3,
+                "vtc": 617.7,
+                "vc1": 1.13243,
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme":"inert"
+
+            }
+        },
+        "WATER": {
+            "Name": "WATER",
+            "Parameters": {
+                "va0": 0.22519,
+                "vb": 0.01556e-3,
+                "vtc": 647.14,
+                "vc1": 0.6108,
+                "epsilon": 141.371e2,
+                "beta": 0.0608,
+                "scheme":"4C"
+
+            }
+        }
+    },
+
+    "CrossParameters": {
+        "WATER_CO2": {
+            "kij": -0.147,
+            "solvation": true,
+            "epsilon_cross": 14000.0,
+            "beta_cross": 0.0007
+        },
+        "WATER_CH4": {
+            "kij": 0.2310,
+            "solvation": false
+
+        }
+    }
+}
