@@ -17,6 +17,7 @@ pub enum ErrorAtFindRoot {
     MaxIterations
 }
 // 
+impl std::error::Error for ErrorAtFindRoot {}
 
 impl fmt::Display for ErrorAtFindRoot {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -35,6 +36,10 @@ impl fmt::Display for ErrorAtFindRoot {
 pub fn  newton<F>(f:F,x:f64,tol:Option<f64>,it_max:Option<i32>)->Result<NewtonResult,ErrorAtFindRoot>
     where F: Fn(f64)->f64 {
 
+
+        if x.is_nan(){
+            return Err(ErrorAtFindRoot::NaNValue(0));
+        }
         let it_max: i32 = if let Some(val) = it_max {val} else {100};
         let tol = if let Some(val) = tol {val} else {1e-6};
 
@@ -66,15 +71,22 @@ pub fn  newton<F>(f:F,x:f64,tol:Option<f64>,it_max:Option<i32>)->Result<NewtonRe
             t = x0 + h;
 
             ft = f(t);
+            // dbg!(res,x0,it,ft);
 
+            // println!()
+
+            // na pratica, nunca é utilizado 
             while (ft.abs())>(res.abs()) {
+
+                println!("t={t}");
                 backtrack_it+=1;
                 alpha=alpha/2.;
                 t = x0 + alpha*h;
                 ft = f(t);
             }
+            // dbg!(res.abs()>tol);
 
-            x1 = t;
+            x1 = t; 
             it+=1;
             // dbg!(res,x0,it);
 

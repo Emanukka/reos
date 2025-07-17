@@ -1,0 +1,205 @@
+{
+    "components": {
+
+        "CO2": {
+            "name": "CO2",
+
+            "cubic":{
+                "a0":      0.35079,
+                "b":   0.0272e-3,
+                "tc":          304.12,
+                "c1":      0.7602
+            },
+            "assoc":{
+
+                "solvation":{
+                    "scheme":"S1B"
+                }
+            }
+        },
+        "OCTANE": {
+            "name": "OCTANE",
+
+            "cubic":{
+                "a0":   34.8750e-1,
+                "b":   0.1424e-3,
+                "tc":   568.7,
+                "c1":   0.99415
+            }
+
+        },
+
+
+        "HEPTANE": {
+            "name": "HEPTANE",
+            "cubic":{
+                "a0":   29.17800e-1,
+                "b":   0.125350e-3,
+                "tc":   540.0,
+                "c1":   0.913700
+            }
+
+        },
+
+        "CH4": {
+            "name": "CH4",
+
+            "cubic":{
+                "a0": 0.23203,
+                "b": 0.0291e-3,
+                "tc": 190.56,
+                "c1": 0.4472
+            }
+
+        },
+
+        "METHANOL":{
+            "name": "METHANOL",
+
+            "cubic":{
+                "a0":  0.40531,
+                "b":  0.000031,
+                "tc": 512.64,
+                "c1": 0.4310
+            },
+            "assoc":{
+                "associative":{
+                    "epsilon":24591.0,
+                    "beta":0.01610,
+                    "scheme":"2B"
+                }
+            }
+        },
+
+        "PROPANOIC":{
+            "name": "PROPANOIC",
+
+            "cubic":{
+                "a0":  1.32676,
+                "b":  0.0641e-3,
+                "tc": 612.2,
+                "c1": 0.6891
+            },
+            "assoc":{
+                "associative":{
+                    "epsilon":399.75e2,
+                    "beta":2.1e-3,
+                    "scheme":"1A"
+                }
+            }
+        },
+        "ACETIC":{
+            "name": "ACETIC",
+
+            "cubic":{
+                "a0":  0.91196,
+                "b":  0.0468e-3,
+                "tc": 594.8,
+                "c1": 0.4644
+            },
+            "assoc":{
+                "associative":{
+                    "epsilon":403.23e2,
+                    "beta":4.5e-3,
+                    "scheme":"1A"
+                }
+            }
+        },
+        "FORMIC":{
+            "name": "FORMIC",
+
+            "cubic":{
+                "a0":  5.6336e-2,
+                "b":  3.0e-5,
+                "tc": 580.0,
+                "c1": 0.3338
+            },
+            "assoc":{
+                "associative":{
+                    "epsilon":419.17e2,
+                    "beta":15.5e-3,
+                    "scheme":"1A"
+                }
+            }
+        },
+
+        "WATER": {
+            "name": "WATER",
+
+            "cubic":{
+                "a0":  0.12277,
+                "b":  0.0145e-3,
+                "tc": 647.14,
+                "c1": 0.6736
+            },
+            "assoc":{
+                "associative":{
+                    "epsilon":166.55e2,
+                    "beta":0.0692,
+                    "scheme":"4C"
+                }
+            }
+
+        }
+    },
+
+    "binary": {
+
+        "WATER_CO2": {
+            "kij_a":0.000877,
+            "kij_b":-0.15508,
+
+            "assoc":{
+                "solvation":{
+                    "rule":"mcr1",
+                    "epsilon_cross": 83.28e2,
+                    "beta_cross":  0.1836
+                }
+            }
+        },
+
+        "ACETIC_OCTANE":{
+            "kij":0.064,
+            "kij_t":false
+
+        },
+        "PROPANOIC_HEPTANE":{
+            "kij":0.017,
+            "kij_t":false
+
+        },
+
+        "WATER_ACETIC": {
+            "kij_a":  0.0,
+            "kij_b":  -0.222,
+
+            "assoc":{
+                "normal":{
+                    "rule":"ecr"
+                }
+            }
+          },
+        "ACETIC_METHANOL": {
+            "kij_a":  0.0,
+            "kij_b":  -0.04,
+
+            "assoc":{
+                "normal":{
+                    "rule":"ecr"
+                }
+            }
+          },
+
+        "WATER_METHANOL": {
+            "kij_a":0.0,
+            "kij_b":  -0.108,
+
+            "assoc":{
+                "normal":{
+                    "rule":"ecr"
+                }
+
+            }
+        }
+    }
+}
