@@ -1,12 +1,12 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use reeos::models::cpa::CPA;
-use reeos::parameters::association::{ASCParameters, AssociationRule};
-use reeos::parameters::cubic::CubicParameters;
-use reeos::parameters::{JsonStruct, Parameters};
-use reeos::state::eos::EquationOfState;
+use reos::models::cpa::CPA;
+use reos::parameters::association::{ASCParameters, AssociationRule};
+use reos::parameters::cubic::CubicParameters;
+use reos::parameters::{JsonStruct, Parameters};
+use reos::state::eos::EquationOfState;
 use std::sync::Arc;
-use reeos::residual::{Residual,ResidualModel};
+use reos::residual::{Residual,ResidualModel};
 
 use crate::py_parameters::pyrecords::{PyAssocRecord, PyCubicRecord};
 

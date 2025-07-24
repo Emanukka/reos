@@ -4,7 +4,7 @@ use pyo3::prelude::*;
 // use crate::py_parameters::PyParameters;
 
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods };
-use reeos::{residual::ResidualModel, state::{density_solver::DensityInitialization, State, S}};
+use reos::{residual::ResidualModel, state::{density_solver::DensityInitialization, State, S}};
 
 use crate::py_eos::PyEquationOfState;
 

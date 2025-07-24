@@ -1,6 +1,6 @@
 use numpy::{PyArray1, PyArrayMethods, ToPyArray};
 use pyo3::{exceptions::PyValueError, pyclass, pymethods, types::PyAnyMethods, Bound, PyResult, Python};
-use reeos::{phase_equilibrium::{Antoine, PhaseEquilibrium}, residual::ResidualModel, state::{density_solver::DensityInitialization, eos::EosError}};
+use reos::{phase_equilibrium::{Antoine, PhaseEquilibrium}, residual::ResidualModel, state::{density_solver::DensityInitialization, eos::EosError}};
 use pyo3::PyErr;
 use crate::py_eos::PyEquationOfState;
 
