@@ -15,7 +15,7 @@ impl<R:Residual> PhaseEquilibrium<R>{
         xguess:Array1<f64>,
         tol:Option<f64>,
         it_max:Option<i32>
-        )->Result<f64,EosError>{
+        )->Result<(f64,Array1<f64>),EosError>{
         let tol =tol.unwrap_or(1e-8);
         let it_max=it_max.unwrap_or(200);
         let mut it=0;
@@ -51,7 +51,7 @@ impl<R:Residual> PhaseEquilibrium<R>{
         }
         let hx = x.ln()+ lnphix;
         let dg = (vw*(hx-hy)).sum();
-        Ok(dg)
+        Ok((dg,x))
 
     }
 
@@ -61,7 +61,7 @@ pub mod tests{
 
     use ndarray::Array1;
 
-    use crate::{models::cpa::water_acetic_acid, phase_equilibrium::PhaseEquilibrium};
+    use crate::{parameters::association::{water_acetic_acid}, phase_equilibrium::PhaseEquilibrium};
     use crate::state::density_solver::DensityInitialization::{Liquid,Vapor};
 
     #[test]
@@ -96,7 +96,7 @@ pub mod tests{
             Some(1e-10),
             None).unwrap();
         
-        println!("ΔG em pBolha={}",dg_zero);
+        println!("ΔG em pBolha={}",dg_zero.0);
 
         let dg_mais= peq
         .tpd(
@@ -108,7 +108,7 @@ pub mod tests{
             Some(1e-10),
             None).unwrap();
         
-        println!("ΔG em P>Pbolha ={}",dg_mais);
+        println!("ΔG em P>Pbolha ={}",dg_mais.0);
 
         let dg_menos= peq
         .tpd(
@@ -120,7 +120,7 @@ pub mod tests{
             Some(1e-10),
             None).unwrap();
         
-        println!("ΔG em P<Pbolha ={}",dg_menos);
+        println!("ΔG em P<Pbolha ={}",dg_menos.0);
 
     }
 

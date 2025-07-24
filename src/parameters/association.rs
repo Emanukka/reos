@@ -2,8 +2,11 @@
 use core::panic;
 use ndarray::{ Array1, Array2};
 use serde::{Deserialize, Serialize};
+use crate::models::cpa::CPA;
 use crate::models::{Site, A, B, C, NS, SITES};
+use crate::parameters::cubic::CubicPureRecord;
 use crate::state::eos::{EosError};
+use crate::state::E;
 
 #[derive(PartialEq,Debug,Clone,Copy,Serialize, Deserialize)]
 #[serde(rename_all="lowercase")]
@@ -178,6 +181,45 @@ impl AssociationPureRecord {
 // tenha preenchido a matriz eps,beta, o cálculo de delta chama cr1 calculado a partir de 
 // cr1)
 // 
+impl std::fmt::Display for ASCParameters {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, " === Associative Parameters ===")?;
+        writeln!(f, "  Number of Components (NC): {}", self.ncomp)?;
+
+        writeln!(f, "  Hard-sphere Volumes (vb):")?;
+        writeln!(f, "    {:?}", self.vb.to_vec())?;
+
+        writeln!(f, "  Epsilon Cross Matrix (εᵢⱼ):")?;
+        for row in self.eps_cross_mat.rows() {
+            writeln!(f, "    {:?}", row.to_vec())?;
+        }
+
+        writeln!(f, "  Beta Cross Matrix (βᵢⱼ):")?;
+        for row in self.beta_cross_mat.rows() {
+            writeln!(f, "    {:?}", row.to_vec())?;
+        }
+
+        writeln!(f, "  Association Site Matrix (Sⱼᵢ):")?;
+        for row in self.site_multiplicity.rows() {
+            writeln!(f, "    {:?}", row.to_vec())?;
+        }
+
+        writeln!(f, "  Components (Self-Assoc. + Solvates): {:?}", self.nassoc)?;
+
+        writeln!(f, "  Binary Parameters (rule and lᵢⱼ=aT+b):")?;
+        for row in self.binary.rows() {
+            writeln!(f, "    {:?}", row.to_vec())?;
+        }
+        // writeln!(f, "  εᵢⱼ Rule): {:?}", self.)?;
+
+
+        // writeln!(f, "  Solvated Components: {:?}", self.non_assoc_comps)?;
+
+        // writeln!(f, "  Association Interactions: {:?}", self.interaction)?;
+        Ok(())
+    }
+}
+
 impl ASCParameters {
     
     /// Todas interações binárias são CR1; para modificar, usar 'set_binary( )'
@@ -293,3 +335,151 @@ impl ASCParameters {
     }
 
 }
+
+
+
+
+//ready-to parameters
+
+pub fn water_acetic_acid()->E<CPA>{
+            //Records
+        //1:Water, 2:Acetic Acid
+        let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
+        let c2=CubicPureRecord::new(0.91196, 0.0468e-3, 0.4644, 594.8);
+
+        let a1=AssociationPureRecord::associative(
+            166.55e2, 
+            0.0692, 
+            [2,2,0],
+            0.0145e-3
+        );
+        let a2=AssociationPureRecord::associative(
+            403.23e2, 
+            4.5e-3, 
+            [0,0,1],
+            0.0468e-3
+        );
+
+
+        //CPA eos
+        let mut cpa=CPA::from_records(
+            vec![c1,c2],
+            vec![a1,a2]);
+
+        //Set binary parameters 
+        cpa.cubic.set_binary(0,1, Some(0.0),-0.222 );
+        cpa.assoc.set_binary(0, 1, AssociationRule::ECR, None, None);
+        
+        //Create new State
+        E::from_residual(cpa)
+
+} 
+
+pub fn water_co2()->E<CPA>{
+            //Records
+        //1:Water, 2:Acetic Acid
+        let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
+        let c2=CubicPureRecord::new(0.35079, 0.0272e-3, 0.7602, 304.12);
+
+        let a1=AssociationPureRecord::associative(
+            166.55e2, 
+            0.0692, 
+            [2,2,0],
+            0.0145e-3
+        );
+        let a2=AssociationPureRecord::solvate(
+            [0,1,0],
+            0.0272e-3);
+
+
+        //CPA eos
+        
+        let mut cpa=CPA::from_records(
+            vec![c1,c2],
+            vec![a1,a2]);
+
+        //Set binary parameters 
+        cpa.cubic.set_binary(0,1, Some(0.000877),-0.15508 );
+        cpa.assoc.set_binary(0, 1, AssociationRule::MCR1, None, Some(0.1836));
+
+        //Create new State
+        E::from_residual(cpa)
+
+} 
+
+pub fn methanol_2b()->E<CPA>{
+            //Records
+        //1:metoh, 2:oct
+        let c1=CubicPureRecord::new(0.40531, 0.0000309, 0.4310, 513.);
+
+        let a1=AssociationPureRecord::associative(
+            24591.0, 
+            0.01610, 
+            [1,1,0],
+            0.0000309
+        );
+
+        let  cpa=CPA::from_records(
+            vec![c1],
+            vec![a1]);
+
+        
+        //Create new State
+        E::from_residual(cpa)
+} 
+pub fn methanol_3b()->E<CPA>{
+            //Records
+        //1:metoh, 2:oct
+        let c1=
+        CubicPureRecord::
+        new(
+            4.5897e-1, 
+            0.0334e-3, 
+            1.0068,
+            513.);
+
+        let a1=AssociationPureRecord::associative(
+            160.70e2, 
+            34.4e-3, 
+            [2,1,0],
+            0.0334e-3
+        );
+
+        let  cpa=CPA::from_records(
+            vec![c1],
+            vec![a1]);
+
+        
+        //Create new State
+        E::from_residual(cpa)
+} 
+
+
+pub fn acoh_octane()->E<CPA>{
+            //Records
+        //1:Acetic Acid, 2:Octane
+        let c1=CubicPureRecord::new(0.91196, 0.0468e-3, 0.4644, 594.8);
+        let c2=CubicPureRecord::new(34.8750e-1, 0.1424e-3, 0.99415, 568.7);
+
+        let a1=AssociationPureRecord::associative(
+            403.23e2, 
+            4.5e-3, 
+            [0,0,1],
+            0.0468e-3
+        );
+        let a2=AssociationPureRecord::inert(0.1424e-3);
+
+
+        //CPA eos
+        let mut cpa=CPA::from_records(
+            vec![c1,c2],
+            vec![a1,a2]);
+
+        //Set binary parameters 
+        cpa.cubic.set_binary(0,1, Some(0.0), 0.064 );
+        
+        //Create new State
+        E::from_residual(cpa)
+
+        
+} 

@@ -137,7 +137,7 @@ pub mod tests{
     use approx::assert_relative_eq;
     use ndarray::Array1;
 
-    use crate::{models::{associative::{ Associative}, cpa::{acoh_octane, water_acetic_acid, CPA}, cubic::{Cubic}}, parameters::Parameters, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
+    use crate::{models::{associative::Associative, cpa::CPA, cubic::Cubic}, parameters::{association::{acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}, Parameters}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
 
     #[test]
     fn vle_1(){
@@ -232,4 +232,34 @@ pub mod tests{
 
 
     }
+
+    #[test]
+    pub fn vle_5(){
+
+        let eoss=[methanol_2b(),methanol_3b()];
+
+        let mut i=0;
+        let t=343.15;
+        // println!("Psats via bbpoint calculation; T={}K",t);
+        for eos in eoss{
+            let peq=PhaseEquilibrium::new(
+                Arc::new(eos),
+                None);
+            //State Variables
+            let x=Array1::from_vec(vec![1.0]);
+            
+            let (pb,_)=peq.bbpy(t, x,Some(1e-10),Some(1e-6)).unwrap();
+            
+            println!("Psat ={} bar",pb/1e5);
+            // println!("Scheme ={}",a[i]);
+            println!("----");
+            i+=1;
+        }
+
+        let exp=1.2541;
+        println!("Psat exp={}bar",exp);
+
+
+    }
+
 }

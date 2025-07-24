@@ -71,14 +71,9 @@ pub fn  newton<F>(f:F,x:f64,tol:Option<f64>,it_max:Option<i32>)->Result<NewtonRe
             t = x0 + h;
 
             ft = f(t);
-            // dbg!(res,x0,it,ft);
 
-            // println!()
-
-            // na pratica, nunca é utilizado 
             while (ft.abs())>(res.abs()) {
 
-                println!("t={t}");
                 backtrack_it+=1;
                 alpha=alpha/2.;
                 t = x0 + alpha*h;

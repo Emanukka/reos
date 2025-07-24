@@ -1,0 +1,108 @@
+{
+    "components": {
+
+        "CO2": {
+            "name": "CO2",
+
+            "cubic":{
+                "a0":      0.35079,
+                "b":   0.0272e-3,
+                "tc":          304.12,
+                "c1":      0.7602
+            },
+            "assoc":{
+                "epsilon": 0.0,
+                "beta":   0.0,
+                "scheme": "S1B"
+            }
+        },
+        "CH4": {
+            "name": "CH4",
+
+            "cubic":{
+                "a0": 0.23203,
+                "b": 0.0291e-3,
+                "tc": 190.56,
+                "c1": 0.4472
+            },
+            
+            "assoc":{
+                "epsilon": 0.0,
+                "beta": 0.0,
+                "scheme": "inert" 
+            }
+
+        },
+
+        "WATER": {
+            "name": "WATER",
+        
+            "cubic":{
+                "a0":  0.12277,
+                "b":  0.0145e-3,
+                "tc": 647.14,
+                "c1": 0.6736
+            },
+            "assoc":{
+                "epsilon":  166.55e2,
+                "beta": 0.0692,
+                "scheme":"4C"
+            }
+
+        },
+
+        "H2S": {
+            "name": "H2S",
+        
+            "cubic":{
+                "a0":  0.445050,
+                "b":   0.0285e-3,
+                "tc": 373.3,
+                "c1": 0.60265
+            },
+            "assoc":{
+                "epsilon":  0.0,
+                "beta": 0.0,
+                "scheme":"S2B"
+            }
+
+        }
+    },
+
+    "binary": {
+
+        "WATER_CO2": {
+            "kij": 0.1145,
+            "solvation": true,
+            "epsilon_cross": 83.28e2,
+            "beta_cross":  0.1836
+        },
+
+
+        "WATER_CH4": {
+            "kij": 0.0,
+            "solvation": false
+        },
+        "WATER_H2S": {
+            "kij":  0.1913,
+            "epsilon_cross":  108.78e2,
+            "beta_cross":   0.0624,
+
+            "solvation": true
+        },
+
+        "CO2_H2S": {
+            "kij":   0.1179,
+
+            "solvation": false
+        },
+
+        "CH4_CO2": {
+            "kij": 0.095929,
+            "solvation": false
+        }
+
+
+
+    }
+}

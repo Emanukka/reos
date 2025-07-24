@@ -1,5 +1,5 @@
 use numpy::{PyArray1, PyArrayMethods, ToPyArray};
-use pyo3::{exceptions::PyValueError, pyclass, pymethods, types::PyAnyMethods, Bound, PyResult};
+use pyo3::{exceptions::PyValueError, pyclass, pymethods, types::PyAnyMethods, Bound, PyResult, Python};
 use reeos::{phase_equilibrium::{Antoine, PhaseEquilibrium}, residual::ResidualModel, state::{density_solver::DensityInitialization, eos::EosError}};
 use pyo3::PyErr;
 use crate::py_eos::PyEquationOfState;
@@ -45,10 +45,10 @@ impl PyPhaseEquilibrium {
     ///     z: MotherPhase Composition,
     ///     x: DaughterPhase ('liquid' or 'vapor'),
     ///     xguess: DaughterPhase Guess Composition
-    /// 
     /// Returns
     /// -------
     /// ΔG formation of the incipient phase from mother phase at (T,P,z) condition.
+    /// and incipient phase composition x.
     #[pyo3(
     signature = (t,p,z,incipient_phase,xguess,tol,it_max),
     text_signature = "(t,p,z,incipient_phase,xguess,tol=1e-8,it_max=100)",
@@ -61,7 +61,7 @@ impl PyPhaseEquilibrium {
         incipient_phase:String,
         xguess:&Bound<'py, PyArray1<f64>>,
         tol:f64,
-        it_max:i32)->PyResult<f64>{
+        it_max:i32)->PyResult<(f64,Bound<'py, PyArray1<f64>>)>{
 
             let xphase=DensityInitialization::from_str(&incipient_phase);
             if xphase.is_err(){
@@ -69,11 +69,16 @@ impl PyPhaseEquilibrium {
                                     "`density_initialization` must be 'vapor' or 'liquid'.".to_string(),
                                 ))
             }
+
+            let py=z.py();
             let xguess = xguess.to_owned_array();
             let z = z.to_owned_array();
 
+
             match self.0.tpd(t, p, z, xphase.unwrap(), xguess, Some(tol), Some(it_max)){
-                Ok(r)=>{Ok(r)},
+                Ok(r)=>{Ok(
+                    (r.0,PyArray1::from_array(py, &r.1))
+                )},
                 Err(e)=> {
                     Err(PyErr::new::<PyValueError, _>(
                         e.to_string(),

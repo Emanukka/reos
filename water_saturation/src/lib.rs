@@ -2,6 +2,7 @@ use std::{path::Components, sync::Arc};
 
 use reeos::{models::cpa::CPA, parameters::{association::{AssociationPureRecord, AssociationRule}, cubic::CubicPureRecord, CompRecord}, phase_equilibrium::PhaseEquilibrium, state::{density_solver::DensityInitialization, eos::{EosError, EquationOfState}, State, E}, tools::newton, Array1};
 
+pub mod data;
 const XW: f64 = 0.999999;
 const YWGUESS:f64 = 2000e-6;
 
@@ -158,7 +159,7 @@ mod tests{
 
     use crate::{co2_water, WaterSaturation};
 
-
+    
     #[test]
     fn t1(){
 

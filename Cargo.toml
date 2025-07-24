@@ -7,7 +7,8 @@ edition = "2021"
 name = "reeos"
 
 
-[dependencies]
+[dependencies] 
+nalgebra = "0.33.2"
 serde = { version = "1.0.217", features = ["derive"] }
 ndarray ="0.16.1"
 serde_json = "1.0"
