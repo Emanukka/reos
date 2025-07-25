@@ -89,15 +89,15 @@ impl AssocBin
 pub struct ASCParameters{
     //Pure
     pub ncomp:    usize,
-    pub nself: Vec<usize>,
-    pub nsolv: Vec<usize>, //redundante
-    pub nassoc:Vec<usize>,
+    pub nsolv:    Vec<usize>, 
+    pub nassoc:   Vec<usize>,
     pub vb:       Array1<f64>,
     //Binary
     pub binary: Array2<AssocBin>,
-    pub site_multiplicity: Array2<Site>,
     pub eps_cross_mat: Array2<f64>,
     pub beta_cross_mat: Array2<f64>,
+    pub site_multiplicity: Array2<Site>,
+
 
 }
 #[derive(Serialize, Deserialize,Debug,Clone,PartialEq)]
@@ -270,7 +270,6 @@ impl ASCParameters {
 
         ASCParameters{
             ncomp,
-            nself,
             nassoc,
             nsolv,
             binary,

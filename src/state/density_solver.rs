@@ -2,7 +2,7 @@ use std::{f64::NAN, sync::Arc};
 
 use ndarray::Array1;
 
-use crate::state::{eos::EosError,Residual, State, StateResult, E, S};
+use crate::state::{eos::EosError,Residual, State, StateResult, E};
 
 
 

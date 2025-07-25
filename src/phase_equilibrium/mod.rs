@@ -1,8 +1,8 @@
-use std::{collections::HashMap, f64::NAN, hash::Hash, sync::Arc};
+use std::{sync::Arc};
 
-use ndarray::{Array1, Array2};
+use ndarray::{Array1};
 
-use crate::{residual::Residual, state::E, tools::newton};
+use crate::{residual::Residual, state::E};
 pub mod stability;
 pub mod vle;
 

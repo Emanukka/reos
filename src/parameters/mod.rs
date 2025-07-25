@@ -251,34 +251,3 @@ pub trait Parameters{
 
 }
     
-
-mod tests{
-    use crate::parameters::CompRecord;
-
-
-    #[test]
-
-    pub fn rcd1(){
-
-
-        let map=CompRecord::map("test.json");
-
-        let names=["CO2","WATER"];
-
-        // for name in names{
-
-            // if map.contains_key(name){
-                // println!("tem {name}!")
-            // }
-        // }
-        // serde_json::from_str(s)
-        // dbg!(a);
-        
-    }
-
-
-    // pub fn rcd2(){
-
-        // let comp_record=CompRecord{}
-    // }
-}

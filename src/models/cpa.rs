@@ -52,23 +52,22 @@ impl Residual for CPA {
 }
 
 
-
+#[cfg(test)]
 mod tests {
     use std::sync::Arc;
 
-    use approx::assert_relative_eq;
-    use nalgebra::{DMatrix, DVector};
-    use ndarray::{array, Array1, Array2};
+    pub use approx::assert_relative_eq;
+    use nalgebra::{DMatrix, DVector, Vector1};
+    // use nalgebra::{DMatrix, DVector};
+    use ndarray::{array, Array1, Array2, ShapeBuilder};
 
-    use crate::{ parameters::{association::{methanol_2b, methanol_3b, water_acetic_acid, water_co2, ASCParameters, AssociationPureRecord, AssociationRule}, cubic::CubicParameters, AssociativeTerm, Parameters}, state::{density_solver::DensityInitialization, eos::EquationOfState, State}};
+    use crate::{ parameters::{association::{methanol_2b, methanol_3b, water_acetic_acid, water_co2}}, state::{density_solver::DensityInitialization, State}};
 
     // use ndarray_linalg::{lapack::solve, solve, Solve};
 
     #[test]
-    fn cpa_t2(){
+    fn cmp_phi_water_co2(){
 
-        let comps = vec!["water","co2"];
-        let ncomp = comps.len();
 
         let p=500e5;
         let t=298.15;
@@ -94,27 +93,7 @@ mod tests {
     }
 
     #[test]
-    fn cpa_t3(){
-
-
-        //State Variables
-        let p=500e5;
-        let t=298.15;
-        let x=Array1::from_vec(vec![0.5,0.5]);
-
-        let eos = water_acetic_acid();
-        let s=State::new_tpx(&Arc::new(eos), t, p, x, DensityInitialization::Vapor).unwrap();
-
-        let phi: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>=s.lnphi().unwrap().exp();
-        let cmp=array![0.00010095530780761838, 8.66809157609047e-05];
-        // dbg!(s.rho);
-        assert_relative_eq!(phi[0],cmp[0],epsilon=1e-10);
-        assert_relative_eq!(phi[1],cmp[1],epsilon=1e-10);
-
-    }
-
-    #[test]
-    fn cpa_t5(){
+    fn cmp_metoh_3b_2b_xassoc(){
 
         //State Variables
         let p=500e5;
@@ -151,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn cpa_t6(){
+    fn cmp_phi_water_acoh(){
 
 
         //State Variables
@@ -173,7 +152,7 @@ mod tests {
 
     }
     #[test]
-    fn cpa_t7(){
+    fn test_val(){
 
 
         //State Variables
@@ -193,7 +172,7 @@ mod tests {
         assert_relative_eq!(phi[1],cmp[1],epsilon=1e-10);
 
     }
-    #[test]
+    // #[test]
     fn mat1(){
 
 
@@ -206,25 +185,51 @@ mod tests {
 
 
     }
-//     fn convert_ndarray_to_nalgebra(nd: &Array2<f64>) -> DMatrix<f64> {
-//     let (nrows, ncols) = nd.dim();
-//     DMatrix::from_row_slice(nrows, ncols, nd.as_slice().unwrap())
-// }
+    fn vector_product(w: &Array1<f64>,v:&Array1<f64>) {
+    // tamanhos iguais necessariamente
+    let n=w.len();
+
+    let slcw=w.as_slice().unwrap();
+    let slcv=v.as_slice().unwrap();
+    
+    let w=DVector::from_row_slice(slcw);
+    let v=DVector::from_row_slice(slcv);
+    
+    println!("w=\n{w}");
+    println!("v=\n{v}");
+    let r=w*v.transpose();
+
+    println!("NALGEBRA:w@v=\n{r}");
+
+    let mat_slice: &[f64]=r.as_slice();
+    
+    // let nd_mat=Array2::from_shape_vec((n,n).strides((1,2)), vec![mat_slice]).unwrap();
+
+    // Array2::from_
+    // Array2::from_v
+    
+    // println!("NDARRAY:w@v=\n{:#?}",nd_mat);
+    
+    }   
     // #[test]
-    // fn mat2(){
+    fn mat2(){
 
 
-    //     let a=Array2::from_shape_vec((3,2), vec![1.,2.,3.,4.,5.,6.]).unwrap();
+        // let a=Array2::from_shape_vec((3,2), vec![1.,2.,3.,4.,5.,6.]).unwrap();
 
-    //     // let b=convert_ndarray_to_nalgebra(&a);
+        // let w=array![1.,2.,3.];
+        // let v=array![4.,5.,6.];
+        // vector_product(&w, &v);
+        // let dot_wv=w.
 
-    //     println!("A={}",a);
-    //     println!("a={}",b);
-    //     // let a_flat=a.flatten_with_order(ndarray::Order::ColumnMajor);
-    //     // println!("A vetor [ordem Fortran (coluna)]={}",a_flat);
+        // let b=convert_ndarray_to_nalgebra(&a);
 
-    // }
+        // println!("A={}",a);
+        // println!("a={}",b);
+        // let a_flat=a.flatten_with_order(ndarray::Order::ColumnMajor);
+        // println!("A vetor [ordem Fortran (coluna)]={}",a_flat);
 
+    }
 
 
 }
