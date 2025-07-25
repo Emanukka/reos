@@ -8,7 +8,7 @@ mod py_eq;
 
 #[pymodule]
 fn eeos(m: &Bound<'_, PyModule>) -> PyResult<()> {
-
+    
     m.add_class::<PyState>()?;
     m.add_class::<PyEquationOfState>()?;
 
