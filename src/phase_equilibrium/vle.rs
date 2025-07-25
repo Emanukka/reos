@@ -123,6 +123,7 @@ impl<R:Residual> PhaseEquilibrium<R>{
 
 }
 
+#[allow(unused)]
 
 fn antoine_water_acetic_acid()->Antoine{
 
@@ -131,35 +132,17 @@ fn antoine_water_acetic_acid()->Antoine{
     Antoine::from_records(vec![ant1,ant2])
 }
 
+#[cfg(test)]
 pub mod tests{
     use std::sync::Arc;
 
     use approx::assert_relative_eq;
-    use ndarray::Array1;
-
+    use ndarray::{linspace, Array1};
+    #[allow(unused_imports)]
     use crate::{models::{associative::Associative, cpa::CPA, cubic::Cubic}, parameters::{association::{acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}, Parameters}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
 
     #[test]
-    fn vle_1(){
-
-        let eos = water_acetic_acid();
-        let peq=PhaseEquilibrium::new(
-            Arc::new(eos),
-            Some(antoine_water_acetic_acid()));
-        //State Variables
-        let p=100e5;
-        let t=298.15;
-        let x=Array1::from_vec(vec![0.5,0.5]);
-
-        let psat=peq.correl.unwrap().psat(t);
-
-        println!("PSAT (bar):{}",psat/1e5);
-
-
-    }
-    // #[test]
-
-    pub fn vle_2(){
+    pub fn cmp_bbpy_water_acoh(){
         let eos = water_acetic_acid();
         let peq=PhaseEquilibrium::new(
             Arc::new(eos),
@@ -171,44 +154,21 @@ pub mod tests{
         
         let (pb,y)=peq.bbpy(t, x,Some(1e-7),Some(1e-7)).unwrap();
         
-        // let cmp=[0.59739271, 0.40260708];
+        let cmp=[0.59739271, 0.40260708];
         
         println!("P bol ={}",pb);
         println!("y={}",y);
 
-        // assert_relative_eq!(pb,3127.2493944115,epsilon=1e-4);
+        assert_relative_eq!(pb,3127.2493944115,epsilon=1e-4);
         
-        // assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
-        // assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
+        assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
+        assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
 
 
     }
-    fn vle_3(){
-        let eos = water_acetic_acid();
-        let peq=PhaseEquilibrium::new(
-            Arc::new(eos),
-            // None);
-            Some(antoine_water_acetic_acid()));
-        //State Variables
-        let t=313.15;
-        let x=Array1::from_vec(vec![0.1,0.9]);
-        
-        let (pb,y)=peq.bbpy(t, x,Some(1e-6),Some(1e-6)).unwrap();
-        
-        let cmp=[0.59739271, 0.40260708];
-        
-        // println!("P bol ={}",pb);
-        // println!("y={}",y);
-
-        // assert_relative_eq!(pb,3127.2493944115,epsilon=1e-4);
-        
-        // assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
-        // assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
-
-
-    }
+ 
     #[test]
-    pub fn vle_4(){
+    pub fn cmp_bbpy_acoh_octane(){
         let eos = acoh_octane();
         let peq=PhaseEquilibrium::new(
             Arc::new(eos),
@@ -234,30 +194,25 @@ pub mod tests{
     }
 
     #[test]
-    pub fn vle_5(){
+    pub fn time_calc(){
+        let eos = water_acetic_acid();
+        let peq=PhaseEquilibrium::new(
+            Arc::new(eos),
+            None);
+            // Some(antoine_water_acetic_acid()));
+        //State Variables
 
-        let eoss=[methanol_2b(),methanol_3b()];
+        let lins=linspace(0.01, 0.99, 100);
+        
+        
+        for xi in lins{
+            let t=300.0;
+            let x=Array1::from_vec(vec![xi,1.-xi]);
+            let (pb,y)=peq.bbpy(t, x,Some(1e-7),Some(1e-7)).unwrap();
 
-        let mut i=0;
-        let t=343.15;
-        // println!("Psats via bbpoint calculation; T={}K",t);
-        for eos in eoss{
-            let peq=PhaseEquilibrium::new(
-                Arc::new(eos),
-                None);
-            //State Variables
-            let x=Array1::from_vec(vec![1.0]);
-            
-            let (pb,_)=peq.bbpy(t, x,Some(1e-10),Some(1e-6)).unwrap();
-            
-            println!("Psat ={} bar",pb/1e5);
-            // println!("Scheme ={}",a[i]);
-            println!("----");
-            i+=1;
         }
 
-        let exp=1.2541;
-        println!("Psat exp={}bar",exp);
+        
 
 
     }

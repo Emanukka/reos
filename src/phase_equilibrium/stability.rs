@@ -1,8 +1,6 @@
-use std::sync::Arc;
+use ndarray::{ Array1};
 
-use ndarray::{Array, Array1};
-
-use crate::{phase_equilibrium::{PhaseEquilibrium}, residual::Residual, state::{density_solver::DensityInitialization, eos::EosError, State, StateResult, E, S}, tools::newton};
+use crate::{phase_equilibrium::{PhaseEquilibrium}, residual::Residual, state::{density_solver::DensityInitialization, eos::EosError, State}};
 
 impl<R:Residual> PhaseEquilibrium<R>{
 
@@ -56,6 +54,7 @@ impl<R:Residual> PhaseEquilibrium<R>{
     }
 
 }
+#[cfg(test)]
 pub mod tests{
     use std::sync::Arc;
 
@@ -65,8 +64,7 @@ pub mod tests{
     use crate::state::density_solver::DensityInitialization::{Liquid,Vapor};
 
     #[test]
-
-    fn tpd_1(){
+    fn verify_tpd_close_to_bbpoint(){
 
         let eos = water_acetic_acid();
         let peq=PhaseEquilibrium::new(

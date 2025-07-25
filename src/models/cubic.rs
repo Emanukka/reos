@@ -146,11 +146,3 @@ impl Residual for Cubic {
     
 }
 
-
-
-mod tests{
-
-    fn debug(){
-        
-    }
-}
