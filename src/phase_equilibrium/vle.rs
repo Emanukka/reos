@@ -138,6 +138,7 @@ pub mod tests{
 
     use approx::assert_relative_eq;
     use ndarray::{linspace, Array1};
+    use crate::parameters::association::octane_acoh;
     #[allow(unused_imports)]
     use crate::{models::{associative::Associative, cpa::CPA, cubic::Cubic}, parameters::{association::{acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}, Parameters}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
 
@@ -169,6 +170,7 @@ pub mod tests{
  
     #[test]
     pub fn cmp_bbpy_acoh_octane(){
+        
         let eos = acoh_octane();
         let peq=PhaseEquilibrium::new(
             Arc::new(eos),
@@ -181,6 +183,33 @@ pub mod tests{
         let (pb,y)=peq.bbpy(t, x,Some(1e-6),Some(1e-6)).unwrap();
         
         let cmp=[0.6542769760724502, 0.34572302386625076];
+        
+        println!("P bol ={}",pb);
+        println!("y={}",y);
+
+        assert_relative_eq!(pb,28987.67376094271,epsilon=1e-2);
+        
+        assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
+        assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
+
+
+    }
+    #[test]
+    pub fn cmp_bbpy_octane_acoh(){
+
+        let eos = octane_acoh();
+        let peq=PhaseEquilibrium::new(
+            Arc::new(eos),
+            None);
+        //State Variables
+        let t=343.15;
+
+        let x1=0.4;
+        let x=Array1::from_vec(vec![x1,1.0-x1]);
+        
+        let (pb,y)=peq.bbpy(t, x,Some(1e-6),Some(1e-6)).unwrap();
+        
+        let cmp=[ 0.34572302386625076,0.6542769760724502];
         
         println!("P bol ={}",pb);
         println!("y={}",y);
@@ -209,12 +238,6 @@ pub mod tests{
             let t=300.0;
             let x=Array1::from_vec(vec![xi,1.-xi]);
             let (pb,y)=peq.bbpy(t, x,Some(1e-7),Some(1e-7)).unwrap();
-
         }
-
-        
-
-
     }
-
 }

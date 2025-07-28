@@ -54,19 +54,19 @@ impl Residual for CPA {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::{sync::Arc, time::Instant};
 
     pub use approx::assert_relative_eq;
     use nalgebra::{DMatrix, DVector, Vector1};
     // use nalgebra::{DMatrix, DVector};
     use ndarray::{array, Array1, Array2, ShapeBuilder};
 
-    use crate::{ parameters::{association::{methanol_2b, methanol_3b, water_acetic_acid, water_co2}}, state::{density_solver::DensityInitialization, State}};
+    use crate::{ parameters::association::{methanol_2b, methanol_3b, multiple_water, water_acetic_acid, water_co2}, state::{density_solver::DensityInitialization, State}};
 
     // use ndarray_linalg::{lapack::solve, solve, Solve};
 
     #[test]
-    fn cmp_phi_water_co2(){
+    fn cmp_phi_water_co2_vapor(){
 
 
         let p=500e5;
@@ -74,20 +74,131 @@ mod tests {
         let x=Array1::from_vec(vec![0.5,0.5]);
 
         let eos =water_co2();
-        let s=State::new_tpx(&Arc::new(eos), t, p, x, DensityInitialization::Vapor).unwrap();
+        let s=State::new_tpx(&Arc::new(eos), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
 
         // let rho=1e3;
         // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
         // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
         let phi: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>=s.lnphi().unwrap().exp();
         
-        // println!("X ok:{}",X.unwrap());
-        // let volume=1./s.rho;
+        let rho=s.rho;
+        let xasc=s.eos.residual.assoc.X_tan(t, rho, &x).unwrap();
 
+        // println!("rho={}",rho);
+        // println!("X=\n{}",xasc);
+        // println!("phi={}",phi);
         let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
 
         assert_relative_eq!(phi[0],phi_cmp[0],epsilon=1e-8);
         assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
+
+    }
+
+    #[test]
+    fn tcs_1(){
+
+
+        let p=500e5;
+        let t=298.15;
+        // let x1_vec
+        let n=15;
+        let mut x1_t=Vec::<f64>::new();
+        let mut x2_t=Vec::<f64>::new();
+
+        for i in 1..n+1{
+            let eos =Arc::new(multiple_water(i));
+
+            let x_all_comp=1.0/(i as f64);
+            let x=Array1::from_elem(i, x_all_comp);
+
+
+            let inicio = Instant::now();
+            let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+            let duracao = inicio.elapsed().as_secs_f64();
+            x1_t.push(duracao);
+            // let inicio = Instant::now();
+            // let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+            // let duracao = inicio.elapsed().as_secs_f64();
+            // x2_t.push(duracao);
+
+            // println!("1=\n{}",&xasc_1);
+            // println!("2=\n{}",&xasc_2);
+            // assert_relative_eq!(xasc_1,xasc_2,epsilon=1e-6);
+            // println!("n={},t={}",i,duracao)
+
+
+        }
+
+        println!("x1={:#?}",x1_t);
+        // println!("x2={:#?}",x2_t);
+
+        // let rho=1e3;
+        // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
+        // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
+        
+
+
+        // println!("X ok:{}",X.unwrap());
+        // let volume=1./s.rho;
+
+        // let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
+
+        // assert_relative_eq!(phi[0],phi_cmp[0],epsilon=1e-8);
+        // assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
+        // dbg!(phi);
+
+    }
+    #[test]
+    fn tcs_2(){
+
+
+        let p=500e5;
+        let t=298.15;
+        // let x1_vec
+        let n=15;
+        let mut x1_t=Vec::<f64>::new();
+        let mut x2_t=Vec::<f64>::new();
+
+        for i in 1..n+1{
+            let eos =Arc::new(multiple_water(i));
+
+            let x_all_comp=1.0/(i as f64);
+            let x=Array1::from_elem(i, x_all_comp);
+
+
+            let inicio = Instant::now();
+            let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+            let duracao = inicio.elapsed().as_secs_f64();
+            x1_t.push(duracao);
+            // let inicio = Instant::now();
+            // let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+            // let duracao = inicio.elapsed().as_secs_f64();
+            // x2_t.push(duracao);
+
+            // println!("1=\n{}",&xasc_1);
+            // println!("2=\n{}",&xasc_2);
+            // assert_relative_eq!(xasc_1,xasc_2,epsilon=1e-6);
+            // println!("n={},t={}",i,duracao)
+
+
+        }
+
+        println!("x2={:#?}",x1_t);
+        // println!("x2={:#?}",x2_t);
+
+        // let rho=1e3;
+        // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
+        // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
+        
+
+
+        // println!("X ok:{}",X.unwrap());
+        // let volume=1./s.rho;
+
+        // let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
+
+        // assert_relative_eq!(phi[0],phi_cmp[0],epsilon=1e-8);
+        // assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
         // dbg!(phi);
 
     }
