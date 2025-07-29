@@ -85,6 +85,7 @@ mod tests {
         let xasc=s.eos.residual.assoc.X_tan(t, rho, &x).unwrap();
         let kmat=s.eos.residual.assoc.association_constants(t, rho, &x, s.eos.residual.assoc.g_func(rho, &x));
         // println!("rh");
+        println!("rho={}",rho);
         println!("X=\n{}",xasc);
         println!("K=\n{}",kmat);
         // println!("phi={}",phi);
@@ -95,114 +96,7 @@ mod tests {
 
     }
 
-    // #[test]
-    fn tcs_1(){
 
-
-        let p=500e5;
-        let t=298.15;
-        // let x1_vec
-        let n=15;
-        let mut x1_t=Vec::<f64>::new();
-        let mut x2_t=Vec::<f64>::new();
-
-        for i in 1..n+1{
-            let eos =Arc::new(multiple_water(i));
-
-            let x_all_comp=1.0/(i as f64);
-            let x=Array1::from_elem(i, x_all_comp);
-
-
-            let inicio = Instant::now();
-            let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-            let duracao = inicio.elapsed().as_secs_f64();
-            x1_t.push(duracao);
-            // let inicio = Instant::now();
-            // let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-            // let duracao = inicio.elapsed().as_secs_f64();
-            // x2_t.push(duracao);
-
-            // println!("1=\n{}",&xasc_1);
-            // println!("2=\n{}",&xasc_2);
-            // assert_relative_eq!(xasc_1,xasc_2,epsilon=1e-6);
-            // println!("n={},t={}",i,duracao)
-
-
-        }
-
-        println!("x1={:#?}",x1_t);
-        // println!("x2={:#?}",x2_t);
-
-        // let rho=1e3;
-        // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
-        // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
-        
-
-
-        // println!("X ok:{}",X.unwrap());
-        // let volume=1./s.rho;
-
-        // let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
-
-        // assert_relative_eq!(phi[0],phi_cmp[0],epsilon=1e-8);
-        // assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
-        // dbg!(phi);
-
-    }
-    // #[test]
-    fn tcs_2(){
-
-
-        let p=500e5;
-        let t=298.15;
-        // let x1_vec
-        let n=15;
-        let mut x1_t=Vec::<f64>::new();
-        let mut x2_t=Vec::<f64>::new();
-
-        for i in 1..n+1{
-            let eos =Arc::new(multiple_water(i));
-
-            let x_all_comp=1.0/(i as f64);
-            let x=Array1::from_elem(i, x_all_comp);
-
-
-            let inicio = Instant::now();
-            let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-            let duracao = inicio.elapsed().as_secs_f64();
-            x1_t.push(duracao);
-            // let inicio = Instant::now();
-            // let s=State::new_tpx(&eos.clone(), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-            // let duracao = inicio.elapsed().as_secs_f64();
-            // x2_t.push(duracao);
-
-            // println!("1=\n{}",&xasc_1);
-            // println!("2=\n{}",&xasc_2);
-            // assert_relative_eq!(xasc_1,xasc_2,epsilon=1e-6);
-            // println!("n={},t={}",i,duracao)
-
-
-        }
-
-        println!("x2={:#?}",x1_t);
-        // println!("x2={:#?}",x2_t);
-
-        // let rho=1e3;
-        // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
-        // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
-        
-
-
-        // println!("X ok:{}",X.unwrap());
-        // let volume=1./s.rho;
-
-        // let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
-
-        // assert_relative_eq!(phi[0],phi_cmp[0],epsilon=1e-8);
-        // assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
-        // dbg!(phi);
-
-    }
 
     #[test]
     fn cmp_metoh_3b_2b_xassoc(){
@@ -231,14 +125,14 @@ mod tests {
         let x_2=eos_2.residual.assoc.X_tan(t, rho_2, &x).unwrap();
 
 
-        let xa_2=x_2[(0,0)];
-        let xb_2=x_2[(1,0)];
+        let xa_2=x_2[0];
+        let xb_2=x_2[1];
         // println!("cmp_metoh_3b_2b_xassoc");
-
+        // println!("rh");
         println!("X2B=\n{}",eos_1.residual.assoc.X_tan(t, s1.rho, &x).unwrap());
         println!("X3B=\n{}",eos_2.residual.assoc.X_tan(t, s2.rho, &x).unwrap());
         assert_relative_eq!(2.0*xa_2-1.0,xb_2,epsilon=1e-8);
-        assert_relative_eq!(x_1[(0,0)],x_1[(1,0)],epsilon=1e-8);
+        assert_relative_eq!(x_1[0],x_1[1],epsilon=1e-8);
         assert_relative_eq!(phi_1[0],cmp_1[0],epsilon=1e-9);
         assert_relative_eq!(phi_2[0],cmp_2[0],epsilon=1e-9);
 

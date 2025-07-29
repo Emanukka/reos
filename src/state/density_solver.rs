@@ -56,6 +56,7 @@ pub fn density<R:Residual>
     )-> StateResult<R>
 {           
 
+
         let rhomax = 1./eos.residual.bmix(&x);
         let eps = 1e-5;
 
@@ -112,6 +113,8 @@ pub fn density<R:Residual>
             // (f0,df_at_s0) = f_and_dfds(s0);
 
             f0 = f(s0);
+        // dbg!("aqui");
+
             df_at_s0=dfds(s0);
             s1 = s0 - f0/df_at_s0;
             

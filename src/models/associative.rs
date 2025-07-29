@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use ndarray::{Array1, Array2, Axis};
+use ndarray::{Array, Array1, Array2, ArrayBase, Axis, CowArray, Dim};
 use crate::models::{A, B, C, SITES};
 use crate::parameters::association::{ ASCParameters, AssociationRule, W};
 use crate::residual::Residual;
@@ -94,23 +94,23 @@ impl Associative {
         let gmix = self.g_func(rho,vx);
         gmix * 1.9 *(rho*&self.parameters.vb/4.0)
     }
+    pub fn get_m(&self,x:&Array1<f64>)->Array1<f64>{
+        let t=&self.parameters.tmat;
+        let h=&self.parameters.hmat;
 
-    pub fn h_func(&self,vx:&Array1<f64>,xassoc:&Array2<f64>)->f64{
-        let s_matrix = &self.parameters.site_multiplicity;
-        let mut sxx=0.0;
+        let x_asc=h.t().dot(x);
+        let m=t.t().dot(&x_asc);
+        m
+
+    }
+    pub fn h_func(&self,x:&Array1<f64>,xassoc:&Array1<f64>)->f64{
         
-        let map=&self.parameters.map;
-        let n=map.len();
-        // for &i in &self.parameters.nassoc{
-        for i in 0..n{
-            let mut sx=0.0;
-            for j in 0..NS{
-                sx+=(1.0-xassoc[(j,i)])*s_matrix[(j,i)]
-            }
+        let s = &self.parameters.s;
+        let m=self.get_m(x);
+        let yasc=1.0-xassoc;
+        
+        m.dot(&(yasc*s))
 
-            sxx+=vx[map[i]]*sx;
-        }
-        sxx
     }
 }
 
@@ -135,58 +135,32 @@ impl Associative {
         (self.CR1(t, gmix, i, i)*self.CR1(t, gmix, k,k)).sqrt()
     }
 
-    pub fn association_constants(&self,t:f64,rho:f64,vx:&Array1<f64>,gmix: f64)->Array2<f64>{
-        let nassoc=&self.parameters.nassoc;
-        let n=nassoc.len();
-
+    pub fn delta(&self,t:f64,rho:f64,vx:&Array1<f64>,gmix: f64)->Array2<f64>{
+        
         let f=&self.parameters.f;
-        let s1=&self.parameters.s1;
-        let ns=self.parameters.s1.len();
-        // let n=self.parameters.ncomp;
+        let ns=self.parameters.s.len();
+        let alphamat=&self.parameters.alphamat;
+        let mut delta =Array2::zeros((ns,ns));
 
+        
+        for (alpha,site_alpha) in f.iter().enumerate(){
+            let comp_i=site_alpha.i();
 
-        // let vb=&self.parameters.vb;
-        // let eps=&self.parameters.eps_cross_mat;
-        // let beta=&self.parameters.beta_cross_mat;
-
-        let mut matk =Array2::zeros((ns,ns));
-        // let delta=&self.parameters.delta;
-        let map=&self.parameters.map;
-
-        for alpha in 0..ns{
-            for beta in 0..ns{
+            for (beta,site_beta) in f.iter().enumerate(){
                 if alpha>beta{continue;}
                 else{
-                    // println!("vi={}",vx[map[i]]);
-                    let comp_i=f[alpha].i();
-                    let comp_j=f[beta].i();
+                    let comp_j=site_beta.i();
 
-                    match self.parameters.binary[(comp_i,comp_j)].rule{
-
-                    AssociationRule::CR1=>{
-                        matk[(alpha,beta)]=self.CR1(t, gmix, comp_i, comp_j)
-                        // matk[(i,k)]=cr1(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
-                    }
-                    AssociationRule::ECR=>{
-                        matk[(alpha,beta)]=self.ECR(t, gmix, comp_i, comp_j)
-                        // matk[(i,k)]=ecr(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
-                    }
-                    //mCR1 e exp
-                    _=>{
-                        matk[(alpha,beta)]=self.CR1(t, gmix, comp_i, comp_j)
-                        }
-                    }
-
-                    // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[map[i]]*vx[map[k]]*rho;
-                    // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho;
-
-                    matk[(beta,alpha)]=matk[(alpha,beta)]
+                    let delta=
+                    delta[(beta,alpha)]=delta[(alpha,beta)]
                 }
             }
         }
 
-        matk
+        delta
     }
+
+
     // pub fn association_constants(&self,t:f64,rho:f64,vx:&Array1<f64>,gmix: f64)->Array2<f64>{
     //     let nassoc=&self.parameters.nassoc;
     //     let n=nassoc.len();
@@ -231,128 +205,115 @@ impl Associative {
     //     matk
     // }
 
+    // #[allow(non_snake_case)]
+    // // pub fn X_tan(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
+    // pub fn X_tan_1(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
+
+    //     let nassoc=&self.parameters.nassoc;
+    //     let n=nassoc.len();
+
+    //     let f=&self.parameters.f;
+    //     let ns=f.len();
+    //     // let n=self.parameters.ncomp;
+    //     let gmix=self.g_func(rho, vx);
+    //     let matk=self.association_constants(t, rho,vx, gmix);
+
+    //     let mut x_assoc =  Array2::from_elem((ns,n),0.2);
+    //     // let mut x_assoc =  Array2::from_elem((NS,ncomp),0.2);
+    //     let map=&self.parameters.map;
+    //     // let mut x_assoc =  a.data.clone();
+    //     let omega=0.25;
+    //     // let mut mat_error:Array2<f64> = Array2::zeros((NS,ncomp));
+    //     let mut mat_error:Array2<f64> = Array2::zeros((ns,n));
+    //     let mut x_old: Array2<f64>;
+    //     let mut res = 1.0;
+    //     let mut it:i32 = 0; 
+    //     const TOL:f64 = 1e-11; 
+    //     const MAX:i32 = 10000;
+
+    //     while (res>TOL) & (it<MAX) {
+
+    //         it+=1;
+    //         x_old= x_assoc.clone();
+    //         // for &i in assoc_comps{
+    //         for i in 0..n{
+    //         for s1 in SITES {
+
+    //             if S[(s1,i)]==0.0{x_assoc[(s1,i)]=1.0;continue;}
+    //             let mut sum1: f64 = 0.0;
+
+    //             for k in 0..n{
+    //             // for &k in assoc_comps{
+    //             for s2 in SITES{
+    //                     sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*W[s1][s2]
+    //                 }
+    //             }
+    //             x_assoc[(s1,i)] = (1.0-omega)*(vx[map[i]]/(vx[map[i]]+sum1)) + omega*x_assoc[(s1,i)] ;
+    //             // x_assoc[(s1,i)] = (1.0-omega)*(vx[i]/(vx[i]+sum1)) + omega*x_assoc[(s1,i)] ;
+    //             mat_error[(s1,i)] = ( (x_assoc[(s1,i)]-x_old[(s1,i)])/x_assoc[(s1,i)] ).abs();
+    //             }
+    //         }
+    //         res = *mat_error.iter().max_by(|a,b| a.total_cmp(b)).unwrap();
+    //     }
+    //     if it == MAX{return Err(EosError::NotConverged("X_tan".to_string()));}
+    //     else {
+    //         // x_grande.data=x_assoc.clone();
+    //         // println!("it={it}");
+    //         // println!("omega={omega}");
+    //         // println!("K=\n{}",&matk);
+    //         // println!("X={}\n",&x_assoc);
+    //         // a.data=x_assoc.clone();
+
+    //         return Ok(x_assoc);
+    //     }
+    // }   
+
     #[allow(non_snake_case)]
-    // pub fn X_tan(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
-    pub fn X_tan(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
+    pub fn X_tan(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array1<f64>,EosError>{
+        let f=&self.parameters.f;
+        let ns=f.len();
+        let s:&Array1<f64> = &self.parameters.s;
+        let m=self.get_m(vx);
 
-        let ncomp = self.parameters.ncomp;
-        // let vb=&self.parameters.vb;
+        let mmat=m.to_shape((ns,1)).unwrap();
+        let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
+        let pmat=&self.parameters.pmat;
 
-        // let mut a=self.X.borrow_mut();
-        // a.change_coordinate(rho, vb, vx);
-
-        let assoc_comps = &self.parameters.nassoc;
-        let n=assoc_comps.len();
-
-        let S = &self.parameters.site_multiplicity;
         let gmix=self.g_func(rho, vx);
-        let matk=self.association_constants(t, rho,vx, gmix);
+        let kmat=self.delta(t, rho,vx, gmix)*mm_mat*pmat*rho;
 
-        let mut x_assoc =  Array2::from_elem((NS,n),0.2);
+        // println!("K=\n{}",&kmat);
+        //nsX1
+        // let mut x_novo =  Array2::from_elem((ns,1),0.2);
+        let mut x_novo =  Array1::from_elem(ns,0.2);
         // let mut x_assoc =  Array2::from_elem((NS,ncomp),0.2);
-        let map=&self.parameters.map;
+
+
+        // dbg!(&x_novo);
+        // dbg!(&(&x_novo*s));
+        // dbg!(&(&x_n);
         // let mut x_assoc =  a.data.clone();
+
         let omega=0.25;
         // let mut mat_error:Array2<f64> = Array2::zeros((NS,ncomp));
-        let mut mat_error:Array2<f64> = Array2::zeros((NS,n));
-        let mut x_old: Array2<f64>;
+        let mut mat_error:Array1<f64> = Array1::zeros(ns);
+        // let mut mat_error:Array2<f64> = Array2::zeros((ns,1));
+        let mut x_old: Array1<f64>;
         let mut res = 1.0;
         let mut it:i32 = 0; 
         const TOL:f64 = 1e-11; 
         const MAX:i32 = 10000;
+        // let n=NS*n_assoc;
 
         while (res>TOL) & (it<MAX) {
-
             it+=1;
-            x_old= x_assoc.clone();
-            // for &i in assoc_comps{
-            for i in 0..n{
-            for s1 in SITES {
+            x_old= x_novo.clone();
+            let z=kmat.dot(&(&x_old*s));
 
-                if S[(s1,i)]==0.0{x_assoc[(s1,i)]=1.0;continue;}
-                let mut sum1: f64 = 0.0;
+            let correc=&m/(&m+z);
+            x_novo = (1.0-omega)*&correc + omega*&x_old ;
 
-                for k in 0..n{
-                // for &k in assoc_comps{
-                for s2 in SITES{
-                        sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*W[s1][s2]
-                    }
-                }
-                x_assoc[(s1,i)] = (1.0-omega)*(vx[map[i]]/(vx[map[i]]+sum1)) + omega*x_assoc[(s1,i)] ;
-                // x_assoc[(s1,i)] = (1.0-omega)*(vx[i]/(vx[i]+sum1)) + omega*x_assoc[(s1,i)] ;
-                mat_error[(s1,i)] = ( (x_assoc[(s1,i)]-x_old[(s1,i)])/x_assoc[(s1,i)] ).abs();
-                }
-            }
-            res = *mat_error.iter().max_by(|a,b| a.total_cmp(b)).unwrap();
-        }
-        if it == MAX{return Err(EosError::NotConverged("X_tan".to_string()));}
-        else {
-            // x_grande.data=x_assoc.clone();
-            // println!("it={it}");
-            // println!("omega={omega}");
-            // println!("K=\n{}",&matk);
-            // println!("X={}\n",&x_assoc);
-            // a.data=x_assoc.clone();
-
-            return Ok(x_assoc);
-        }
-    }   
-
-    #[allow(non_snake_case)]
-    pub fn X_tan_(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
-        let assoc_comps = &self.parameters.nassoc;
-        let n_assoc=assoc_comps.len();
-
-        let S = &self.parameters.site_multiplicity;
-        let gmix=self.g_func(rho, vx);
-        let matk=self.association_constants(t, rho,vx, gmix);
-
-        let mut x_assoc =  Array2::from_elem((NS,n_assoc),0.2);
-        // let mut x_assoc =  Array2::from_elem((NS,ncomp),0.2);
-        let map=&self.parameters.map;
-
-
-        // let mut x_assoc =  a.data.clone();
-
-        let omega=0.25;
-        // let mut mat_error:Array2<f64> = Array2::zeros((NS,ncomp));
-        let mut mat_error:Array2<f64> = Array2::zeros((NS,n_assoc));
-        let mut x_old: Array2<f64>;
-        let mut res = 1.0;
-        let mut it:i32 = 0; 
-        const TOL:f64 = 1e-11; 
-        const MAX:i32 = 10000;
-        let n=NS*n_assoc;
-
-        while (res>TOL) & (it<MAX) {
-
-            it+=1;
-            x_old= x_assoc.clone();
-            
-            for r in 0..n{
-
-                let i=r/NS;
-                let s1=r%NS;
-                let mut sum1= 0.0;
-
-                // if S[(s1,i)]==0.0{x_assoc[(s1,i)]=1.0;continue;}
-                for t in 0..n {
-
-                    let k=t/NS;
-                    let s2=t%NS;
-                    // if S[(s2,k)]==0.0{continue;}
-                    
-                    sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*W[s1][s2];
-
-                    // sum1+= delta[(i,k)]*vx[k]*x_old[(s2,k)]*S[(s2,k)].n()*(&S[(s1,i)]*&S[(s2,k)]);
-                    // println!("order={}",1.0/(1.0 + rho*sum1));
-                }
-
-                x_assoc[(s1,i)] = (1.0-omega)*(vx[map[i]]/(vx[map[i]]+sum1)) + omega*x_assoc[(s1,i)] ;
-                // x_assoc[(s1,i)] = (1.0-omega)*(vx[i]/(vx[i]+sum1)) + omega*x_assoc[(s1,i)] ;
-                mat_error[(s1,i)] = ( (x_assoc[(s1,i)]-x_old[(s1,i)])/x_assoc[(s1,i)] ).abs();
-            }
-            // println!("{}  {}  {} {}",x_assoc[(0,0)], x_assoc[(1,0)], x_assoc[(2,1)], it);
+            mat_error=((&x_novo-&x_old)/&x_novo).abs();
             res = *mat_error.iter().max_by(|a,b| a.total_cmp(b)).unwrap();
             //res = mat_error.sum();
             // println!("{}",res);
@@ -370,8 +331,8 @@ impl Associative {
         
         // x_grande.data=x_assoc.clone();
 
-        // println!("X={}",&x_assoc);
-        return Ok(x_assoc);
+        // println!("it={}",it);
+        return Ok(x_novo);
     }
     
 }   
@@ -395,7 +356,7 @@ pub fn xmichelssen(){
 impl Residual for Associative {
 
     fn components(&self)->usize {
-        self.parameters.ncomp
+        self.parameters.vb.len()
     }
     fn bmix(&self,x:&Array1<f64>)->f64 {
         self.parameters.vb.dot(x)
@@ -403,7 +364,9 @@ impl Residual for Associative {
     fn pressure(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
 
         // let delta=&self.calc_delta_mat(t, rho, x);
+
         let xassoc=self.X_tan(t,rho, x)?;
+        // dbg!("aqui");
 
         let h = self.h_func(x,&xassoc);
         let dlngdrho = self.dlngdrho(rho,x);
@@ -413,35 +376,26 @@ impl Residual for Associative {
 
         )
     }
+
     fn residual_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<Array1<f64>>{
 
-        // let delta=&self.calc_delta_mat(t, rho, x);
-        let xassoc=self.X_tan(t,rho, x)?;
-        let h = self.h_func(x,&xassoc);
+        let xassoc=self.X_tan(t,rho, x).unwrap();
         let nassoc=&self.parameters.nassoc;
+
+        let s=&self.parameters.s;
         let n =nassoc.len();
 
-        let mut mu = -0.5*h*self.dlngdni(rho,x); // Vetor Ntotal
-
-        let map=&self.parameters.map;
-        let ln_xassoc = xassoc.ln();
-        let sites=&self.parameters.site_multiplicity;
-        // let lnx_mult_by_smat:Array2<f64> = ln_xassoc*&self.parameters.site_multiplicity;
-        // let lnx_mult_by_smat:Array2<f64> = ln_xassoc;
-        // let mut mu=
-
-        //varre tbm components inertes , pois o residual deles é não-nulo
-        for i in 0..n{
-            let mut slogx=0.0;
-            for j in SITES{
-                slogx+=ln_xassoc[(j,i)]*sites[(j,i)]
-            }
-            mu[map[i]]+=slogx 
-        } 
-        // let slogx = lnx_mult_by_smat.sum_axis(ndarray::Axis(0));
-        // println!("mu={}",&mu);
+        let lnx_s=(xassoc.ln())*s;
+        let f=&self.parameters.f;
+        let tmat=&self.parameters.tmat;
+        let mu1=tmat.dot(&lnx_s); //nX1
+        let hmat=&self.parameters.hmat;
+        // println!("T@(ln(X)*S)=\n{}",mu1);
+        let h = self.h_func(x,&xassoc);
+        let mu2 = -0.5*h*self.dlngdni(rho,x); // Vetor Ntotal
+        let mu=hmat.dot(&mu1)+mu2;
         Ok(
-        mu
+            mu
         )
 
         // Ok(

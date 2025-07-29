@@ -122,21 +122,22 @@ impl AssocBin
 #[derive(Clone,Debug)]
 pub struct ASCParameters{
     //Pure
-    pub ncomp:    usize,
-    pub nsolv:    Vec<usize>, 
     pub nassoc:   Vec<usize>,
+    pub nsolv:   Vec<usize>,
     pub vb:       Array1<f64>,
-    //Binary
-    pub binary: Array2<AssocBin>,
-    pub eps_cross_mat: Array2<f64>,
-    pub beta_cross_mat: Array2<f64>,
-    pub site_multiplicity: Array2<f64>,
+    ///Indicates if compi and compj are CR1 (alpha_ij=0) or ECR (alpha_ij=1) 
+    pub alphamat: Array2<f64>,
+    pub epsmat: Array2<f64>,
+    pub betamat: Array2<f64>,
+    ///f map ( site_alpha--->(type_of_Site,component) )
     pub f: Array1<Site>,
-    pub s1: Array1<f64>,
-    pub m:Array1<f64>,
-    // pub delta:Array2<Δfn>,
-    pub map:Array1<usize>,
-    pub pmat:Array2<f64>
+    pub s: Array1<f64>,
+    /// ns x ns (allowed interactions between sites)
+    pub pmat:Array2<f64>,
+    /// nAssoc x ns (m=Tx'^T))
+    pub tmat:Array2<f64>,
+    /// N x nAssoc (x'=Hx^T)
+    pub hmat:Array2<f64>,
     
 
 
@@ -152,18 +153,6 @@ impl ASCParameters {
         let mut nself:Vec<usize>=Vec::with_capacity(ncomp);
         let mut nsolv:Vec<usize>=Vec::with_capacity(ncomp);
 
-        //i=0,...,Ntotal
-
-        // Ntotal=n+n'
-        // n'==Nao assoc
-        // n== Assoc´
-
-        // n e n' sao vetores diferentes (tamanhos dif)
-        // pra nao ter um vetor/matriz NxN (o que causa redundancia para componentes nao associatrivos)
-        // cria-se um mapa (i_base_total,i_base_associativa), de modo que, quando for necessário votlar 
-        // para a base total - cálculo de vetor potencial químico -, pode-se apenas consultar o mapa
-
-        //Apenas verifica quem é associativo,solvato ou nao-associativo
         for (i,record) in records.iter().enumerate(){
             vb[i]=record.b.clone();
             match record.typ {
@@ -175,29 +164,34 @@ impl ASCParameters {
 
         let nassoc=([nself.clone(),nsolv.clone()]).concat();
         let n =nassoc.len();
+        let mut veps=Array1::<f64>::zeros(n);
+        let mut vbeta=Array1::<f64>::zeros(n);
 
-        //acessar map[idx i do componente associativo no espaço dos compoenntes associativos]--->index i no espaço de todos comps. da mistura
+        let mut hmat:Array2<f64>=Array2::zeros((ncomp,n)); // N x nAssoc
 
-        let mut map:Array1<usize>=Array1::zeros(n);
+        let mut map:Array1<usize>=Array1::zeros(n); //só vou utilizar aqui; quando for realziar conta no associative.rs,
+        //vou apenas fazert as operações matriciais
+        
         for i in 0..ncomp{
             for (idx_assoc,&j) in nassoc.iter().enumerate(){
                 if i==j{
                     map[idx_assoc]=i;
+                    hmat[(i,idx_assoc)]=1.0;
+
                     break;
                 }
             }
         }
 
-        let mut f:Vec<Site>=Vec::with_capacity(NS*n); //nao necessariamente vai ser preenchido, pois i pode não conter j
-
+        let mut f:Vec<Site>=Vec::with_capacity(NS*n); //transformação F
         let mut s=Array2::<f64>::zeros((NS,n));
         let mut s1:Vec<f64>=Vec::with_capacity(NS); //nao necessariamente vai ser preenchido, pois i pode não conter j
-
+        
         // let mut S=Array2::<Site>::default((NS,ncomp));
-        let mut mepsilon_cross=Array2::<f64>::zeros((n,n));
-        let mut mbeta_cross=Array2::<f64>::zeros((n,n));
-        // let delta=Array2::<Δfn>::default((n,n));
-        let binary = Array2::<AssocBin>::default((n,n));
+        // let mut mepsilon_cross=Array2::<f64>::zeros((n,n));
+        // let mut mbeta_cross=Array2::<f64>::zeros((n,n));
+
+        let alpha_mat: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 2]>>=Array2::default((n,n));
 
         for i in 0..n{
             let j=map[i];
@@ -222,57 +216,56 @@ impl ASCParameters {
                 s1.push(nc);
             }
 
-            s[(A,i)]=record.na as f64;
-            s[(B,i)]=record.nb as f64;
-            s[(C,i)]=record.nc as f64;
-
-            mepsilon_cross[(i,i)]= record.epsilon;
-            mbeta_cross[(i,i)]=record.beta;
+            veps[i]= record.epsilon;
+            vbeta[i]=record.beta;
         }
+
         let f=Array1::from_vec(f);
-        let s1=Array1::from_vec(s1);
         let ns=f.len();
+        let s=Array1::from_vec(s1);
+        let mut mepsilon_cross=Array2::<f64>::zeros((ns,ns));
+        let mut mbeta_cross=Array2::<f64>::zeros((ns,ns));
+
         let mut pmat:Array2<f64>=Array2::zeros((ns,ns));
+        let mut tmat:Array2<f64>= Array2::zeros((n,ns));
 
-        assert_eq!(f.len(),s1.len());
+        assert_eq!(f.len(),s.len());
 
-        for alpha in 0..f.len(){
-            for beta in 0..f.len(){
-                
-                let j=f[alpha].t();
-                let l=f[beta].t();
+        //1. Criando Matriz P de interçaões permitidas
+        //2. Criando Matriz T de existencia do sítio ativo alpha no componente i //nsXn
+        //3. Criando matriz eps e beta (ns x ns)
+        // sitios->associativo->mistura
+        for (alpha,site_alpha) in f.iter().enumerate(){
+
+            let compi=site_alpha.i();
+            tmat[(compi,alpha)]=1.0;
+            
+            for (beta,site_beta) in f.iter().enumerate(){
+                let compk=site_alpha.i();
+                let j=site_alpha.t();
+                let l=site_beta.t();
 
                 if W[j][l]==1.0{
                     pmat[(alpha,beta)]=1.0;
                     pmat[(beta,alpha)]=1.0;
                 }
+
+                mepsilon_cross[(alpha,beta)]=(veps[compi]+veps[compk])*0.5;
+                mbeta_cross[(alpha,beta)]=((vbeta[compi]*vbeta[compk])).sqrt();
             }
         }
-        for &i in &nself{
-            for &j in &nself{
-                if i==j{continue;}
-                else{
-                    mepsilon_cross[(i,j)]=(mepsilon_cross[(i,i)]+mepsilon_cross[(j,j)])*0.5;
-                    mbeta_cross[(i,j)]=(mbeta_cross[(i,i)]*mbeta_cross[(j,j)]).sqrt();
-                }
-            }
-        }
-
-
-        // println!("map={}",&map);
 
         ASCParameters{
-            ncomp,
             nassoc,
             nsolv,
-            binary,
+            alphamat:alpha_mat,
             pmat,
-            site_multiplicity:s,
-            eps_cross_mat:mepsilon_cross,
-            beta_cross_mat:mbeta_cross,
-            map,
+            epsmat:mepsilon_cross,
+            betamat:mbeta_cross,
+            hmat,
             f,
-            s1,
+            tmat,
+            s,
             vb
         }
 
@@ -288,9 +281,11 @@ impl ASCParameters {
         
     ){
         assert_ne!(i,j);
-        let me=&mut self.eps_cross_mat;
-        let mb=&mut self.beta_cross_mat;
-        let binary=&mut self.binary;
+        let me=&mut self.epsmat;
+        let mb=&mut self.betamat;
+        let alphamat=&mut self.alphamat;
+        let f=&self.f;
+
         let mut k=i;
         let mut l=j;
         // let delta: &mut ndarray::ArrayBase<ndarray::OwnedRepr<Δfn>, ndarray::Dim<[usize; 2]>>=&mut self.delta;
@@ -299,41 +294,59 @@ impl ASCParameters {
         let nsolv=&self.nsolv;
 
         //k é solvente
-        //l é soluto 
+        //l é soluto
+        for (alpha,site_alpha) in f.iter().enumerate(){
 
-        match rule {
-            AssociationRule::MCR1=>{
+            let compi=site_alpha.i();
+            if compi!=i{continue;}
 
-                if nsolv.contains(&j){}
-                else if nsolv.contains(&i) {
-                    k=j;
-                    l=i;
-                }else {
-                    panic!("MCR1 implies 'i' is Self-Assoc., and 'j' is Solvate (v.v), but 
-                    was found from pure record that they aren't. Verify the pure records.")
+            for (beta_,site_beta) in f.iter().enumerate(){
+
+                let compj=site_beta.i();
+                if compj!=j{continue;}       
+                     
+                match rule {
+                    //Apenas altera a matriz eps e beta
+                    AssociationRule::MCR1=>{
+
+                        if nsolv.contains(&j){}
+                        else if nsolv.contains(&i) {
+                            k=j;
+                            l=i;
+                        }else {
+                            panic!("MCR1 implies 'i' is Self-Assoc., and 'j' is Solvate (v.v), but 
+                            was found from pure record that they aren't. Verify the pure records.")
+                        }
+                        
+                        // assert_ne!(me[(k,k)],0.0,"both componentes are solvates! error");
+                        
+                        me[(k,l)]=(me[(k,k)])*0.5;
+                        mb[(k,l)]=beta.expect("Alert! for solv. interaction betw.'i' and 'j',it's necessary BetaCross' value.");
+                    }
+                    //Apenas altera a matriz eps e beta
+                    AssociationRule::EXP=>{
+                        me[(k,l)]=eps.expect("Alert! Missing  EpsCross from Experimental Data");
+                        mb[(k,l)]=beta.expect("Alert! Missing BetaCross from Experimental Data");
+                    }
+                    AssociationRule::ECR=>{
+                        alphamat[(k,l)]=1.0
+
+                    }
+                    _=>{
+                    }
                 }
-                
-                assert_ne!(me[(k,k)],0.0,"both componentes are solvates! error");
-                me[(k,l)]=(me[(k,k)])*0.5;
-                mb[(k,l)]=beta.expect("Alert! for solv. interaction betw.'i' and 'j',it's necessary BetaCross' value.");
-            }
-            AssociationRule::EXP=>{
-                me[(k,l)]=eps.expect("Alert! Missing  EpsCross from Experimental Data");
-                mb[(k,l)]=beta.expect("Alert! Missing BetaCross from Experimental Data");
-            }
-            AssociationRule::ECR=>{
-                // delta[(i,j)]=Δfn(ecr);
-                // delta[(j,i)]=Δfn(ecr);
-            }
-            _=>{}
 
+                
+            }
         }
+
+
         
         me[(l,k)]=me[(k,l)];
         mb[(l,k)]=mb[(k,l)];
 
-        binary[(k,l)]=AssocBin::new(0.0, rule);
-        binary[(l,k)]=binary[(k,l)];
+        // binary[(k,l)]=AssocBin::new(0.0, rule);
+        // binary[(l,k)]=binary[(k,l)];
 
         // println!("Delta={:#?}",delta);
 
@@ -427,25 +440,19 @@ impl std::fmt::Display for ASCParameters {
         writeln!(f, "    {:?}", self.vb.to_vec())?;
 
         writeln!(f, "  Epsilon Cross Matrix (εᵢⱼ):")?;
-        for row in self.eps_cross_mat.rows() {
+        for row in self.epsmat.rows() {
             writeln!(f, "    {:?}", row.to_vec())?;
         }
 
         writeln!(f, "  Beta Cross Matrix (βᵢⱼ):")?;
-        for row in self.beta_cross_mat.rows() {
+        for row in self.betamat.rows() {
             writeln!(f, "    {:?}", row.to_vec())?;
         }
 
-        writeln!(f, "  Association Site Matrix (Sⱼᵢ):")?;
-        for row in self.site_multiplicity.rows() {
-            writeln!(f, "    {:?}", row.to_vec())?;
-        }
+        writeln!(f, "  Multiplicity Site Vector (Sⱼ):")?;
+        writeln!(f, "    {:?}", self.s.to_vec())?;
 
 
-        writeln!(f, "  Binary Parameters (rule and lᵢⱼ=aT+b):")?;
-        for row in self.binary.rows() {
-            writeln!(f, "    {:?}", row.to_vec())?;
-        }
         // writeln!(f, "  εᵢⱼ Rule): {:?}", self.)?;
 
 
@@ -658,33 +665,61 @@ pub fn octane_acoh()->E<CPA>{
 
 #[cfg(test)]
 pub mod tests{
-    use ndarray::array;
+    use ndarray::{array, linalg::Dot, Array1};
 
     use crate::parameters::association::{acoh_octane, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2};
 
     pub fn map_assoc(){
         
         let eos = octane_acoh();
-        let map=&eos.residual.assoc.parameters.map;
+        let h=&eos.residual.assoc.parameters.hmat;
         // println!("Assoc=\n{}",eos.residual.assoc.parameters);
         let x1=0.4;
         let x=array![x1,1.-x1];
-        // println!("x1={}",x[map[0]]);
-        assert_eq!(x[map[0]],0.6);
+        let x_= h.dot(&x.t());
+        assert_eq!(x_[0],0.6);
 
     }
+    #[test]
     pub fn map_f_water_co2(){
         println!("---WATER & CO2---\n");
 
         let eos = water_co2();
-        let map=&eos.residual.assoc.parameters.map;
+        // let map=&eos.residual.assoc.parameters.map;
         // println!("Assoc=\n{}",eos.residual.assoc.parameters);
-        let x1=0.4;
-        let x=array![x1,1.-x1];
+        let rho=36161.69900319786;
+        let p=500e5;
+        let t=298.15;
+        let vx=Array1::from_vec(vec![0.5,0.5]);
+        let gmix=eos.residual.assoc.g_func(rho, &vx);
+        // let k=eos.residual.assoc.association_constants_2(t, rho, &vx, gmix).0;
         // println!("x1={}",x[map[0]]);
-        println!("S={}",&eos.residual.assoc.parameters.s1);
-        println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
+        let hmat=&eos.residual.assoc.parameters.hmat;
+
+        // let chemical_pot=eos.residual.assoc.res_mu(t, rho, &vx);
+        let xassoc=eos.residual.assoc.X_tan(t, rho, &vx).unwrap();
+        // println!("X={}",&xassoc);
+
+        let tmat=&eos.residual.assoc.parameters.tmat;
+        let x_=hmat.dot(&vx.t());
+
+        let m= tmat.t().dot(&x_);
+        // let mm= m.dot();
+        let m_mat=m.to_shape((m.len(),1)).unwrap();
+
+        let mm=m_mat.dot(&m_mat.t());
+
+// ndarray: inputs 2 × 3 and 2 × 1 are not compatible for matrix multiplication
         println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
+        println!("F={}",&eos.residual.assoc.parameters.f);
+        println!("T=\n{}",tmat);
+        println!("m=\n{}",m);
+        println!("mm=\n{}",mm);
+        println!("H=\n{}",&hmat);
+        // println!("mu=\n{}",&chemical_pot);
+        println!("S={}",&eos.residual.assoc.parameters.s);
+        // println!("K={}",&k);
+        println!("X={}",&xassoc);
 
 
     }
@@ -692,12 +727,12 @@ pub mod tests{
         
         println!("---WATER & ACETIC ACID---\n");
         let eos = water_acetic_acid();
-        let map=&eos.residual.assoc.parameters.map;
+        // let map=&eos.residual.assoc.parameters.map;
         // println!("Assoc=\n{}",eos.residual.assoc.parameters);
         let x1=0.4;
         let x=array![x1,1.-x1];
         // println!("x1={}",x[map[0]]);
-        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("S={}",&eos.residual.assoc.parameters.s);
         println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
         println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
 
@@ -707,12 +742,11 @@ pub mod tests{
         println!("---AcOH & Octane---\n");
 
         let eos = acoh_octane();
-        let map=&eos.residual.assoc.parameters.map;
         // println!("Assoc=\n{}",eos.residual.assoc.parameters);
         let x1=0.4;
         let x=array![x1,1.-x1];
         // println!("x1={}",x[map[0]]);
-        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("S={}",&eos.residual.assoc.parameters.s);
         println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
         println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
 
@@ -722,7 +756,7 @@ pub mod tests{
         println!("---MeOH 3B---\n");
 
         let eos = methanol_3b();
-        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("S={}",&eos.residual.assoc.parameters.s);
         println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
         println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
 
@@ -731,12 +765,12 @@ pub mod tests{
                 println!("---MeOH 2B---\n");
 
         let eos = methanol_2b();
-        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("S={}",&eos.residual.assoc.parameters.s);
         println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
         println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
     }
 
-    #[test]
+    // #[test]
     pub fn map(){
 
         map_f_water_co2();
