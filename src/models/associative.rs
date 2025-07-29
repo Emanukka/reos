@@ -2,13 +2,12 @@ use std::cell::RefCell;
 
 use ndarray::{Array1, Array2, Axis};
 use crate::models::{A, B, C, SITES};
-use crate::parameters::association::{ ASCParameters, AssociationRule};
+use crate::parameters::association::{ ASCParameters, AssociationRule, W};
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EosResult};
 use super::{IDEAL_GAS_CONST,NS};
 
 
-const P:[[f64;3];3]=[[0.0,1.0,1.0],[1.0,0.0,1.0],[1.0,1.0,1.0]];
 
 
 pub struct Associative{
@@ -124,9 +123,7 @@ impl Associative {
 
         let eps_cross= p.eps_cross_mat[(i,k)];
         let beta_cross= p.beta_cross_mat[(i,k)];
-        // let lij=binary_parameters.map_or(0.0, |(a,b)| a*t+b);
-        // let eps_cross_modf=eps_cross*(1.0-lij);        
-        // let eps_cross_modf=eps_cross*(1.0-lij);        
+      
         ((p.vb[map[i]]+p.vb[map[k]])*0.5)*beta_cross * gmix *(
             (( 
                 ( eps_cross) / (IDEAL_GAS_CONST * t) ) ).exp() -1.0 )
@@ -141,6 +138,10 @@ impl Associative {
     pub fn association_constants(&self,t:f64,rho:f64,vx:&Array1<f64>,gmix: f64)->Array2<f64>{
         let nassoc=&self.parameters.nassoc;
         let n=nassoc.len();
+
+        let f=&self.parameters.f;
+        let s1=&self.parameters.s1;
+        let ns=self.parameters.s1.len();
         // let n=self.parameters.ncomp;
 
 
@@ -148,39 +149,87 @@ impl Associative {
         // let eps=&self.parameters.eps_cross_mat;
         // let beta=&self.parameters.beta_cross_mat;
 
-        let mut matk =Array2::zeros((n,n));
+        let mut matk =Array2::zeros((ns,ns));
         // let delta=&self.parameters.delta;
         let map=&self.parameters.map;
-        for i in 0..n{
-            for k in 0..n{
-                if i>k{continue;}
+
+        for alpha in 0..ns{
+            for beta in 0..ns{
+                if alpha>beta{continue;}
                 else{
                     // println!("vi={}",vx[map[i]]);
-                    match self.parameters.binary[(i,k)].rule{
+                    let comp_i=f[alpha].i();
+                    let comp_j=f[beta].i();
+
+                    match self.parameters.binary[(comp_i,comp_j)].rule{
+
                     AssociationRule::CR1=>{
-                        matk[(i,k)]=self.CR1(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
+                        matk[(alpha,beta)]=self.CR1(t, gmix, comp_i, comp_j)
                         // matk[(i,k)]=cr1(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
                     }
                     AssociationRule::ECR=>{
-                        matk[(i,k)]=self.ECR(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
+                        matk[(alpha,beta)]=self.ECR(t, gmix, comp_i, comp_j)
                         // matk[(i,k)]=ecr(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
                     }
                     //mCR1 e exp
                     _=>{
-                        matk[(i,k)]=self.CR1(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
+                        matk[(alpha,beta)]=self.CR1(t, gmix, comp_i, comp_j)
                         }
                     }
 
                     // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[map[i]]*vx[map[k]]*rho;
                     // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho;
 
-                    matk[(k,i)]=matk[(i,k)]
+                    matk[(beta,alpha)]=matk[(alpha,beta)]
                 }
             }
         }
 
         matk
     }
+    // pub fn association_constants(&self,t:f64,rho:f64,vx:&Array1<f64>,gmix: f64)->Array2<f64>{
+    //     let nassoc=&self.parameters.nassoc;
+    //     let n=nassoc.len();
+    //     // let n=self.parameters.ncomp;
+
+
+    //     // let vb=&self.parameters.vb;
+    //     // let eps=&self.parameters.eps_cross_mat;
+    //     // let beta=&self.parameters.beta_cross_mat;
+
+    //     let mut matk =Array2::zeros((n,n));
+    //     // let delta=&self.parameters.delta;
+    //     let map=&self.parameters.map;
+    //     for i in 0..n{
+    //         for k in 0..n{
+    //             if i>k{continue;}
+    //             else{
+    //                 // println!("vi={}",vx[map[i]]);
+    //                 match self.parameters.binary[(i,k)].rule{
+    //                 AssociationRule::CR1=>{
+    //                     matk[(i,k)]=self.CR1(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
+    //                     // matk[(i,k)]=cr1(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
+    //                 }
+    //                 AssociationRule::ECR=>{
+    //                     matk[(i,k)]=self.ECR(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
+    //                     // matk[(i,k)]=ecr(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
+    //                 }
+    //                 //mCR1 e exp
+    //                 _=>{
+    //                     matk[(i,k)]=self.CR1(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
+    //                     }
+    //                 }
+
+    //                 // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[map[i]]*vx[map[k]]*rho;
+    //                 // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho;
+
+    //                 matk[(k,i)]=matk[(i,k)]
+    //             }
+    //         }
+    //     }
+
+    //     matk
+    // }
 
     #[allow(non_snake_case)]
     // pub fn X_tan(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
@@ -226,7 +275,7 @@ impl Associative {
                 for k in 0..n{
                 // for &k in assoc_comps{
                 for s2 in SITES{
-                        sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*P[s1][s2]
+                        sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*W[s1][s2]
                     }
                 }
                 x_assoc[(s1,i)] = (1.0-omega)*(vx[map[i]]/(vx[map[i]]+sum1)) + omega*x_assoc[(s1,i)] ;
@@ -293,7 +342,7 @@ impl Associative {
                     let s2=t%NS;
                     // if S[(s2,k)]==0.0{continue;}
                     
-                    sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*P[s1][s2];
+                    sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*W[s1][s2];
 
                     // sum1+= delta[(i,k)]*vx[k]*x_old[(s2,k)]*S[(s2,k)].n()*(&S[(s1,i)]*&S[(s2,k)]);
                     // println!("order={}",1.0/(1.0 + rho*sum1));

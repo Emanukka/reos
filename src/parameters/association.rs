@@ -1,13 +1,14 @@
 
 use core::panic;
 use std::default;
-use ndarray::{ Array, Array1, Array2};
+use ndarray::{ iter, Array, Array1, Array2};
 use serde::{Deserialize, Serialize};
 use crate::models::cpa::CPA;
 use crate::models::{Site, A, B, C, IDEAL_GAS_CONST, NS, SITES};
 use crate::parameters::cubic::CubicPureRecord;
 use crate::state::eos::{EosError};
 use crate::state::E;
+pub const W:[[f64;3];3]=[[0.0,1.0,1.0],[1.0,0.0,1.0],[1.0,1.0,1.0]];
 
 #[derive(PartialEq,Debug,Clone,Copy,Serialize, Deserialize)]
 #[serde(rename_all="lowercase")]
@@ -129,10 +130,14 @@ pub struct ASCParameters{
     pub binary: Array2<AssocBin>,
     pub eps_cross_mat: Array2<f64>,
     pub beta_cross_mat: Array2<f64>,
-    // pub site_multiplicity: Array2<Site>,
     pub site_multiplicity: Array2<f64>,
+    pub f: Array1<Site>,
+    pub s1: Array1<f64>,
+    pub m:Array1<f64>,
     // pub delta:Array2<Δfn>,
-    pub map:Array1<usize>
+    pub map:Array1<usize>,
+    pub pmat:Array2<f64>
+    
 
 
 }
@@ -170,10 +175,9 @@ impl ASCParameters {
 
         let nassoc=([nself.clone(),nsolv.clone()]).concat();
         let n =nassoc.len();
-        //n---->N
-        //mapa será um vetor 
-        //mapa será tamanho n
-        //acessar map[i]--->index na base total
+
+        //acessar map[idx i do componente associativo no espaço dos compoenntes associativos]--->index i no espaço de todos comps. da mistura
+
         let mut map:Array1<usize>=Array1::zeros(n);
         for i in 0..ncomp{
             for (idx_assoc,&j) in nassoc.iter().enumerate(){
@@ -183,7 +187,12 @@ impl ASCParameters {
                 }
             }
         }
+
+        let mut f:Vec<Site>=Vec::with_capacity(NS*n); //nao necessariamente vai ser preenchido, pois i pode não conter j
+
         let mut s=Array2::<f64>::zeros((NS,n));
+        let mut s1:Vec<f64>=Vec::with_capacity(NS); //nao necessariamente vai ser preenchido, pois i pode não conter j
+
         // let mut S=Array2::<Site>::default((NS,ncomp));
         let mut mepsilon_cross=Array2::<f64>::zeros((n,n));
         let mut mbeta_cross=Array2::<f64>::zeros((n,n));
@@ -193,16 +202,52 @@ impl ASCParameters {
         for i in 0..n{
             let j=map[i];
             let record=&records[j];
+
+            let na=record.na as f64;
+            let nb=record.nb as f64;
+            let nc=record.nc as f64;
+            //Não importa a ordem de f
+            // mas é necessário que a ordem de f e s batam
+            if na!=0.0{
+                f.push(Site::A(i));
+                s1.push(na);
+            }
+            if nb!=0.0{
+                f.push(Site::B(i));
+                s1.push(nb);
+
+            }
+            if nc!=0.0{
+                f.push(Site::C(i));
+                s1.push(nc);
+            }
+
             s[(A,i)]=record.na as f64;
             s[(B,i)]=record.nb as f64;
             s[(C,i)]=record.nc as f64;
-            // S[(A,i)]=Site::A(record.na as f64);
-            // S[(B,i)]=Site::B(record.nb as f64);
-            // S[(C,i)]=Site::C(record.nc as f64);
+
             mepsilon_cross[(i,i)]= record.epsilon;
             mbeta_cross[(i,i)]=record.beta;
         }
+        let f=Array1::from_vec(f);
+        let s1=Array1::from_vec(s1);
+        let ns=f.len();
+        let mut pmat:Array2<f64>=Array2::zeros((ns,ns));
 
+        assert_eq!(f.len(),s1.len());
+
+        for alpha in 0..f.len(){
+            for beta in 0..f.len(){
+                
+                let j=f[alpha].t();
+                let l=f[beta].t();
+
+                if W[j][l]==1.0{
+                    pmat[(alpha,beta)]=1.0;
+                    pmat[(beta,alpha)]=1.0;
+                }
+            }
+        }
         for &i in &nself{
             for &j in &nself{
                 if i==j{continue;}
@@ -220,12 +265,14 @@ impl ASCParameters {
             ncomp,
             nassoc,
             nsolv,
-            // delta,
             binary,
+            pmat,
             site_multiplicity:s,
             eps_cross_mat:mepsilon_cross,
             beta_cross_mat:mbeta_cross,
             map,
+            f,
+            s1,
             vb
         }
 
@@ -613,9 +660,8 @@ pub fn octane_acoh()->E<CPA>{
 pub mod tests{
     use ndarray::array;
 
-    use crate::parameters::association::{acoh_octane, octane_acoh};
+    use crate::parameters::association::{acoh_octane, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2};
 
-    #[test]
     pub fn map_assoc(){
         
         let eos = octane_acoh();
@@ -625,6 +671,88 @@ pub mod tests{
         let x=array![x1,1.-x1];
         // println!("x1={}",x[map[0]]);
         assert_eq!(x[map[0]],0.6);
+
+    }
+    pub fn map_f_water_co2(){
+        println!("---WATER & CO2---\n");
+
+        let eos = water_co2();
+        let map=&eos.residual.assoc.parameters.map;
+        // println!("Assoc=\n{}",eos.residual.assoc.parameters);
+        let x1=0.4;
+        let x=array![x1,1.-x1];
+        // println!("x1={}",x[map[0]]);
+        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
+        println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
+
+
+    }
+    pub fn map_f_water_acoh(){
+        
+        println!("---WATER & ACETIC ACID---\n");
+        let eos = water_acetic_acid();
+        let map=&eos.residual.assoc.parameters.map;
+        // println!("Assoc=\n{}",eos.residual.assoc.parameters);
+        let x1=0.4;
+        let x=array![x1,1.-x1];
+        // println!("x1={}",x[map[0]]);
+        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
+        println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
+
+
+    }
+    pub fn map_f_acoh_octane(){
+        println!("---AcOH & Octane---\n");
+
+        let eos = acoh_octane();
+        let map=&eos.residual.assoc.parameters.map;
+        // println!("Assoc=\n{}",eos.residual.assoc.parameters);
+        let x1=0.4;
+        let x=array![x1,1.-x1];
+        // println!("x1={}",x[map[0]]);
+        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
+        println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
+
+    }
+    pub fn map_f_metoh_3b(){
+
+        println!("---MeOH 3B---\n");
+
+        let eos = methanol_3b();
+        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
+        println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
+
+    }
+    pub fn map_f_metoh_2b(){
+                println!("---MeOH 2B---\n");
+
+        let eos = methanol_2b();
+        println!("S={}",&eos.residual.assoc.parameters.s1);
+        println!("T ( (sitio_j,comp_i)---->sitio_alpha )={}",&eos.residual.assoc.parameters.f);
+        println!("P=\n{}",&eos.residual.assoc.parameters.pmat);
+    }
+
+    #[test]
+    pub fn map(){
+
+        map_f_water_co2();
+        println!("\n");
+
+        map_f_water_acoh();
+        println!("\n");
+
+        map_f_acoh_octane();
+        println!("\n");
+
+        map_f_metoh_2b();
+        println!("\n");
+
+        map_f_metoh_3b();
+        println!("\n");
 
     }
 }

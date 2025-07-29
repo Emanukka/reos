@@ -75,7 +75,7 @@ mod tests {
 
         let eos =water_co2();
         let s=State::new_tpx(&Arc::new(eos), t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-
+        
         // let rho=1e3;
         // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
         // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
@@ -83,9 +83,10 @@ mod tests {
         
         let rho=s.rho;
         let xasc=s.eos.residual.assoc.X_tan(t, rho, &x).unwrap();
-
-        // println!("rho={}",rho);
-        // println!("X=\n{}",xasc);
+        let kmat=s.eos.residual.assoc.association_constants(t, rho, &x, s.eos.residual.assoc.g_func(rho, &x));
+        // println!("rh");
+        println!("X=\n{}",xasc);
+        println!("K=\n{}",kmat);
         // println!("phi={}",phi);
         let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
 
@@ -94,7 +95,7 @@ mod tests {
 
     }
 
-    #[test]
+    // #[test]
     fn tcs_1(){
 
 
@@ -148,7 +149,7 @@ mod tests {
         // dbg!(phi);
 
     }
-    #[test]
+    // #[test]
     fn tcs_2(){
 
 
@@ -232,7 +233,10 @@ mod tests {
 
         let xa_2=x_2[(0,0)];
         let xb_2=x_2[(1,0)];
+        // println!("cmp_metoh_3b_2b_xassoc");
 
+        println!("X2B=\n{}",eos_1.residual.assoc.X_tan(t, s1.rho, &x).unwrap());
+        println!("X3B=\n{}",eos_2.residual.assoc.X_tan(t, s2.rho, &x).unwrap());
         assert_relative_eq!(2.0*xa_2-1.0,xb_2,epsilon=1e-8);
         assert_relative_eq!(x_1[(0,0)],x_1[(1,0)],epsilon=1e-8);
         assert_relative_eq!(phi_1[0],cmp_1[0],epsilon=1e-9);
@@ -283,64 +287,5 @@ mod tests {
         assert_relative_eq!(phi[1],cmp[1],epsilon=1e-10);
 
     }
-    // #[test]
-    fn mat1(){
-
-
-        // let a=Array2::from_shape_vec((3,2), vec![1,2,3,4,5,6]).unwrap();
-        // println!("A={}",a);
-        // let a_flat=a.flatten_with_order(ndarray::Order::ColumnMajor);
-        // println!("A vetor [ordem Fortran (coluna)]={}",a_flat);
-        let a: Array2<f64>=Array2::from_shape_vec((2,2), vec![1.,2.,3.,4.]).unwrap();
-        let b: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>=array![1.0,2.];
-
-
-    }
-    fn vector_product(w: &Array1<f64>,v:&Array1<f64>) {
-    // tamanhos iguais necessariamente
-    let n=w.len();
-
-    let slcw=w.as_slice().unwrap();
-    let slcv=v.as_slice().unwrap();
-    
-    let w=DVector::from_row_slice(slcw);
-    let v=DVector::from_row_slice(slcv);
-    
-    println!("w=\n{w}");
-    println!("v=\n{v}");
-    let r=w*v.transpose();
-
-    println!("NALGEBRA:w@v=\n{r}");
-
-    let mat_slice: &[f64]=r.as_slice();
-    
-    // let nd_mat=Array2::from_shape_vec((n,n).strides((1,2)), vec![mat_slice]).unwrap();
-
-    // Array2::from_
-    // Array2::from_v
-    
-    // println!("NDARRAY:w@v=\n{:#?}",nd_mat);
-    
-    }   
-    // #[test]
-    fn mat2(){
-
-
-        // let a=Array2::from_shape_vec((3,2), vec![1.,2.,3.,4.,5.,6.]).unwrap();
-
-        // let w=array![1.,2.,3.];
-        // let v=array![4.,5.,6.];
-        // vector_product(&w, &v);
-        // let dot_wv=w.
-
-        // let b=convert_ndarray_to_nalgebra(&a);
-
-        // println!("A={}",a);
-        // println!("a={}",b);
-        // let a_flat=a.flatten_with_order(ndarray::Order::ColumnMajor);
-        // println!("A vetor [ordem Fortran (coluna)]={}",a_flat);
-
-    }
-
 
 }

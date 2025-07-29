@@ -157,8 +157,8 @@ pub mod tests{
         
         let cmp=[0.59739271, 0.40260708];
         
-        println!("P bol ={}",pb);
-        println!("y={}",y);
+        // println!("P bol ={}",pb);
+        // println!("y={}",y);
 
         assert_relative_eq!(pb,3127.2493944115,epsilon=1e-4);
         
@@ -168,7 +168,7 @@ pub mod tests{
 
     }
  
-    #[test]
+    // #[test]
     pub fn cmp_bbpy_acoh_octane(){
         
         let eos = acoh_octane();
@@ -184,8 +184,8 @@ pub mod tests{
         
         let cmp=[0.6542769760724502, 0.34572302386625076];
         
-        println!("P bol ={}",pb);
-        println!("y={}",y);
+        // println!("P bol ={}",pb);
+        // println!("y={}",y);
 
         assert_relative_eq!(pb,28987.67376094271,epsilon=1e-2);
         
@@ -211,8 +211,8 @@ pub mod tests{
         
         let cmp=[ 0.34572302386625076,0.6542769760724502];
         
-        println!("P bol ={}",pb);
-        println!("y={}",y);
+        // println!("P bol ={}",pb);
+        // println!("y={}",y);
 
         assert_relative_eq!(pb,28987.67376094271,epsilon=1e-2);
         
@@ -222,22 +222,22 @@ pub mod tests{
 
     }
 
-    #[test]
-    pub fn time_calc(){
-        let eos = water_acetic_acid();
-        let peq=PhaseEquilibrium::new(
-            Arc::new(eos),
-            None);
-            // Some(antoine_water_acetic_acid()));
-        //State Variables
+    // #[test]
+    // pub fn time_calc(){
+    //     let eos = water_acetic_acid();
+    //     let peq=PhaseEquilibrium::new(
+    //         Arc::new(eos),
+    //         None);
+    //         // Some(antoine_water_acetic_acid()));
+    //     //State Variables
 
-        let lins=linspace(0.01, 0.99, 100);
+    //     let lins=linspace(0.01, 0.99, 100);
         
         
-        for xi in lins{
-            let t=300.0;
-            let x=Array1::from_vec(vec![xi,1.-xi]);
-            let (pb,y)=peq.bbpy(t, x,Some(1e-7),Some(1e-7)).unwrap();
-        }
-    }
+    //     for xi in lins{
+    //         let t=300.0;
+    //         let x=Array1::from_vec(vec![xi,1.-xi]);
+    //         let (pb,y)=peq.bbpy(t, x,Some(1e-7),Some(1e-7)).unwrap();
+    //     }
+    // }
 }

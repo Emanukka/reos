@@ -1,3 +1,4 @@
+use core::fmt;
 use std::ops::Mul;
 
 pub mod associative;
@@ -12,65 +13,42 @@ pub const C: usize = 2;
 pub const NS:  usize = 3;
 pub const IDEAL_GAS_CONST: f64 = 8.31446261815324;
 
-// pub const SINT: [(usize,usize);4]=[(A,B),(A,C),(B,C),(C,C)];
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Site{
-    A(f64),
-    B(f64),
-    C(f64),
-    Null
+    A(usize),
+    B(usize),
+    C(usize),
 }
 
 impl Site {
     
-    pub fn n(&self)->f64{
+    ///Get component of site alpha
+    pub fn i(&self)->usize{
         match self {
-            Site::A(m)=>*m,
-            Site::B(m)=>*m,
-            Site::C(m)=>*m,
-            Site::Null=>0.0
+            Self::A(i)=>*i,
+            Self::B(i)=>*i,
+            Self::C(i)=>*i,
+        }
+    }
+    ///Get type index site alpha
+    pub fn t(&self)->usize{
+        match self {
+            Self::A(_)=>A,
+            Self::B(_)=>B,
+            Self::C(_)=>C,
         }
     }
 }
 
-impl Default for Site {
-    
-    fn default() -> Self {
-        Site::Null
-    }
-}
 pub const SITES:[usize;3]=[A,B,C];
 
-// impl Mul {
-    
-// }
-impl<'a, 'b> Mul<&'b Site> for &'a Site {
-    type Output = f64;
-
-    fn mul(self, rhs: &'b Site) -> f64 {
-
-        if (self.n()==0.0) || (rhs.n()==0.0){
-            0.0
-        }else{
-            match (self,rhs) {
-            (Site::A(_),Site::A(_))=>{0.0}
-            (Site::B(_),Site::B(_))=>{0.0}
-            (_,_)=>1.0
-            }
+impl fmt::Display for Site {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Site::A(i) => write!(f, "A({})", i),
+            Site::B(i) => write!(f, "B({})", i),
+            Site::C(i) => write!(f, "C({})", i),
         }
     }
 }
-
-// impl<'a> From<&'a Site> for usize {
-//     fn from(s: &'a Site) -> Self {
-//         match s {
-
-//             Site::A=>0,
-//             Site::B=>1,
-//             Site::C=>2,
-
-//         }
-//     }
-// }
-
