@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use ndarray::{Array, Array1, Array2, ArrayBase, Axis, CowArray, Dim};
+use ndarray::{array, Array, Array1, Array2, ArrayBase, Axis, CowArray, Dim};
 use crate::models::{A, B, C, SITES};
 use crate::parameters::association::{ ASCParameters, AssociationRule, W};
 use crate::residual::Residual;
@@ -117,46 +117,44 @@ impl Associative {
 impl Associative {
     #[allow(non_snake_case)]
     
-    pub fn CR1(&self,t:f64,gmix:f64,i:usize,k:usize)->f64{
-        let p = &self.parameters;
-        let map=&p.map;
+    pub fn cr1(&self,t:f64,gmix:f64,alpha:usize,beta:usize)->f64{
 
-        let eps_cross= p.eps_cross_mat[(i,k)];
-        let beta_cross= p.beta_cross_mat[(i,k)];
-      
-        ((p.vb[map[i]]+p.vb[map[k]])*0.5)*beta_cross * gmix *(
+        let p = &self.parameters;
+        let f=&p.f;
+        let map=&p.asc_into_global;
+        let eps_cross= p.epsmat[(alpha,beta)];
+        let beta_cross= p.betamat[(alpha,beta)];
+        // let vb: ArrayBase<ndarray::OwnedRepr<&[f64]>, Dim<[usize; 2]>>= array![[vb_sclice.in]];
+        // let b=(vb+vb.t())*0.5;
+        let vb=&p.vb;
+        let i=f[alpha].i();
+        let j=f[beta].i();
+
+        ((vb[map[i]]+vb[map[j]])*0.5)*beta_cross * gmix *(
             (( 
                 ( eps_cross) / (IDEAL_GAS_CONST * t) ) ).exp() -1.0 )
     }
 
-    #[allow(non_snake_case)]
-    pub fn ECR(&self,t:f64,gmix:f64,i:usize,k:usize)->f64
-    {
-        (self.CR1(t, gmix, i, i)*self.CR1(t, gmix, k,k)).sqrt()
+    pub fn ecr(&self,t:f64,gmix:f64,alpha:usize,beta:usize)->f64{
+        (self.cr1(t, gmix, alpha, alpha)*self.cr1(t, gmix, beta,beta)).sqrt()
     }
 
-    pub fn delta(&self,t:f64,rho:f64,vx:&Array1<f64>,gmix: f64)->Array2<f64>{
+    pub fn delta(&self,t:f64,gmix: f64)->Array2<f64>{
         
-        let f=&self.parameters.f;
         let ns=self.parameters.s.len();
         let alphamat=&self.parameters.alphamat;
         let mut delta =Array2::zeros((ns,ns));
+        for alpha in 0..ns{
+            for beta in alpha..ns{
 
-        
-        for (alpha,site_alpha) in f.iter().enumerate(){
-            let comp_i=site_alpha.i();
+                let dcr1=self.cr1(t, gmix, alpha, beta);
+                let decr=self.ecr(t, gmix, alpha, beta);
+                let alpha_ij=alphamat[(alpha,beta)];
+                delta[(alpha,beta)]=dcr1*(1.0-alpha_ij)+decr*alpha_ij;
+                delta[(beta,alpha)]=delta[(alpha,beta)]
 
-            for (beta,site_beta) in f.iter().enumerate(){
-                if alpha>beta{continue;}
-                else{
-                    let comp_j=site_beta.i();
-
-                    let delta=
-                    delta[(beta,alpha)]=delta[(alpha,beta)]
-                }
             }
         }
-
         delta
     }
 
@@ -280,7 +278,7 @@ impl Associative {
         let pmat=&self.parameters.pmat;
 
         let gmix=self.g_func(rho, vx);
-        let kmat=self.delta(t, rho,vx, gmix)*mm_mat*pmat*rho;
+        let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
 
         // println!("K=\n{}",&kmat);
         //nsX1

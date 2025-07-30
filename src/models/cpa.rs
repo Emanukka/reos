@@ -83,11 +83,11 @@ mod tests {
         
         let rho=s.rho;
         let xasc=s.eos.residual.assoc.X_tan(t, rho, &x).unwrap();
-        let kmat=s.eos.residual.assoc.association_constants(t, rho, &x, s.eos.residual.assoc.g_func(rho, &x));
+        // let kmat=s.eos.residual.assoc.association_constants(t, rho, &x, s.eos.residual.assoc.g_func(rho, &x));
         // println!("rh");
         println!("rho={}",rho);
         println!("X=\n{}",xasc);
-        println!("K=\n{}",kmat);
+        // println!("K=\n{}",kmat);
         // println!("phi={}",phi);
         let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
 
