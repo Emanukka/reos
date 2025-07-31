@@ -12,4 +12,4 @@ crate-type = ["cdylib"]
 pyo3 = "0.24.0"
 numpy = "0.24"
 
-reos= {path=".."}
+reos= {path="../../."}

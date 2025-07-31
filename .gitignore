@@ -1,5 +1,5 @@
-/target
 **/target
 output.txt
 Cargo.lock
 **/Cargo.lock
+**/dbg

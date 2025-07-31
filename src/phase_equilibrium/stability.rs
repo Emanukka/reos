@@ -61,7 +61,7 @@ pub mod tests{
     use ndarray::Array1;
 
     use crate::{parameters::association::{water_acetic_acid}, phase_equilibrium::PhaseEquilibrium};
-    use crate::state::density_solver::DensityInitialization::{Liquid,Vapor};
+    use crate::state::density_solver::DensityInitialization::{Vapor};
 
     // #[test]
     fn verify_tpd_close_to_bbpoint(){
@@ -123,52 +123,4 @@ pub mod tests{
     }
 
 }
-// impl <E:EquationOfState> State<E> {
-
-//     pub fn tpd(&self,xphase:DensityInitialization,xguess:Array1<f64>)->Result<f64,EosError>{
-
-//         let tol =1e-8;
-//         let it_max=200;
-//         let mut it=0;
-//         let mut res=10.0;
-
-//         // Cte
-//         let hy = self.lnphi()?+self.x.ln();
-
-//         let mut vw_old:Array1<f64>;
-//         let mut vw =xguess.clone();
-//         let mut x=xguess;
-
-//         // xPhase guess
-//         let mut lnphix:Array1<f64>=Array1::zeros(x.len());
-//         let mut old_density = State::
-//         new_tpx(self.eos.clone(), self.t, self.p, x.clone(), xphase)?.rho;
-
-//         while (res>tol) & (it<it_max) {
-
-//             vw_old = vw;
-
-//             // incipient state 
-//             let incipient_state= State::
-//             new_tpx(self.eos.clone(), self.t, self.p, x, DensityInitialization::Guess(old_density))?;            
-//             old_density=incipient_state.rho;
-
-//             lnphix=incipient_state.lnphi()?;
-
-//             vw = ( &hy-&lnphix).exp();
-            
-//             x = &vw/vw.sum();
-
-//             res = (&vw - vw_old).pow2().sum().sqrt();
-//             it+=1
-//         }
-//         // dbg!(&vx);
-        
-//         let hx = x.ln()+ lnphix;
-//         let dg = (vw*(hx-hy)).sum();
-
-//         Ok(dg)
-//     }
-    
-// }
 

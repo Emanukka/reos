@@ -73,14 +73,14 @@ impl Associative {
 
 }
 impl Associative {
-    pub fn g_func(&self,rho:f64,vx:&Array1<f64>)->f64{
-        1.0 / (1.0 - 1.9 * (rho * self.parameters.vb.dot(vx) / 4.0))
+    pub fn g_func(&self,rho:f64,x:&Array1<f64>)->f64{
+        1.0 / (1.0 - 1.9 * (rho * self.parameters.vb.dot(x) / 4.0))
     }
 
-    pub fn dlngdrho(&self,rho:f64,vx:&Array1<f64>)->f64{
+    pub fn dlngdrho(&self,rho:f64,x:&Array1<f64>)->f64{
 
-        let bm = self.parameters.vb.dot(vx);
-        let gm =self.g_func(rho,vx);
+        let bm = self.parameters.vb.dot(x);
+        let gm =self.g_func(rho,x);
 
         let result = (1.0 / gm) * (-1.0) * (gm*gm) * (-1.9 * bm / 4.0);
         // println!("dlngdrho={result}");
@@ -89,9 +89,9 @@ impl Associative {
     }
 
     // !!!
-    pub fn dlngdni(&self,rho:f64,vx:&Array1<f64>)->Array1<f64>{
+    pub fn dlngdni(&self,rho:f64,x:&Array1<f64>)->Array1<f64>{
 
-        let gmix = self.g_func(rho,vx);
+        let gmix = self.g_func(rho,x);
         gmix * 1.9 *(rho*&self.parameters.vb/4.0)
     }
     pub fn get_m(&self,x:&Array1<f64>)->Array1<f64>{
@@ -158,126 +158,18 @@ impl Associative {
         delta
     }
 
-
-    // pub fn association_constants(&self,t:f64,rho:f64,vx:&Array1<f64>,gmix: f64)->Array2<f64>{
-    //     let nassoc=&self.parameters.nassoc;
-    //     let n=nassoc.len();
-    //     // let n=self.parameters.ncomp;
-
-
-    //     // let vb=&self.parameters.vb;
-    //     // let eps=&self.parameters.eps_cross_mat;
-    //     // let beta=&self.parameters.beta_cross_mat;
-
-    //     let mut matk =Array2::zeros((n,n));
-    //     // let delta=&self.parameters.delta;
-    //     let map=&self.parameters.map;
-    //     for i in 0..n{
-    //         for k in 0..n{
-    //             if i>k{continue;}
-    //             else{
-    //                 // println!("vi={}",vx[map[i]]);
-    //                 match self.parameters.binary[(i,k)].rule{
-    //                 AssociationRule::CR1=>{
-    //                     matk[(i,k)]=self.CR1(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
-    //                     // matk[(i,k)]=cr1(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
-    //                 }
-    //                 AssociationRule::ECR=>{
-    //                     matk[(i,k)]=self.ECR(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
-    //                     // matk[(i,k)]=ecr(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho
-    //                 }
-    //                 //mCR1 e exp
-    //                 _=>{
-    //                     matk[(i,k)]=self.CR1(t, gmix, i, k)*vx[map[i]]*vx[map[k]]*rho
-    //                     }
-    //                 }
-
-    //                 // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[map[i]]*vx[map[k]]*rho;
-    //                 // matk[(i,k)]=(delta[(i,k)].0)(i,k,t,gmix,vb,eps,beta)*vx[i]*vx[k]*rho;
-
-    //                 matk[(k,i)]=matk[(i,k)]
-    //             }
-    //         }
-    //     }
-
-    //     matk
-    // }
-
-    // #[allow(non_snake_case)]
-    // // pub fn X_tan(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
-    // pub fn X_tan_1(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array2<f64>,EosError>{
-
-    //     let nassoc=&self.parameters.nassoc;
-    //     let n=nassoc.len();
-
-    //     let f=&self.parameters.f;
-    //     let ns=f.len();
-    //     // let n=self.parameters.ncomp;
-    //     let gmix=self.g_func(rho, vx);
-    //     let matk=self.association_constants(t, rho,vx, gmix);
-
-    //     let mut x_assoc =  Array2::from_elem((ns,n),0.2);
-    //     // let mut x_assoc =  Array2::from_elem((NS,ncomp),0.2);
-    //     let map=&self.parameters.map;
-    //     // let mut x_assoc =  a.data.clone();
-    //     let omega=0.25;
-    //     // let mut mat_error:Array2<f64> = Array2::zeros((NS,ncomp));
-    //     let mut mat_error:Array2<f64> = Array2::zeros((ns,n));
-    //     let mut x_old: Array2<f64>;
-    //     let mut res = 1.0;
-    //     let mut it:i32 = 0; 
-    //     const TOL:f64 = 1e-11; 
-    //     const MAX:i32 = 10000;
-
-    //     while (res>TOL) & (it<MAX) {
-
-    //         it+=1;
-    //         x_old= x_assoc.clone();
-    //         // for &i in assoc_comps{
-    //         for i in 0..n{
-    //         for s1 in SITES {
-
-    //             if S[(s1,i)]==0.0{x_assoc[(s1,i)]=1.0;continue;}
-    //             let mut sum1: f64 = 0.0;
-
-    //             for k in 0..n{
-    //             // for &k in assoc_comps{
-    //             for s2 in SITES{
-    //                     sum1+= matk[(i,k)]*x_old[(s2,k)]*S[(s2,k)]*W[s1][s2]
-    //                 }
-    //             }
-    //             x_assoc[(s1,i)] = (1.0-omega)*(vx[map[i]]/(vx[map[i]]+sum1)) + omega*x_assoc[(s1,i)] ;
-    //             // x_assoc[(s1,i)] = (1.0-omega)*(vx[i]/(vx[i]+sum1)) + omega*x_assoc[(s1,i)] ;
-    //             mat_error[(s1,i)] = ( (x_assoc[(s1,i)]-x_old[(s1,i)])/x_assoc[(s1,i)] ).abs();
-    //             }
-    //         }
-    //         res = *mat_error.iter().max_by(|a,b| a.total_cmp(b)).unwrap();
-    //     }
-    //     if it == MAX{return Err(EosError::NotConverged("X_tan".to_string()));}
-    //     else {
-    //         // x_grande.data=x_assoc.clone();
-    //         // println!("it={it}");
-    //         // println!("omega={omega}");
-    //         // println!("K=\n{}",&matk);
-    //         // println!("X={}\n",&x_assoc);
-    //         // a.data=x_assoc.clone();
-
-    //         return Ok(x_assoc);
-    //     }
-    // }   
-
     #[allow(non_snake_case)]
-    pub fn X_tan(&self,t:f64,rho:f64,vx:&Array1<f64>)-> Result<Array1<f64>,EosError>{
+    pub fn X_tan(&self,t:f64,rho:f64,x:&Array1<f64>)-> Result<Array1<f64>,EosError>{
         let f=&self.parameters.f;
         let ns=f.len();
         let s:&Array1<f64> = &self.parameters.s;
-        let m=self.get_m(vx);
+        let m=self.get_m(x);
 
         let mmat=m.to_shape((ns,1)).unwrap();
         let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
         let pmat=&self.parameters.pmat;
 
-        let gmix=self.g_func(rho, vx);
+        let gmix=self.g_func(rho, x);
         let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
 
         // println!("K=\n{}",&kmat);
@@ -316,36 +208,20 @@ impl Associative {
             //res = mat_error.sum();
             // println!("{}",res);
         }
-
     // dbg!(&x_assoc);
     // dbg!(res);
     // println!("materror={mat_error}");
     if it == MAX{
         return Err(EosError::NotConverged("X_tan".to_string()));
-        
     }
-
     else {
-        
         // x_grande.data=x_assoc.clone();
 
         // println!("it={}",it);
         return Ok(x_novo);
     }
     
-}   
-
-//Xmichelssen-NR
-pub fn xmichelssen(){
-    
-}
-    #[allow(non_snake_case)]
-    pub fn Q(&self,t:f64,rho:f64,x:&Array1<f64>){
-
-        let xassoc=x;
-
-
-    }
+    }   
 
 }
 
@@ -384,7 +260,7 @@ impl Residual for Associative {
         let n =nassoc.len();
 
         let lnx_s=(xassoc.ln())*s;
-        let f=&self.parameters.f;
+        // let f=&self.parameters.f;
         let tmat=&self.parameters.tmat;
         let mu1=tmat.dot(&lnx_s); //nX1
         let hmat=&self.parameters.hmat;
