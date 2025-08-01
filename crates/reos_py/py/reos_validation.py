@@ -32,7 +32,7 @@ from auxiliary_functions.data import *
 
 
 
-#%%
+#%%Testing X calculation
 pACOH=CPAParameters.from_records(
     cubic=[c_acoh],
     assoc=[a_acoh])
@@ -46,7 +46,20 @@ peq=PhaseEquilibrium(ACOH)
 antoine=np.array([acoh_antoine])
 # p,y,vx=vle_diagram(T,peq,factor=1e3)
 
+x=np.array([1.0])
+t=298.15
+p=1e5
 
+state_acoh=State.tpx(ACOH,t,p,x,"vapor")
+
+rho=1.0/state_acoh.volume()
+print(rho)
+
+association_residual=ACOH.get_association()
+
+X=association_residual.non_bonded_sites(t,rho,x)
+
+print(X)
 
 
 #%%
@@ -58,7 +71,7 @@ pACOH_OCT.set_cubic_binary(0,1,0.0, 0.064)
 
 ACOH_OCT=EquationOfState.cpa(pACOH_OCT)# print(pWATER_ACETIC.as_string())
 
-peq=PhaseEquilibrium(ACOH_OCT)
+# peq=PhaseEquilibrium(ACOH_OCT)
 
 antoine=np.array([acoh_antoine,octane_antoine])
 # p,y,vx=vle_diagram(T,peq,factor=1e3)
@@ -67,21 +80,29 @@ xorv,porv=acoh_octane["orv"]
 xbol,pbol=acoh_octane["bol"]
 exp_data=[xorv,porv,xbol,pbol]
 
-T=343.15
+T=343.2
 
-_=VLE_DIAGRAM(
+*_,linspaceZ,XASCL,XASCV=VLE_DIAGRAM(
     ("t",T),
-    peq,antoine,
+    ACOH_OCT,antoine,
     y_label=r"P/kPa",
     x_label=r"$x_1,y_1$",
-    y_lim=[15,31],
+    y_lim=[0,35],
     x_figsize=5,
+    y_figsize=5,
     factor=1e3,
     exp_data=exp_data,
     title=r"Acetic Acid(1) and Octane",
-    save_fig=True,
+    save_fig=False,
     N_points=100)
 
+#now testando modelos de grafico de X
+plt.figure()
+#plt.plot(BOL,XASC)
+plt.plot(linspaceZ,XASCL)
+plt.plot(linspaceZ,XASCV)
+plt.xlim(-0.01,1.01)
+plt.ylim(-0.01,1.01)
 
 
 #%%
@@ -147,6 +168,8 @@ _,_,_=VLE_DIAGRAM(
     title="Methanol(1) and Octanol CR1 2B",
     save_fig=True,
     N_points=100)
+
+
 
 #%%
 p=CPAParameters.from_records(
@@ -220,7 +243,7 @@ pMETHANOL_ACETIC.set_cubic_binary(0,1,0.0,-0.04)
 pMETHANOL_ACETIC.set_assoc_binary(0,1,"ecr")
 METHANOL_ACETIC=EquationOfState.cpa(pMETHANOL_ACETIC)
 # print(pWATER_ACETIC.as_string())
-peq=PhaseEquilibrium(METHANOL_ACETIC)
+# peq=PhaseEquilibrium(METHANOL_ACETIC)
 
 antoine=np.array([metoh_antoine,acoh_antoine])
 T=308.15
@@ -229,19 +252,59 @@ xorv,porv=metoh_acoh["orv"]
 xbol,pbol=metoh_acoh["bol"]
 exp_data=[xorv,porv,xbol,pbol]
 
-_,_,_=VLE_DIAGRAM(
+# _,_,_=VLE_DIAGRAM(
+#     ("t",T),
+#     peq,
+#     antoine,
+#     y_label="P/kPa",
+#     y_figsize=5,
+#     x_figsize=5,
+#     factor=1e3,
+#     exp_data=exp_data,
+#     x_label=r"$x_1,y_1$",
+#     y_lim=[0.0,30.0],
+#     title="Methanol 2B(1) and AcOH 1A(2) (ECR)",
+#     save_fig=True,
+#     N_points=100)
+
+BOL,_,linspaceZ,XASCL,XASCV=VLE_DIAGRAM(
     ("t",T),
-    peq,
-    antoine,
-    y_label="P/kPa",
-    y_figsize=5,
+    METHANOL_ACETIC,antoine,
+    y_label=r"P/kPa",
+    x_label=r"$x_1,y_1$",
+    y_lim=[0,30],
     x_figsize=5,
+    y_figsize=5,
     factor=1e3,
     exp_data=exp_data,
-    x_label=r"$x_1,y_1$",
-    y_lim=[0.0,30.0],
-    title="Methanol 2B(1) and AcOH 1A(2) (ECR)",
-    save_fig=True,
+    title=r"Methanol 2B(1) and AcOH 1A(2) (ECR)",
+    save_fig=False,
     N_points=100)
+
+#now testando modelos de grafico de X
+XASCV=np.stack(XASCV)
+XASCL=np.stack(XASCL)
+
+plt.figure()
+# plt.plot(BOL,XASC)
+# plt.plot(linspaceZ,XASCV[:,0],label="- MetOH VAP")
+# plt.plot(linspaceZ,XASCV[:,1],label="+ MetOH VAP")
+# plt.plot(linspaceZ,XASCV[:,2],label="+-AcOH  VAP")
+
+# plt.plot(linspaceZ,XASCL[:,0],label="-MetOH LIQ")
+# plt.plot(linspaceZ,XASCL[:,1],label="+MetOH LIQ")
+# plt.plot(linspaceZ,XASCL[:,2],label="+-AcOH LIQ")
+
+plt.plot(BOL,XASCV[:,0],label="- MetOH VAP")
+plt.plot(BOL,XASCV[:,1],label="+ MetOH VAP")
+plt.plot(BOL,XASCV[:,2],label="+-AcOH  VAP")
+plt.plot(BOL,XASCL[:,0],label="-MetOH LIQ")
+plt.plot(BOL,XASCL[:,1],label="+MetOH LIQ")
+plt.plot(BOL,XASCL[:,2],label="+-AcOH LIQ")
+
+plt.legend()
+# plt.xlim(-0.01,1.01)
+plt.ylim(-0.01,1.01)
+
 
 #%%

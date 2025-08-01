@@ -5,3 +5,4 @@ Cargo.lock
 **/dbg
 **/plots
 **/__pycache__/
+**/venv

@@ -1,5 +1,5 @@
 
-from aux import *
+from auxiliary_functions import *
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import os
@@ -24,8 +24,142 @@ def vle_diagram(T,phase_eq,N=100,factor=1e5):
 
   return [calc_p,calc_vy,vx]
 
+def get_bbp(EOS,T,antoine,factor=1e3,N_points=100):
+
+  peq=PhaseEquilibrium(EOS)
+  linspaceZ=np.linspace(0.00001,0.9999,N_points)
+  PBOL=np.zeros_like(linspaceZ)
+  XPHASE=np.zeros_like(linspaceZ)
+  # XASCL=np.zeros_like(linspaceZ,dtype=object)
+  # XASCV=np.zeros_like(linspaceZ,dtype=object)
+  MAE=np.zeros_like(linspaceZ,dtype=object)
+  FILHA=np.zeros_like(linspaceZ,dtype=object)
+
+  tol=1e-6
+  for (i,z1) in enumerate(linspaceZ):
+
+    try:
+      z=np.array([z1,1-z1])
+      # print(z)
+
+      # print(z)
+      pcalc,w1=tpd_root_("t",T,z,"vapor",peq ,antoine,tol)
+
+      MAE[i]=State.tpx(EOS,T,pcalc,z,"liquid")
+
+      y=np.array( [w1,1-w1] )
+      FILHA[i]=State.tpx(EOS,T,pcalc,y,"vapor")
+
+      PBOL[i]=pcalc/factor
+      XPHASE[i]=w1
+
+    except Exception as e:
+      print(e)
+
+  return PBOL,linspaceZ,XPHASE,MAE,FILHA
+
+def get_bbt(EOS,P,antoine,N_points=100):
+
+  peq=PhaseEquilibrium(EOS)
+  Z=np.linspace(0.00001,0.9999,N_points)
+
+  TBOL=np.zeros_like(Z)
+  XPHASE=np.zeros_like(Z)
+  # XASCL=np.zeros_like(linspaceZ,dtype=object)
+  # XASCV=np.zeros_like(linspaceZ,dtype=object)
+  MAE=np.zeros_like(Z,dtype=object)
+  FILHA=np.zeros_like(Z,dtype=object)
+
+  tol=1e-6
+  for (i,z1) in enumerate(Z):
+
+    try:
+      z=np.array([z1,1-z1])
+      # print(z)
+
+      # print(z)
+      tcalc,w1=tpd_root_("p",P,z,"vapor",peq ,antoine,tol)
+
+      state_mae=State.tpx(EOS,tcalc,P,z,"liquid")
+      MAE[i]= 1.0/state_mae.volume()
+
+      w=np.array( [w1,1-w1] )
+
+      state_filha=State.tpx(EOS,tcalc,P,w,"vapor")
+      FILHA[i]=1.0/state_filha.volume()
+
+      TBOL[i]=tcalc
+      XPHASE[i]=w1
+
+    except Exception as e:
+      print(e)
+      continue
+
+  return TBOL,Z,XPHASE,MAE,FILHA
+
+def get_orvt(EOS,P,antoine,N_points=100):
+
+  peq=PhaseEquilibrium(EOS)
+  Z=np.linspace(0.00001,0.9999,N_points)
+
+  TORV=np.zeros_like(Z)
+  XPHASE=np.zeros_like(Z)
+  # XASCL=np.zeros_like(linspaceZ,dtype=object)
+  # XASCV=np.zeros_like(linspaceZ,dtype=object)
+  MAE=np.zeros_like(Z,dtype=object)
+  FILHA=np.zeros_like(Z,dtype=object)
+
+  tol=1e-6
+  for (i,z1) in enumerate(Z):
+
+    try:
+      z=np.array([z1,1-z1])
+      # print(z)
+
+      # print(z)
+      tcalc,w1=tpd_root_("p",P,z,"liquid",peq ,antoine,tol)
+
+      state_mae=State.tpx(EOS,tcalc,P,z,"vapor")
+      rhoV=1.0/state_mae.volume()
+      FILHA[i]=rhoV
+
+      w=np.array( [w1,1-w1] )
+
+      state_filha=State.tpx(EOS,tcalc,P,w,"liquid")
+      rhoL=1.0/state_filha.volume()
+      FILHA[i]=rhoL
+      TORV[i]=tcalc
+      XPHASE[i]=w1
+
+    except Exception as e:
+      print(e)
+      continue
+      
+  return TORV,Z,XPHASE,MAE,FILHA
+
+def calc_X(EOS,T,RHO,X1):
+
+
+  XASC=np.zeros_like(RHO,dtype=object)
+  association_residual=EOS.get_association()
+
+  for (i,rho) in enumerate(RHO):
+
+    try:
+
+
+      z=np.array([X1[i],1-X1[i]])
+
+      X=association_residual.non_bonded_sites(T[i],rho,z)
+      XASC[i]=X*1   
+
+    except Exception as e:
+      print(e)
+
+  return XASC
+
 def VLE_DIAGRAM(p_or_t,
-                peq,antoine,
+                eos,antoine,
                 y_label,
                 x_label,
                 title,
@@ -45,11 +179,14 @@ def VLE_DIAGRAM(p_or_t,
   '''
 
   var_str,var=p_or_t
-
+  EOS=eos
+  peq=PhaseEquilibrium(EOS)
   # print(var_str,var)
   linspaceZ=np.linspace(0.00001,0.9999,N_points)
   BOL=np.zeros_like(linspaceZ)
   XPHASE=np.zeros_like(linspaceZ)
+  XASCL=np.zeros_like(linspaceZ,dtype=object)
+  XASCV=np.zeros_like(linspaceZ,dtype=object)
   
   for (i,z1) in enumerate(linspaceZ):
 
@@ -58,14 +195,33 @@ def VLE_DIAGRAM(p_or_t,
       # print(z)
 
       # print(z)
-      calc_bol,x1=tpd_root_(var_str,var,z,"vapor",peq ,antoine,tol)
+      calc_bol,w1=tpd_root_(var_str,var,z,"vapor",peq ,antoine,tol)
+
+      #novo calculo
+      #dado T,P,x, calcular XASC
+      t=var
+      p=calc_bol
+      state_mae=State.tpx(EOS,t,p,z,"liquid")
+      rho=1.0/state_mae.volume()
+      association_residual=EOS.get_association()
+      X=association_residual.non_bonded_sites(t,rho,z)
+      XASCL[i]=X*1
+
+      y=np.array( [w1,1-w1] )
+      state_fil=State.tpx(EOS,t,p,y,"vapor")
+      rho=1.0/state_fil.volume()
+      association_residual=EOS.get_association()
+      X=association_residual.non_bonded_sites(t,rho,y)
+      XASCV[i]=X*1      
+
       # calc_bol,x1=tpd_root_(var_str,var,z,"vapor",peq ,antoine)
       # calc_orv=tpd_root_(var_str,var,z,"liquid",peq,antoine)
       # print('z=',z,'var=',var)
       # print('Tbol=',calc_bol)
       # print('x1=',x1)
       BOL[i]=calc_bol/factor
-      XPHASE[i]=x1
+      XPHASE[i]=w1
+
     except Exception as e:
       print(e)
     # ORV[i]=calc_orv/factor
@@ -81,7 +237,7 @@ def VLE_DIAGRAM(p_or_t,
   # plt.scatter(XPHASE,BOL)
   if exp_data!=None:
     plt.figure(figsize=(x_figsize, y_figsize))
-    # plt.xlim(0,1.0)
+    plt.xlim(-0.01,1.01)
     plt.ylim(y_inf,y_sup)
     xorv,orv,xbol,bol=exp_data
 
@@ -106,7 +262,7 @@ def VLE_DIAGRAM(p_or_t,
     plt.show()
   else:
     plt.figure(figsize=(x_figsize, y_figsize))
-    # plt.xlim(0,1.0)
+    plt.xlim(-0.01,1.01)
     plt.ylim(y_inf,y_sup)
     plt.plot(XPHASE,BOL,color='black')
     # BOL
@@ -126,11 +282,11 @@ def VLE_DIAGRAM(p_or_t,
       filepath = os.path.join(plot_dir, filename)
       plt.savefig(filepath)
       
-    plt.show()
+  
   
 
+  return BOL,XPHASE,linspaceZ,XASCL,XASCV
 
-  return BOL,XPHASE,linspaceZ
 def psat_antoine(T,v):
 
   psats=np.zeros(len(v))
