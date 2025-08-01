@@ -7,7 +7,7 @@ use crate::parameters::cubic::{CubicParameters, CubicPureRecord};
 use crate::residual::Residual;
 use crate::state::eos::EosResult;
 
-
+#[derive(Clone)]
 pub struct CPA{
     pub cubic: Cubic,
     pub assoc:Associative,

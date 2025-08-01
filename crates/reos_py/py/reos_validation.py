@@ -10,6 +10,27 @@ from aux.parameters import *
 from aux.vle_functions import *
 from aux.data import *
 
+plt.rcParams.update({
+    'font.family': 'serif',                     
+    'font.size': 12,                            
+    'axes.labelsize': 14,                       
+    'axes.titlesize': 14,                       
+    'xtick.direction': 'in',                    
+    'ytick.direction': 'in',
+    'xtick.major.size': 5,                      
+    'ytick.major.size': 5,
+    'xtick.minor.size': 3,                      
+    'ytick.minor.size': 3,
+    'xtick.top': True,                          
+    'ytick.right': True,                        
+    'axes.spines.top': True,                    
+    'axes.spines.right': True,
+    'figure.figsize': (6, 4),                   
+    'savefig.dpi': 300,                         
+})
+
+
+
 
 
 #%%
@@ -36,8 +57,7 @@ pACOH_OCT=CPAParameters.from_records(
 
 pACOH_OCT.set_cubic_binary(0,1,0.0, 0.064)
 
-ACOH_OCT=EquationOfState.cpa(pACOH_OCT)
-# print(pWATER_ACETIC.as_string())
+ACOH_OCT=EquationOfState.cpa(pACOH_OCT)# print(pWATER_ACETIC.as_string())
 
 peq=PhaseEquilibrium(ACOH_OCT)
 
@@ -53,13 +73,13 @@ T=343.15
 _=VLE_DIAGRAM(
     ("t",T),
     peq,antoine,
-    y_label="P/kPa",
-    x_label="x1,y1",
+    y_label=r"P/kPa",
+    x_label=r"$x_1,y_1$",
     y_lim=[15,31],
     x_figsize=5,
     factor=1e3,
     exp_data=exp_data,
-    title="Acetic Acid(1) and Octane",
+    title=r"Acetic Acid(1) and Octane",
     save_fig=True,
     N_points=100)
 
@@ -88,7 +108,7 @@ _,_,_=VLE_DIAGRAM(
     ("t",T),
     peq,antoine,
     y_label="P/kPa",
-    x_label="x1,y1",
+    x_label=r"$x_1,y_1$",
     factor=1e3,
     exp_data=expdata,
     title="Propanoic Acid(1) and Heptane",
@@ -122,7 +142,7 @@ _,_,_=VLE_DIAGRAM(
     antoine,
     y_label="T/K",
     exp_data=exp_data,
-    x_label="x1,y1",
+    x_label=r"$x_1,y_1$",
     y_lim=[300,480],
     x_figsize=5,
     title="Methanol(1) and Octanol CR1 2B",
@@ -145,7 +165,7 @@ _,_,_=VLE_DIAGRAM(
     antoine,
     y_label="T/K",
     exp_data=exp_data,
-    x_label="x1,y1",
+    x_label=r"$x_1,y_1$",
     y_lim=[300,480],
     x_figsize=5,
     title="Methanol(1) and Octanol ECR 3B",
@@ -183,7 +203,7 @@ _,_,_=VLE_DIAGRAM(
     y_figsize=5,
     x_figsize=5,
     exp_data=exp_data,
-    x_label="x1,y1",
+    x_label=r"$x_1,y_1$",
     y_lim=[360,420],
     title="Propanoic Acid 1A(1) and Heptane(2)",
     save_fig=True,
@@ -219,7 +239,7 @@ _,_,_=VLE_DIAGRAM(
     x_figsize=5,
     factor=1e3,
     exp_data=exp_data,
-    x_label="x1,y1",
+    x_label=r"$x_1,y_1$",
     y_lim=[0.0,30.0],
     title="Methanol 2B(1) and AcOH 1A(2) (ECR)",
     save_fig=True,

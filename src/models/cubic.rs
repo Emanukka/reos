@@ -4,7 +4,7 @@ use crate::residual::Residual;
 use ndarray::Array1;
 use ndarray::Array2;
 use crate::models::IDEAL_GAS_CONST as R;
-
+#[derive(Clone)]
 pub struct Cubic{
     pub parameters:CubicParameters,
     pub model:CubicModel,
@@ -18,6 +18,8 @@ impl Cubic {
     pub fn set_binary(&mut self,i:usize,j:usize,kij_a:Option<f64>,kij_b:f64){
         self.parameters.pbinary.insert((i,j), (kij_a.unwrap_or(0.0),kij_b));
     } }
+
+#[derive(Clone)]
 pub enum CubicModel{
     SRK,
     PR

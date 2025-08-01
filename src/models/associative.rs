@@ -7,7 +7,7 @@ use super::{IDEAL_GAS_CONST};
 
 
 
-
+#[derive(Clone)]
 pub struct Associative{
     pub parameters:ASCParameters
 }

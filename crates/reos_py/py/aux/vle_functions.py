@@ -85,12 +85,12 @@ def VLE_DIAGRAM(p_or_t,
     plt.ylim(y_inf,y_sup)
     xorv,orv,xbol,bol=exp_data
 
-    plt.plot(XPHASE,BOL)
-    plt.scatter(xorv,orv)
-    # BOL
-    # plt.scatter(linspaceZ, BOL)
-    plt.plot(linspaceZ, BOL)
-    plt.scatter(xbol,bol)
+    plt.plot(XPHASE,BOL,color='black')
+    plt.scatter(xorv,orv,color='black')
+
+    plt.plot(linspaceZ, BOL,color='black')
+    plt.scatter(xbol,bol,color='black')
+
     plt.xlabel(x_label)
     plt.ylabel(y_label)
     plt.title(title)
@@ -108,10 +108,10 @@ def VLE_DIAGRAM(p_or_t,
     plt.figure(figsize=(x_figsize, y_figsize))
     # plt.xlim(0,1.0)
     plt.ylim(y_inf,y_sup)
-    plt.plot(XPHASE,BOL)
+    plt.plot(XPHASE,BOL,color='black')
     # BOL
     # plt.scatter(linspaceZ, BOL)
-    plt.plot(linspaceZ, BOL)
+    plt.plot(linspaceZ, BOL,color='black')
 
 
     plt.xlabel(x_label)

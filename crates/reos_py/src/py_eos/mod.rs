@@ -1,4 +1,4 @@
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 use reos::models::associative::Associative;
 use reos::models::cpa::CPA;
@@ -6,10 +6,16 @@ use reos::models::cubic::{Cubic, CubicModel};
 use reos::parameters::{JsonStruct, Parameters};
 use reos::state::eos::EquationOfState;
 use std::sync::Arc;
-use reos::residual::{Residual,ResidualModel};
+use crate::py_eos::py_association::PyAssociation;
+// // use reos::residual::{Residual};
 use crate::py_parameters::PyCpaParameters;
 
 
+pub mod py_residual;
+pub mod py_association;
+
+
+use py_residual::ResidualModel;
 #[derive(Clone)]
 
 #[pyclass(name="EquationOfState")]
@@ -36,11 +42,24 @@ impl PyEquationOfState {
             PyEquationOfState(arc)
         )
     }
-    
-    
 
+    
+    fn get_association(&self)->PyResult<PyAssociation>{
 
+        let residual=&self.0.residual;
+
+        if let ResidualModel::CPA(cpa) = residual{
+            Ok(
+                PyAssociation(cpa.assoc.clone())
+            )
+        }
+        else {
+
+            Err(PyErr::new::<PyTypeError, _>("Error! EOS doens't contai Associative Contribution."))
+        }
+    }
 }
+
 
 
 

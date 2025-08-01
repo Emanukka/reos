@@ -49,6 +49,9 @@ impl<R:Residual> PhaseEquilibrium<R>{
         }
         let hx = x.ln()+ lnphix;
         let dg = (vw*(hx-hy)).sum();
+
+        //Retorna TPDresult (DG,StateMae,StateFilha)
+        
         Ok((dg,x))
 
     }

@@ -1,8 +1,8 @@
 use numpy::{PyArray1, PyArrayMethods, ToPyArray};
 use pyo3::{exceptions::PyValueError, pyclass, pymethods, types::PyAnyMethods, Bound, PyResult, Python};
-use reos::{phase_equilibrium::{Antoine, PhaseEquilibrium}, residual::ResidualModel, state::{density_solver::DensityInitialization, eos::EosError}};
+use reos::{phase_equilibrium::{Antoine, PhaseEquilibrium}, state::{density_solver::DensityInitialization, eos::EosError}};
 use pyo3::PyErr;
-use crate::py_eos::PyEquationOfState;
+use crate::py_eos::{py_residual::ResidualModel, PyEquationOfState};
 
 #[pyclass(name = "Antoine")]
 pub struct PyAntoine(Antoine);
