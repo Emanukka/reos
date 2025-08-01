@@ -54,12 +54,12 @@ _=VLE_DIAGRAM(
     ("t",T),
     peq,antoine,
     y_label="P/kPa",
-    x_label="x1,y1(AcOH)",
+    x_label="x1,y1",
     y_lim=[15,31],
     x_figsize=5,
     factor=1e3,
     exp_data=exp_data,
-    title="AcOH(1A)&Octane",
+    title="Acetic Acid(1) and Octane",
     save_fig=True,
     N_points=100)
 
@@ -88,10 +88,10 @@ _,_,_=VLE_DIAGRAM(
     ("t",T),
     peq,antoine,
     y_label="P/kPa",
-    x_label="x1,y1(Propanoic)",
+    x_label="x1,y1",
     factor=1e3,
     exp_data=expdata,
-    title="Propanoic(1A)&Heptane",
+    title="Propanoic Acid(1) and Heptane",
     y_lim=[0.0,25.0],
     save_fig=True,
     N_points=100)
@@ -122,10 +122,10 @@ _,_,_=VLE_DIAGRAM(
     antoine,
     y_label="T/K",
     exp_data=exp_data,
-    x_label="x1,y1(MetOH)",
+    x_label="x1,y1",
     y_lim=[300,480],
     x_figsize=5,
-    title="MetOH&Octanol CR1 2B",
+    title="Methanol(1) and Octanol CR1 2B",
     save_fig=True,
     N_points=100)
 
@@ -145,10 +145,10 @@ _,_,_=VLE_DIAGRAM(
     antoine,
     y_label="T/K",
     exp_data=exp_data,
-    x_label="x1,y1(MetOH)",
+    x_label="x1,y1",
     y_lim=[300,480],
     x_figsize=5,
-    title="MetOH&Octanol ECR 3B",
+    title="Methanol(1) and Octanol ECR 3B",
     save_fig=True,
     N_points=100)
 
@@ -168,20 +168,61 @@ PROPANOIC_HEPTANE=EquationOfState.cpa(pPROPANOIC_HEPTANE)
 peq=PhaseEquilibrium(PROPANOIC_HEPTANE)
 # p,y,vx=vle_diagram(T,peq,factor=1e3)
 
+antoine=np.array([propanoic_antoine,heptane_antoine])
 propanoic_hep_teb
 xorv,torv=propanoic_hep_teb["orv"]
 xbol,tbol=propanoic_hep_teb["bol"]
+exp_data=[xorv,torv,xbol,tbol]
 P=101.32e3
 
 _,_,_=VLE_DIAGRAM(
     ("p",P),
-    peq_3b,
+    peq,
     antoine,
     y_label="T/K",
-    exp_data=exp_data,
-    x_label="x1,y1(Ac.Propanoic)",
-    y_lim=[300,480],
+    y_figsize=5,
     x_figsize=5,
-    title="Ac.Propanoic(1A)&Heptane",
+    exp_data=exp_data,
+    x_label="x1,y1",
+    y_lim=[360,420],
+    title="Propanoic Acid 1A(1) and Heptane(2)",
     save_fig=True,
     N_points=100)
+
+
+#%%
+
+pMETHANOL_ACETIC=CPAParameters.from_records(
+    cubic=[c_methanol_2b,c_acoh],
+    assoc=[a_methanol_2b,a_acoh])
+
+pMETHANOL_ACETIC.set_cubic_binary(0,1,0.0,-0.04)
+# pMETHANOL_ACETIC.set_assoc_binary(0,1,"ecr")
+pMETHANOL_ACETIC.set_assoc_binary(0,1,"ecr")
+METHANOL_ACETIC=EquationOfState.cpa(pMETHANOL_ACETIC)
+# print(pWATER_ACETIC.as_string())
+peq=PhaseEquilibrium(METHANOL_ACETIC)
+
+antoine=np.array([metoh_antoine,acoh_antoine])
+T=308.15
+
+xorv,porv=metoh_acoh["orv"]
+xbol,pbol=metoh_acoh["bol"]
+exp_data=[xorv,porv,xbol,pbol]
+
+_,_,_=VLE_DIAGRAM(
+    ("t",T),
+    peq,
+    antoine,
+    y_label="P/kPa",
+    y_figsize=5,
+    x_figsize=5,
+    factor=1e3,
+    exp_data=exp_data,
+    x_label="x1,y1",
+    y_lim=[0.0,30.0],
+    title="Methanol 2B(1) and AcOH 1A(2) (ECR)",
+    save_fig=True,
+    N_points=100)
+
+#%%
