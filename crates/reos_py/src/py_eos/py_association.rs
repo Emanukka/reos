@@ -1,6 +1,6 @@
-use numpy::{IntoPyArray, PyArray, PyArray1, PyArray2, PyArrayMethods};
-use pyo3::{exceptions::PyTypeError, pyclass, pymethods, Bound, Py, PyErr, PyResult, Python};
-use reos::{models::associative::Associative};
+use numpy::{array, IntoPyArray, PyArray, PyArray1, PyArray2, PyArrayMethods};
+use pyo3::{exceptions::PyTypeError, pyclass, pymethods, types::PyTuple, Bound, Py, PyErr, PyResult, Python};
+use reos::{models::associative::Associative, Array1};
 
 use crate::py_eos::py_residual::ResidualModel;
 
@@ -13,6 +13,28 @@ pub struct  PyAssociation(pub Associative);
 
 impl PyAssociation {
     
+
+    /// Get the fraction of non-bonded sites X.
+    /// 
+    /// Parameters
+    /// ----------
+    /// 
+    /// t: f64
+    ///    Temperature
+    /// 
+    /// rho: f64
+    ///    Molar Density
+    /// 
+    /// x : numpy.ndarray[float]
+    ///     Molar fraction of each component.
+    /// 
+    /// Returns
+    /// -------
+    /// Fraction of non-bonded sites X as np.ndarray
+    #[pyo3(
+    text_signature = "(t,rho,x)"
+    )]
+    #[pyo3(signature = (t,rho,x))]
     fn non_bonded_sites<'py>(&self,t:f64,rho:f64,x: &Bound<'py, PyArray1<f64>>)->Bound<'py, PyArray1<f64>>{
 
         let assoc=&self.0;
@@ -24,6 +46,16 @@ impl PyAssociation {
 
     }
     
+    /// Get the transformation matrix T.
+    /// 
+    /// Row's lenght is the number of associative componentes 'n',
+    /// Column's lenght is the number of distinctive sites 'NS'
+    /// 
+    /// Each element indicates if component i (row) has site k (column)
+    /// 
+    /// Returns
+    /// -------
+    /// T matrix
     fn get_tmat<'py>(&self,py: Python<'py>)->Bound<'py, PyArray2<f64>>{
 
         let assoc=&self.0;
@@ -31,13 +63,38 @@ impl PyAssociation {
         tmat.into_pyarray(py)
 
     }
-    // fn get_fmap<'py>(&self,py: Python<'py>)->Bound<'py, PyArray1<f64>>{
+    /// Get the map F.
+    /// 
+    /// Map's size is the number of distinctive sites (NS) in mixture.
+    /// 
+    /// At the k position in F[k], it's returned a tuple (j,i):
+    /// 
+    /// - j is the type of the site (A,B or C),
+    /// - i is the owner of the site.
+    /// 
+    /// The map is useful to determine in the X which is the site's owner at k position.
+    /// 
+    /// Returns
+    /// -------
+    /// T matrix
+    fn get_fmap<'py>(&self,py: Python<'py>)->Bound<'py,PyTuple>{
 
-    //     let assoc=&self.0;
-    //     // assoc.parameters.f.clone().into_pyarray(py)
+        let assoc=&self.0;
+        let sites:Vec<(usize,usize)>=assoc.
+        parameters.
+        f.clone().
+        iter().map(|s|s.clone().into())
+        .collect(); 
 
-    // }
+        let tup=PyTuple::new(py,sites).unwrap();
+        tup
+    }
 
+    /// Get array (lenght 'n') with indices of all associative components in the mixture.
+    /// 
+    /// Returns
+    /// -------
+    /// nassoc array
     fn get_nassoc<'py>(&self,py: Python<'py>)->Bound<'py, PyArray1<usize>>{
 
         let assoc=&self.0;

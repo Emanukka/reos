@@ -38,7 +38,17 @@ impl Site {
             Self::C(_)=>C,
         }
     }
+
 }
+
+impl From<Site> for (usize,usize) {
+
+    fn from(value: Site) -> Self {
+        
+        (value.t(),value.i())
+    }
+}
+
 
 pub const SITES:[usize;3]=[A,B,C];
 

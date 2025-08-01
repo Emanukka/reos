@@ -24,6 +24,17 @@ pub struct PyEquationOfState( pub Arc<EquationOfState<ResidualModel>> );
 #[pymethods]
 impl PyEquationOfState {
 
+
+    /// A CPA Equation Of State.
+    /// 
+    /// Parameters
+    /// ----------
+    /// 
+    /// parameters : CPAParameters object
+    /// 
+    /// Returns
+    /// -------
+    /// CPA Equation Of State
     #[staticmethod]
     pub fn cpa(parameters: Bound<'_,PyCpaParameters>)->PyResult<Self>{
 
@@ -43,7 +54,14 @@ impl PyEquationOfState {
         )
     }
 
-    
+    /// Returns the Association contribution object of EOS.
+    /// 
+    /// The object returned can calculate associative properties
+    /// from the properties converged in the 'State initialization'
+    /// e.g: calculate the fraction of non-bonded sites X
+    /// 
+    /// Warning! If the EoS doens't have an associative contribution,
+    /// an error will be thrown
     fn get_association(&self)->PyResult<PyAssociation>{
 
         let residual=&self.0.residual;

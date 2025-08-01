@@ -1,4 +1,3 @@
-
 #%%
 
 
@@ -6,28 +5,28 @@ from reos.reos  import EquationOfState,State,CPAParameters,PhaseEquilibrium,Cubi
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
-from aux.parameters import *
-from aux.vle_functions import *
-from aux.data import *
+from auxiliary_functions.parameters import *
+from auxiliary_functions.vle_functions import *
+from auxiliary_functions.data import *
 
-plt.rcParams.update({
-    'font.family': 'serif',                     
-    'font.size': 12,                            
-    'axes.labelsize': 14,                       
-    'axes.titlesize': 14,                       
-    'xtick.direction': 'in',                    
-    'ytick.direction': 'in',
-    'xtick.major.size': 5,                      
-    'ytick.major.size': 5,
-    'xtick.minor.size': 3,                      
-    'ytick.minor.size': 3,
-    'xtick.top': True,                          
-    'ytick.right': True,                        
-    'axes.spines.top': True,                    
-    'axes.spines.right': True,
-    'figure.figsize': (6, 4),                   
-    'savefig.dpi': 300,                         
-})
+# plt.rcParams.update({
+#     'font.family': 'serif',                     
+#     'font.size': 12,                            
+#     'axes.labelsize': 14,                       
+#     'axes.titlesize': 14,                       
+#     'xtick.direction': 'in',                    
+#     'ytick.direction': 'in',
+#     'xtick.major.size': 5,                      
+#     'ytick.major.size': 5,
+#     'xtick.minor.size': 3,                      
+#     'ytick.minor.size': 3,
+#     'xtick.top': True,                          
+#     'ytick.right': True,                        
+#     'axes.spines.top': True,                    
+#     'axes.spines.right': True,
+#     'figure.figsize': (6, 4),                   
+#     'savefig.dpi': 300,                         
+# })
 
 
 
