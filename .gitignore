@@ -3,3 +3,5 @@ output.txt
 Cargo.lock
 **/Cargo.lock
 **/dbg
+**/plots
+**/__pycache__

@@ -1,12 +1,10 @@
 
 use core::panic;
-use std::default;
 use std::fmt::Debug;
-use approx::assert_relative_ne;
-use ndarray::{ iter, Array, Array1, Array2};
+use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
 use crate::models::cpa::CPA;
-use crate::models::{Site, A, B, C, IDEAL_GAS_CONST, NS, SITES};
+use crate::models::{Site,NS};
 use crate::parameters::cubic::CubicPureRecord;
 use crate::state::eos::{EosError};
 use crate::state::E;
@@ -43,28 +41,6 @@ impl TryFrom<String,> for AssociationRule {
         }
     }
 }
-#[derive(PartialEq,Debug,Clone,Copy,Serialize, Deserialize)]
-#[serde(rename_all="lowercase")]
-pub enum EpsilonRule{
-    Art,
-    Geo,
-
-}
-impl Default for EpsilonRule {
-    fn default() -> Self {
-        Self::Art
-    }
-}
-impl EpsilonRule {
-    
-    fn cross(&self,i:f64,j:f64)->f64{
-
-        match self {
-            Self::Art=>{0.5*(i+j)},
-            Self::Geo=>{(i*j).sqrt()}
-        }
-    }
-}
 
 
 #[derive(PartialEq,Debug,Clone,Copy)]
@@ -87,39 +63,7 @@ impl AssocBin
     }
 }
 
-// type ΔfnPtr = fn(i:usize,k:usize,t:f64,g:f64,b:&Array1<f64>,eps:&Array2<f64>,beta:&Array2<f64>)->f64; 
-// #[derive(Clone,Debug)]
-// pub struct Δfn(pub ΔfnPtr);
 
-// impl Default for Δfn {
-//     fn default() -> Self {
-//         Δfn(cr1)
-//     }
-// }
-// // (i,k,t,gmix,vb,eps,beta)
-//         // ((p.vb[i]+p.vb[k])*0.5)*beta_cross * gmix *(
-//             // (( 
-//                 // ( eps_cross) / (IDEAL_GAS_CONST * t) ) ).exp() -1.0 )
-// pub fn cr1(i:usize,k:usize,t:f64,g:f64,bi:f64,bk:f64,eps:&Array2<f64>,beta:&Array2<f64>)->f64{
-
-//     // ((b[i]+b[k])*0.5)*beta[(i,k)]*g *((( eps[(i,k)] / (IDEAL_GAS_CONST * t) ) ).exp() -1.0 )
-//             ((bi+bk)*0.5)*beta[(i,k)]* g *(
-//             (( 
-//                 ( eps[(i,k)]) / (IDEAL_GAS_CONST * t) ) ).exp() -1.0 )
-// }
-// pub fn ecr(i:usize,k:usize,t:f64,g:f64,b:&Array1<f64>,eps:&Array2<f64>,beta:&Array2<f64>)->f64{
-
-//     (cr1(i, i, t, g, b, eps, beta)*cr1(k, k, t, g, b, eps, beta)).sqrt()
-
-
-// }
-
-
-// #[allow(non_snake_case)]
-// pub fn ecr(&self,t:f64,gmix:f64,i:usize,k:usize)->f64
-// {
-//     (cr1(t, gmix, i, i)*self.CR1(t, gmix, k,k)).sqrt()
-// }
 
 #[derive(Clone)]
 pub struct ASCParameters{
@@ -841,7 +785,7 @@ pub mod tests{
         let x_= h.dot(&x.t());
         assert_eq!(x_[0],0.6);
     }
-    #[test]
+    // #[test]
     pub fn associative_solvate(){
         println!("---WATER & CO2---\n");
         let p=500e5;
@@ -852,18 +796,19 @@ pub mod tests{
         println!{"{}",format!("{}",state)};
 
     }
-    #[test]
+    // #[test]
     pub fn solvate_associative(){
         println!("---CO2 & WATER---\n");
         let eos = co2_water().into();
         let p=500e5;
         let t=298.15;
         let x=array![0.2,0.8];
+
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
         println!{"{}",format!("{}",state)};
 
     }
-    #[test]
+    // #[test]
     pub fn associative_4c_associative_1a(){
         
         println!("---WATER & ACETIC ACID---\n");

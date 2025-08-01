@@ -1,11 +1,9 @@
-use std::cell::RefCell;
 
-use ndarray::{array, Array, Array1, Array2, ArrayBase, Axis, CowArray, Dim};
-use crate::models::{A, B, C, SITES};
-use crate::parameters::association::{ ASCParameters, AssociationRule, W};
+use ndarray::{Array1, Array2};
+use crate::parameters::association::{ ASCParameters, AssociationRule};
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EosResult};
-use super::{IDEAL_GAS_CONST,NS};
+use super::{IDEAL_GAS_CONST};
 
 
 
@@ -31,7 +29,7 @@ pub struct Associative{
 //             data:Array2::<f64>::from_elem((NS,ncomp),0.2),
 //             rho
 //         }
-//     }
+//     }a
 //     pub fn change_coordinate(&mut self,rho:f64,vb:&Array1<f64>,x:&Array1<f64>){
         
 //         let rhomax=1.0/vb.dot(x);

@@ -5,7 +5,7 @@ use std::fs::File;
 
 use serde::{Deserialize, Serialize};
 
-use crate::parameters::association::{AssociationPureRecord, AssociationRule, EpsilonRule};
+use crate::parameters::association::{AssociationPureRecord, AssociationRule};
 use crate::parameters::cubic::CubicPureRecord;
 
 
@@ -122,7 +122,7 @@ pub enum AssociativeBinary{
     ///Normal:Interaction between two self-associative componentes.
     /// $a$ and $b$ are binary parameters: $\varepsilon^{\text{cross}} = \sqrt{\varepsilon_i \varepsilon_j} (1 - l_{ij})$, where $l_{ij} = aT + b$
     /// if $a=0$, then $l_{ij}=b=cte$
-    Normal{rule:AssociationRule,eps_rule:Option<EpsilonRule>,a:Option<f64>,b:Option<f64>},
+    Normal{rule:AssociationRule,a:Option<f64>,b:Option<f64>},
 
     Solvation{rule:AssociationRule,epsilon_cross:Option<f64>,beta_cross:f64}
 }

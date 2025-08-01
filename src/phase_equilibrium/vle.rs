@@ -137,7 +137,7 @@ pub mod tests{
     use std::sync::Arc;
 
     use approx::assert_relative_eq;
-    use ndarray::{linspace, Array1};
+    use ndarray::Array1;
     use crate::parameters::association::octane_acoh;
     #[allow(unused_imports)]
     use crate::{models::{associative::Associative, cpa::CPA, cubic::Cubic}, parameters::{association::{acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}, Parameters}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};

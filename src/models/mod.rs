@@ -1,5 +1,4 @@
 use core::fmt;
-use std::ops::Mul;
 
 pub mod associative;
 pub mod cubic;

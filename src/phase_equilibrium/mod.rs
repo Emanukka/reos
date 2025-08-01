@@ -7,9 +7,6 @@ pub mod stability;
 pub mod vle;
 
 
-const XW: f64 = 0.999999;
-const YWGUESS:f64 = 2000e-6;
-
 //Contém EOS
 // Antoine Parameters
 pub struct PhaseEquilibrium<R>{

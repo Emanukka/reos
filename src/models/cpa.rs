@@ -2,11 +2,10 @@ use core::f64;
 use ndarray::Array1;
 use crate::models::associative::Associative;
 use crate::models::cubic::Cubic;
-use crate::parameters::association::{ASCParameters, AssociationPureRecord, AssociationRule};
+use crate::parameters::association::{ASCParameters, AssociationPureRecord};
 use crate::parameters::cubic::{CubicParameters, CubicPureRecord};
 use crate::residual::Residual;
 use crate::state::eos::EosResult;
-use crate::state::E;
 
 
 pub struct CPA{
@@ -54,14 +53,14 @@ impl Residual for CPA {
 
 #[cfg(test)]
 mod tests {
-    use std::{sync::Arc, time::Instant};
+    use std::sync::Arc;
 
     pub use approx::assert_relative_eq;
-    use nalgebra::{DMatrix, DVector, Vector1};
+    
     // use nalgebra::{DMatrix, DVector};
-    use ndarray::{array, Array1, Array2, ShapeBuilder};
+    use ndarray::{array, Array1};
 
-    use crate::{ parameters::association::{methanol_2b, methanol_3b, multiple_water, water_acetic_acid, water_co2}, state::{density_solver::DensityInitialization, State}};
+    use crate::{ parameters::association::{methanol_2b, methanol_3b, water_acetic_acid, water_co2}, state::{density_solver::DensityInitialization, State}};
 
     // use ndarray_linalg::{lapack::solve, solve, Solve};
 
