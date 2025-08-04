@@ -1,9 +1,11 @@
-use crate::parameters::cubic::CubicParameters;
+use crate::models::cubic::parameters::CubicParameters;
 use crate::state::eos::EosResult;
 use crate::residual::Residual;
 use ndarray::Array1;
 use ndarray::Array2;
 use crate::models::IDEAL_GAS_CONST as R;
+
+pub mod parameters;
 #[derive(Clone)]
 pub struct Cubic{
     pub parameters:CubicParameters,

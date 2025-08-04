@@ -1,6 +1,7 @@
 use ndarray::Array1;
 
-use crate::{models::{associative::Associative, cpa::CPA}, state::eos::EosResult};
+use crate::state::eos::EosResult;
+
 
 pub trait Residual{
 

@@ -3,12 +3,15 @@ use core::panic;
 use std::fmt::Debug;
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
-use crate::models::cpa::CPA;
-use crate::models::{Site,NS};
-use crate::parameters::cubic::CubicPureRecord;
+use crate::models::cpa::sites::{Site, NS};
+use crate::models::cubic::parameters::CubicPureRecord;
 use crate::state::eos::{EosError};
 use crate::state::E;
 pub const W:[[f64;3];3]=[[0.0,1.0,1.0],[1.0,0.0,1.0],[1.0,1.0,1.0]];
+
+use crate::models::cpa::{CPA};
+
+
 
 #[derive(PartialEq,Debug,Clone,Copy,Serialize, Deserialize)]
 #[serde(rename_all="lowercase")]
@@ -85,6 +88,7 @@ pub struct ASCParameters{
     pub tmat:Array2<f64>,
     /// N x nAssoc (x'=Hx^T)
     pub hmat:Array2<f64>,
+
     
 
 
@@ -772,9 +776,9 @@ pub mod tests{
     use std::sync::Arc;
 
     use approx::assert_relative_eq;
-    use ndarray::{array, linalg::Dot, Array1};
+    use ndarray::{array, linalg::Dot};
 
-    use crate::{parameters::association::{acetic_acid_water, acoh_octane, co2_water, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2, water_octane_acetic_acid}, state::{density_solver::DensityInitialization, S}};
+    use crate::{models::cpa::parameters::{acetic_acid_water, acoh_octane, co2_water, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2, water_octane_acetic_acid}, state::{density_solver::DensityInitialization, S}};
     
     pub fn map_assoc(){
         let eos = octane_acoh();

@@ -5,7 +5,12 @@ use ndarray::Array1;
 use crate::state::{eos::EosError,Residual, State, StateResult, E};
 
 
+#[derive(Clone, Copy)]
 
+pub enum Phase{
+    Vapor,
+    Liquid
+}
 // guess vai ser um tipo especifico (vapor ou liquido)
 
 #[derive(Clone, Copy)]

@@ -9,7 +9,7 @@ name = "reos"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.24.0"
+pyo3 = {version="0.24.0",features=["multiple-pymethods"]}
 numpy = "0.24"
 
 reos= {path="../../."}

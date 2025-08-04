@@ -10,8 +10,6 @@ use crate::py_eos::{PyEquationOfState,py_residual::ResidualModel};
 
 
 
-
-
 /// A Thermodynamic State 
 /// 
 /// Units in SI.
@@ -174,6 +172,53 @@ impl PyState {
     /// float
     pub fn volume(&self) -> f64 {
         1./self.0.rho
+    }
+    /// Return density.
+    ///
+    /// Returns
+    /// -------
+    /// float
+    pub fn density(&self) -> f64 {
+        self.0.rho
+    }
+
+    /// Return the mininum of TPD and the incipient phase state.
+    ///
+    /// Parameters
+    /// -------
+    /// 
+    /// xphase: 'liquid','vapor'
+    ///     incipiente phase 
+    /// 
+    /// xguess: numpy.ndarray[float] 
+    ///     initial guess for the xphase's composition 
+    ///     
+    /// 
+    /// Returns
+    /// -------
+    /// ΔG formation of the incipient phase from mother phase State at (T,P,z) condition.
+    /// and incipient phase State at (T,P,x).
+    #[pyo3(
+    text_signature = "(xphase,xguess,tol=1e-8,it_max=100)"
+    )]
+    #[pyo3(signature = (xphase,xguess,tol=1e-8,it_max=100))]
+
+    pub fn min_tpd<'py>(&self,xphase:&str,xguess:&Bound<'py, PyArray1<f64>>,tol:Option<f64>,it_max:Option<i32>)->PyResult<(f64,PyState)>{
+
+        let state=&self.0;
+        let xphase = DensityInitialization::from_str(xphase);
+        let xguess=xguess.to_owned_array();
+        if xphase.is_err(){
+            return Err(PyErr::new::<PyValueError, _>(
+                                "`density_initialization` must be 'vapor' or 'liquid'.".to_string(),
+                            ))
+        }
+
+        let (dg,new_phase)=state.min_tpd(xphase.unwrap(), xguess, tol, it_max).unwrap();
+
+        Ok(
+        (dg,PyState(new_phase))
+        )
     }
 
 

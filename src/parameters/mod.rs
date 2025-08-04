@@ -5,12 +5,9 @@ use std::fs::File;
 
 use serde::{Deserialize, Serialize};
 
-use crate::parameters::association::{AssociationPureRecord, AssociationRule};
-use crate::parameters::cubic::CubicPureRecord;
+use crate::models::cpa::parameters::{AssociationPureRecord, AssociationRule};
+use crate::models::cubic::parameters::CubicPureRecord;
 
-
-pub mod association;
-pub mod cubic;
 // use crate::eos::associative::{AssociationRule, SchemeType};
 // use crate::eos::associative::{AssociationRule, SchemeType};
 

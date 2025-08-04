@@ -5,7 +5,7 @@ use ndarray::{Array1};
 use crate::{residual::Residual, state::E};
 pub mod stability;
 pub mod vle;
-
+pub mod bubble_dew;
 
 //Contém EOS
 // Antoine Parameters
@@ -17,8 +17,8 @@ pub struct PhaseEquilibrium<R>{
 
 impl<R:Residual> PhaseEquilibrium<R> {
     
-    pub fn new(eos:Arc<E<R>>,correl:Option<Antoine>)->Self{
-        Self { eos, correl }
+    pub fn new(eos:&Arc<E<R>>,correl:Option<Antoine>)->Self{
+        Self { eos:eos.clone(), correl }
     }
 }
 // se o record foi montado em outra ordem (ou apenas uma subs da mistura tenha parametro

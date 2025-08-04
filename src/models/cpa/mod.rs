@@ -1,11 +1,19 @@
-use core::f64;
-use ndarray::Array1;
-use crate::models::associative::Associative;
-use crate::models::cubic::Cubic;
-use crate::parameters::association::{ASCParameters, AssociationPureRecord};
-use crate::parameters::cubic::{CubicParameters, CubicPureRecord};
+
+pub mod associative;
+pub mod sites;
+pub mod parameters;
+
+use crate::models::cpa::parameters::{ASCParameters, AssociationPureRecord};
+use crate::models::cubic::parameters::{CubicParameters, CubicPureRecord};
+use crate::models::{cubic::Cubic,cpa::associative::Associative};
 use crate::residual::Residual;
 use crate::state::eos::EosResult;
+use crate::state::State;
+use core::f64;
+use ndarray::Array1;
+
+
+
 
 #[derive(Clone)]
 pub struct CPA{
@@ -51,6 +59,16 @@ impl Residual for CPA {
 }
 
 
+impl State<CPA> {
+    
+    pub fn non_bonded_sites(&self)->Array1<f64> {
+
+        let (t,rho,x)=(self.t,self.rho,&self.x);
+        self.eos.residual.assoc.X_tan(t, rho, x).unwrap()
+    }
+
+}
+
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
@@ -60,7 +78,7 @@ mod tests {
     // use nalgebra::{DMatrix, DVector};
     use ndarray::{array, Array1};
 
-    use crate::{ parameters::association::{methanol_2b, methanol_3b, water_acetic_acid, water_co2}, state::{density_solver::DensityInitialization, State}};
+    use crate::{ models::cpa::parameters::{methanol_2b, methanol_3b, water_acetic_acid, water_co2}, state::{density_solver::DensityInitialization, State}};
 
     // use ndarray_linalg::{lapack::solve, solve, Solve};
 
@@ -94,8 +112,6 @@ mod tests {
         assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
 
     }
-
-
 
     #[test]
     fn cmp_metoh_3b_2b_xassoc(){
@@ -178,6 +194,37 @@ mod tests {
         // dbg!(s.rho);
         assert_relative_eq!(phi[0],cmp[0],epsilon=1e-10);
         assert_relative_eq!(phi[1],cmp[1],epsilon=1e-10);
+
+    }
+
+    #[test]
+
+    fn x_from_state(){
+
+        let p=500e5;
+        let t=298.15;
+        let x=Array1::from_vec(vec![0.5,0.5]);
+
+        let eos =water_co2().into();
+
+        let s=State::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+        
+        // let rho=1e3;
+        // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
+        // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
+        let phi: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>=s.lnphi().unwrap().exp();
+
+        let xasc=s.non_bonded_sites();
+
+
+        println!("X=\n{}",xasc);
+        // println!("K=\n{}",kmat);
+        // println!("phi={}",phi);
+        let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
+
+        assert_relative_eq!(phi[0],phi_cmp[0],epsilon=1e-8);
+        assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
+
 
     }
 

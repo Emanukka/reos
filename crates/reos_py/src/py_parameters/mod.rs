@@ -1,10 +1,10 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use reos::parameters::association::{ASCParameters, AssociationRule};
-use reos::parameters::cubic::CubicParameters;
-
+use reos::models::cpa::parameters::ASCParameters;
+use reos::models::cubic::parameters::CubicParameters;
+// use reos::models::{cpa::}
 use crate::py_parameters::pyrecords::{PyAssocRecord, PyCubicRecord};
-
+use reos::models::cpa::parameters::AssociationRule;
 pub mod pyrecords;
 
 #[derive(Clone)]

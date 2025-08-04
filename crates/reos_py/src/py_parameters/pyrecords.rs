@@ -1,5 +1,6 @@
 use pyo3::{pyclass, pyclass_init, pymethods};
-use reos::parameters::{association::AssociationPureRecord, cubic::CubicPureRecord};
+use reos::models::{cpa::parameters::AssociationPureRecord, cubic::parameters::CubicPureRecord};
+
 
 
 #[derive(Clone)]

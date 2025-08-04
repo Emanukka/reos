@@ -6,7 +6,7 @@
 // - python é run-time comp.)
 // 
 
-use reos::{models::{associative::Associative, cpa::CPA}, residual::Residual, state::eos::EosResult, Array1};
+use reos::{models::cpa::{CPA,associative::Associative}, residual::Residual, state::eos::EosResult, Array1};
 
 #[derive(Clone)]
 pub enum ResidualModel{

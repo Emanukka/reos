@@ -29,8 +29,50 @@ from auxiliary_functions.data import *
 # })
 
 
+#%%
+
+class TemperatureOrPressure:
+
+  def __init__(self,x,type):
+
+    self.x=x
+    self.type=type
+    pass
 
 
+  def guess_from_antoine(self,antoine):
+
+      v=antoine
+
+      if self.type=="pressure":
+        
+          # calc T
+          tsats=np.zeros(len(v))
+
+          for (i,vec) in enumerate(v):
+
+              a,b,c=vec[0],vec[1],vec[2]
+
+              tsats[i]=b/(a-np.log10(P*1e-5))-c
+
+          return tsats
+
+      elif self.type=="temperature":
+        
+
+          psats=np.zeros(len(v))
+
+          for (i,vec) in enumerate(v):
+              a,b,c=vec[0],vec[1],vec[2]
+
+              log=a-b/(T+c)
+
+              psats[i]=(10**log)*1e5
+
+          return psats
+
+      else:
+        print("escreveu errado")
 
 #%%Testing X calculation
 pACOH=CPAParameters.from_records(
@@ -41,8 +83,6 @@ pACOH=CPAParameters.from_records(
 ACOH=EquationOfState.cpa(pACOH)
 # print(pWATER_ACETIC.as_string())
 
-peq=PhaseEquilibrium(ACOH)
-
 antoine=np.array([acoh_antoine])
 # p,y,vx=vle_diagram(T,peq,factor=1e3)
 
@@ -50,16 +90,16 @@ x=np.array([1.0])
 t=298.15
 p=1e5
 
-state_acoh=State.tpx(ACOH,t,p,x,"vapor")
+s1=State.tpx(ACOH,t,p,x,"liquid")
 
-rho=1.0/state_acoh.volume()
+rho=s1.density()
 print(rho)
 
-association_residual=ACOH.get_association()
+X=s1.non_bonded_sites()
 
-X=association_residual.non_bonded_sites(t,rho,x)
+assoc_resiudal=ACOH.get_association()
 
-print(X)
+# print(X)
 
 
 #%%

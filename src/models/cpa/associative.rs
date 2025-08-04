@@ -1,26 +1,24 @@
 
 use ndarray::{Array1, Array2};
-use crate::parameters::association::{ ASCParameters, AssociationRule};
+use crate::models::IDEAL_GAS_CONST;
+use crate::models::cpa::parameters::{ ASCParameters, AssociationRule};
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EosResult};
-use super::{IDEAL_GAS_CONST};
-
 
 
 #[derive(Clone)]
 pub struct Associative{
-    pub parameters:ASCParameters
+    pub parameters:ASCParameters,
 }
 // pub struct Associative{
 //     pub parameters:ASCParameters,
 //     pub X:RefCell< X>,
 // }
-
-// struct X{
-//     pub data:Array2<f64>,
-//     pub rho:f64,
-
-// }
+#[derive(Clone)]
+struct NonBondedSites{
+    pub data:Array1<f64>,
+    pub rho:f64,
+}
 
 // impl X {
     
@@ -49,13 +47,9 @@ pub struct Associative{
 
 impl Associative {
     
-    // pub fn new(p:ASCParameters)->Self{
-    //     let ncomp=p.ncomp;
-    //     Self{parameters:p,X:
-    //         RefCell::new(X::default(0.0, ncomp))}
-    // }
     pub fn new(p:ASCParameters)->Self{
         Self{parameters:p}
+        // Self{x:Array1::<f64>::default(p.f.len()),parameters:p}
     }
 
     pub fn set_binary(
@@ -158,6 +152,7 @@ impl Associative {
 
     #[allow(non_snake_case)]
     pub fn X_tan(&self,t:f64,rho:f64,x:&Array1<f64>)-> Result<Array1<f64>,EosError>{
+        
         let f=&self.parameters.f;
         let ns=f.len();
         let s:&Array1<f64> = &self.parameters.s;
@@ -216,6 +211,7 @@ impl Associative {
         // x_grande.data=x_assoc.clone();
 
         // println!("it={}",it);
+        // self.x=x_novo.clone();
         return Ok(x_novo);
     }
     

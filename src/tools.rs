@@ -1,4 +1,6 @@
 use std::fmt;
+
+use ndarray::Array1;
 pub struct NewtonResult{
     pub x:f64,
     pub it:i32,
@@ -31,6 +33,7 @@ impl fmt::Display for ErrorAtFindRoot {
             
         }
     }
+
 
 
 pub fn  newton<F>(f:F,x:f64,tol:Option<f64>,it_max:Option<i32>)->Result<NewtonResult,ErrorAtFindRoot>

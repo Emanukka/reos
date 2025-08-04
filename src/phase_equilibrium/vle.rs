@@ -138,9 +138,8 @@ pub mod tests{
 
     use approx::assert_relative_eq;
     use ndarray::Array1;
-    use crate::parameters::association::octane_acoh;
     #[allow(unused_imports)]
-    use crate::{models::{associative::Associative, cpa::CPA, cubic::Cubic}, parameters::{association::{acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}, Parameters}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
+    use crate::{models::{ cpa::{CPA,parameters::{octane_acoh,acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}}, cubic::Cubic}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
 
     // #[test]
     pub fn cmp_bbpy_water_acoh(){
@@ -149,7 +148,7 @@ pub mod tests{
 
         let eos = water_acetic_acid();
         let peq=PhaseEquilibrium::new(
-            Arc::new(eos),
+            &Arc::new(eos),
             None);
             // Some(antoine_water_acetic_acid()));
         //State Variables
@@ -174,7 +173,7 @@ pub mod tests{
         println!("bbpy-acoh-octane");
         let eos = acoh_octane();
         let peq=PhaseEquilibrium::new(
-            Arc::new(eos),
+            &Arc::new(eos),
             None);
         //State Variables
         let t=343.15;
@@ -199,7 +198,7 @@ pub mod tests{
         println!("bbpy-octane-acoh");
         let eos = octane_acoh();
         let peq=PhaseEquilibrium::new(
-            Arc::new(eos),
+            &Arc::new(eos),
             None);
         //State Variables
         let t=343.15;

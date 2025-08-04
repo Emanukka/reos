@@ -18,7 +18,7 @@ impl PyPhaseEquilibrium {
         let eos:PyEquationOfState=eos.extract()?;
         Ok(
         PyPhaseEquilibrium(
-        PhaseEquilibrium::new(eos.0, None)))
+        PhaseEquilibrium::new(&eos.0, None)))
     }
 
 

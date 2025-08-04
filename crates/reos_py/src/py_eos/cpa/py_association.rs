@@ -1,6 +1,8 @@
 use numpy::{array, IntoPyArray, PyArray, PyArray1, PyArray2, PyArrayMethods};
 use pyo3::{exceptions::PyTypeError, pyclass, pymethods, types::PyTuple, Bound, Py, PyErr, PyResult, Python};
-use reos::{models::associative::Associative, Array1};
+// use reos::{models::associative::Associative, Array1};
+use reos::models::cpa::associative::Associative;
+
 
 use crate::py_eos::py_residual::ResidualModel;
 
@@ -14,37 +16,37 @@ pub struct  PyAssociation(pub Associative);
 impl PyAssociation {
     
 
-    /// Get the fraction of non-bonded sites X.
-    /// 
-    /// Parameters
-    /// ----------
-    /// 
-    /// t: f64
-    ///    Temperature
-    /// 
-    /// rho: f64
-    ///    Molar Density
-    /// 
-    /// x : numpy.ndarray[float]
-    ///     Molar fraction of each component.
-    /// 
-    /// Returns
-    /// -------
-    /// Fraction of non-bonded sites X as np.ndarray
-    #[pyo3(
-    text_signature = "(t,rho,x)"
-    )]
-    #[pyo3(signature = (t,rho,x))]
-    fn non_bonded_sites<'py>(&self,t:f64,rho:f64,x: &Bound<'py, PyArray1<f64>>)->Bound<'py, PyArray1<f64>>{
+    // /// Get the fraction of non-bonded sites X.
+    // /// 
+    // /// Parameters
+    // /// ----------
+    // /// 
+    // /// t: f64
+    // ///    Temperature
+    // /// 
+    // /// rho: f64
+    // ///    Molar Density
+    // /// 
+    // /// x : numpy.ndarray[float]
+    // ///     Molar fraction of each component.
+    // /// 
+    // /// Returns
+    // /// -------
+    // /// Fraction of non-bonded sites X as np.ndarray
+    // #[pyo3(
+    // text_signature = "(t,rho,x)"
+    // )]
+    // #[pyo3(signature = (t,rho,x))]
+    // fn non_bonded_sites<'py>(&self,t:f64,rho:f64,x: &Bound<'py, PyArray1<f64>>)->Bound<'py, PyArray1<f64>>{
 
-        let assoc=&self.0;
-        let token=x.py();
+    //     let assoc=&self.0;
+    //     let token=x.py();
 
-        let x=x.to_owned_array();
-        let x=assoc.X_tan(t, rho, &x);
-        x.unwrap().into_pyarray(token)
+    //     let x=x.to_owned_array();
+    //     let x=assoc.X_tan(t, rho, &x);
+    //     x.unwrap().into_pyarray(token)
 
-    }
+    // }
     
     /// Get the transformation matrix T.
     /// 
