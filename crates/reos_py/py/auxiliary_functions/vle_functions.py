@@ -3,161 +3,153 @@ from auxiliary_functions import *
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import os
-def vle_diagram(T,phase_eq,N=100,factor=1e5):
-  vx=np.linspace(0.00001,0.9999,N)
-  calc_p=np.zeros_like(vx)
-  calc_vy=np.zeros_like(vx)
+def bubble_diagram(
 
-  for i in range(len(vx)):
+    VAR,
+    LIQUID,
+    VAPOR,
+    x_figsize=5,
+    y_figsize=5,
+    y_inf=None,
+    y_sup=None,
+    x_inf=0.0,
+    x_sup=1.0,
+    x_label="",
+    y_label="",
+    title="",
+    exp_data=None,
+    save_fig=None,
+    plot_dir="plots",
+    factor=1.0):
 
-      try:
-        x=np.array([vx[i],1-vx[i]])
-        # p,y,*_=BubblePy(eos,T,x,guess_p,guess_y) #calculado em Pa
-        p,y=phase_eq.bbpy(T,x,tol_p=1e-6,tol_y=1e-6)
-        # print(p)
-        calc_p[i]=p/factor #armazena em bar
-        calc_vy[i]=y[0] #composição de acido acetico
+  """
+  Calculate VAR,LIQUID,VAPOR using linspace_bubble_(t or p), and use the values inside this function
 
-      except Exception as e:
-        print(e)
-        continue
+  antoine: np.ndarray[[A1,B1,C1],[A2,B2,C2],...[AN,BN,CN]]
 
-  return [calc_p,calc_vy,vx]
+  """
 
-def get_bbp(EOS,T,antoine,factor=1e3,N_points=100):
+  VAR=VAR/factor
+  N=len(VAR)
+  vz=np.zeros_like(VAR)
+  vy=np.zeros_like(VAR)
 
-  peq=PhaseEquilibrium(EOS)
-  linspaceZ=np.linspace(0.00001,0.9999,N_points)
-  PBOL=np.zeros_like(linspaceZ)
-  XPHASE=np.zeros_like(linspaceZ)
-  # XASCL=np.zeros_like(linspaceZ,dtype=object)
-  # XASCV=np.zeros_like(linspaceZ,dtype=object)
-  MAE=np.zeros_like(linspaceZ,dtype=object)
-  FILHA=np.zeros_like(linspaceZ,dtype=object)
+  for i,vapor in enumerate(VAPOR):
+    
+    y1=vapor.composition()[0]
+    vy[i]=y1
+  for i,liquid in enumerate(LIQUID):
+    z1=liquid.composition()[0]
 
-  tol=1e-6
-  for (i,z1) in enumerate(linspaceZ):
+    vz[i]=z1
 
-    try:
-      z=np.array([z1,1-z1])
-      # print(z)
+  plot_dir=""
+  if (y_sup==None) and (y_inf==None):
 
-      # print(z)
-      pcalc,w1=tpd_root_("t",T,z,"vapor",peq ,antoine,tol)
+    y_inf=np.min(VAR)*0.5
+    y_sup=np.max(VAR)*1.5
+  # print(y_inf,y_sup)
 
-      MAE[i]=State.tpx(EOS,T,pcalc,z,"liquid")
+  if exp_data!=None:
+    xorv,orv,xbol,bol=exp_data
 
-      y=np.array( [w1,1-w1] )
-      FILHA[i]=State.tpx(EOS,T,pcalc,y,"vapor")
+    plt.figure(figsize=(x_figsize, y_figsize))
+    plt.xlim(-0.01,1.01)
+    plt.ylim(y_inf,y_sup)
 
-      PBOL[i]=pcalc/factor
-      XPHASE[i]=w1
+    # Bolha
+    plt.plot(vy,VAR,color='black')
+    plt.scatter(xorv,orv,color='black')
+    # Orvalho 
+    plt.plot(vz, VAR,color='black')
+    plt.scatter(xbol,bol,color='black')
 
-    except Exception as e:
-      print(e)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    
+    if save_fig:
+      os.makedirs(plot_dir, exist_ok=True)
 
-  return PBOL,linspaceZ,XPHASE,MAE,FILHA
+      filename = f"{title}.png"
+      filepath = os.path.join(plot_dir, filename)
+      plt.savefig(filepath)
 
-def get_bbt(EOS,P,antoine,N_points=100):
+    plt.show()
+  else:
 
-  peq=PhaseEquilibrium(EOS)
-  Z=np.linspace(0.00001,0.9999,N_points)
+    plt.figure(figsize=(x_figsize, y_figsize))
+    plt.xlim(-0.01,1.01)
+    plt.ylim(y_inf,y_sup)
 
-  TBOL=np.zeros_like(Z)
-  XPHASE=np.zeros_like(Z)
-  # XASCL=np.zeros_like(linspaceZ,dtype=object)
-  # XASCV=np.zeros_like(linspaceZ,dtype=object)
-  MAE=np.zeros_like(Z,dtype=object)
-  FILHA=np.zeros_like(Z,dtype=object)
+    plt.plot(vy,VAR,color='black')
+    plt.plot(vz, VAR,color='black')
 
-  tol=1e-6
-  for (i,z1) in enumerate(Z):
 
-    try:
-      z=np.array([z1,1-z1])
-      # print(z)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    if save_fig:
+      os.makedirs(plot_dir, exist_ok=True)
 
-      # print(z)
-      tcalc,w1=tpd_root_("p",P,z,"vapor",peq ,antoine,tol)
-
-      state_mae=State.tpx(EOS,tcalc,P,z,"liquid")
-      MAE[i]= 1.0/state_mae.volume()
-
-      w=np.array( [w1,1-w1] )
-
-      state_filha=State.tpx(EOS,tcalc,P,w,"vapor")
-      FILHA[i]=1.0/state_filha.volume()
-
-      TBOL[i]=tcalc
-      XPHASE[i]=w1
-
-    except Exception as e:
-      print(e)
-      continue
-
-  return TBOL,Z,XPHASE,MAE,FILHA
-
-def get_orvt(EOS,P,antoine,N_points=100):
-
-  peq=PhaseEquilibrium(EOS)
-  Z=np.linspace(0.00001,0.9999,N_points)
-
-  TORV=np.zeros_like(Z)
-  XPHASE=np.zeros_like(Z)
-  # XASCL=np.zeros_like(linspaceZ,dtype=object)
-  # XASCV=np.zeros_like(linspaceZ,dtype=object)
-  MAE=np.zeros_like(Z,dtype=object)
-  FILHA=np.zeros_like(Z,dtype=object)
-
-  tol=1e-6
-  for (i,z1) in enumerate(Z):
-
-    try:
-      z=np.array([z1,1-z1])
-      # print(z)
-
-      # print(z)
-      tcalc,w1=tpd_root_("p",P,z,"liquid",peq ,antoine,tol)
-
-      state_mae=State.tpx(EOS,tcalc,P,z,"vapor")
-      rhoV=1.0/state_mae.volume()
-      FILHA[i]=rhoV
-
-      w=np.array( [w1,1-w1] )
-
-      state_filha=State.tpx(EOS,tcalc,P,w,"liquid")
-      rhoL=1.0/state_filha.volume()
-      FILHA[i]=rhoL
-      TORV[i]=tcalc
-      XPHASE[i]=w1
-
-    except Exception as e:
-      print(e)
-      continue
+      filename = f"{title}.png"
+      filepath = os.path.join(plot_dir, filename)
+      plt.savefig(filepath)
       
-  return TORV,Z,XPHASE,MAE,FILHA
 
-def calc_X(EOS,T,RHO,X1):
-
-
-  XASC=np.zeros_like(RHO,dtype=object)
-  association_residual=EOS.get_association()
-
-  for (i,rho) in enumerate(RHO):
-
-    try:
+  # return XASC
 
 
-      z=np.array([X1[i],1-X1[i]])
+def linspace_bubble_p(eos,t,antoine,N=100):
 
-      X=association_residual.non_bonded_sites(T[i],rho,z)
-      XASC[i]=X*1   
+  """
+    return PRES,LIQUID,VAPOR
 
-    except Exception as e:
-      print(e)
+  """
 
-  return XASC
+  # Composiçaõ do comp1
+  vz=np.linspace(0.00001,0.9999,N)
+  PRES=np.zeros_like(vz)
 
+  LIQUID=np.zeros_like(vz,dtype=object)
+  # print(LIQUID)
+  VAPOR=np.zeros_like(vz,dtype=object)
+  # print(VAPOR)
+  
+
+  for (i,z1) in enumerate(vz):
+
+    z=np.array([z1,1.0-z1])
+    liquid_phase,vapor_phase=bubble_p(eos,t,z,antoine)
+    PRES[i]=liquid_phase.pressure()
+    LIQUID[i]=liquid_phase 
+    VAPOR[i]=vapor_phase 
+
+
+  return PRES,LIQUID,VAPOR
+
+def linspace_bubble_t(eos,p,antoine,N=100):
+
+  vz=np.linspace(0.00001,0.9999,N)
+  TEMP=np.zeros_like(vz)
+  LIQUID=np.zeros_like(vz,dtype=object)
+  VAPOR=np.zeros_like(vz,dtype=object)
+
+  for (i,z1) in enumerate(vz):
+
+    z=np.array([z1,1.0-z1])
+
+    liquid_phase,vapor_phase=bubble_t(eos,p,z,antoine)
+    TEMP[i]=liquid_phase.temperature()
+    LIQUID[i]=liquid_phase 
+    VAPOR[i]=vapor_phase 
+
+
+  return TEMP,LIQUID,VAPOR
 def VLE_DIAGRAM(p_or_t,
                 eos,antoine,
                 y_label,
@@ -196,31 +188,32 @@ def VLE_DIAGRAM(p_or_t,
 
       # print(z)
       calc_bol,w1=tpd_root_(var_str,var,z,"vapor",peq ,antoine,tol)
-
+      BOL[i]=calc_bol/factor
+      XPHASE[i]=w1
+      
       #novo calculo
       #dado T,P,x, calcular XASC
-      t=var
-      p=calc_bol
-      state_mae=State.tpx(EOS,t,p,z,"liquid")
-      rho=1.0/state_mae.volume()
-      association_residual=EOS.get_association()
-      X=association_residual.non_bonded_sites(t,rho,z)
-      XASCL[i]=X*1
+      # t=var
+      # p=calc_bol
+      # state_mae=State.tpx(EOS,t,p,z,"liquid")
+      # rho=1.0/state_mae.volume()
+      # association_residual=EOS.get_association()
+      # X=association_residual.non_bonded_sites(t,rho,z)
+      # XASCL[i]=X*1
 
-      y=np.array( [w1,1-w1] )
-      state_fil=State.tpx(EOS,t,p,y,"vapor")
-      rho=1.0/state_fil.volume()
-      association_residual=EOS.get_association()
-      X=association_residual.non_bonded_sites(t,rho,y)
-      XASCV[i]=X*1      
+      # y=np.array( [w1,1-w1] )
+      # state_fil=State.tpx(EOS,t,p,y,"vapor")
+      # rho=1.0/state_fil.volume()
+      # association_residual=EOS.get_association()
+      # X=association_residual.non_bonded_sites(t,rho,y)
+      # XASCV[i]=X*1      
 
       # calc_bol,x1=tpd_root_(var_str,var,z,"vapor",peq ,antoine)
       # calc_orv=tpd_root_(var_str,var,z,"liquid",peq,antoine)
       # print('z=',z,'var=',var)
       # print('Tbol=',calc_bol)
       # print('x1=',x1)
-      BOL[i]=calc_bol/factor
-      XPHASE[i]=w1
+
 
     except Exception as e:
       print(e)
@@ -285,7 +278,7 @@ def VLE_DIAGRAM(p_or_t,
   
   
 
-  return BOL,XPHASE,linspaceZ,XASCL,XASCV
+  return BOL,XPHASE,linspaceZ
 
 def psat_antoine(T,v):
 
@@ -311,6 +304,58 @@ def tsat_antoine(P,v):
     tsats[i]=b/(a-np.log10(P*1e-5))-c
 
   return tsats
+
+
+def bubble_p(eos,t,z,antoine):
+  
+  """
+  Return np.ndarray[State(T,Pb,z),State(T,Pb,y)]
+  """
+  psat=psat_antoine(t,antoine)
+  P0=z.dot(psat)
+  yguess=(z*psat)/P0
+  def F(P):
+    
+    # print(P)
+    state_z= State.tpx(eos,t,P,z,"liquid")
+    dg,state_x=state_z.min_tpd("vapor",yguess)
+    return dg,np.array([state_z,state_x])
+
+    # F=lambda P: peq.tpd(T,P,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[0]
+    # F_return_x=lambda X: peq.tpd(T,X,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[1]
+  
+  f=lambda x: F(x)[0]
+
+  RESULT=opt.root(f,P0)
+  Pbubble=RESULT.x
+  _,states=F(Pbubble)
+  return states
+
+def bubble_t(eos,p,z,antoine):
+  
+  """
+
+  z: composition of developd phase
+  antoine: np.ndarray[[A1,B1,C1],[A2,B2,C2],...[AN,BN,CN]]
+  Return np.ndarray[State(Tb,P,z),State(Tb,P,y)]
+  """
+  tsat=tsat_antoine(p,antoine)
+  T0=z.dot(tsat)
+  yguess=(z*tsat)/T0
+
+  def F(T):
+    state_z= State.tpx(eos,T,p,z,"liquid")
+    dg,state_x=state_z.min_tpd("vapor",yguess)
+    return dg,np.array([state_z,state_x])
+
+    # F=lambda P: peq.tpd(T,P,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[0]
+    # F_return_x=lambda X: peq.tpd(T,X,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[1]
+  f=lambda x: F(x)[0]
+  
+  RESULT=opt.root(f,T0)
+  Tbubble=RESULT.x
+  _,states=F(Tbubble)
+  return states
 
 def tpd_root_(tp,
               var,

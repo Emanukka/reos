@@ -812,7 +812,7 @@ pub mod tests{
         println!{"{}",format!("{}",state)};
 
     }
-    // #[test]
+    #[test]
     pub fn associative_4c_associative_1a(){
         
         println!("---WATER & ACETIC ACID---\n");
@@ -823,6 +823,8 @@ pub mod tests{
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
         println!{"{}",format!("{}",state)};
     }
+    #[test]
+
     pub fn associative_4c_inert_associative_1a(){
         
         println!("---WATER & OCTANE & ACETIC ACID---\n");

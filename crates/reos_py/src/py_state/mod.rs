@@ -11,24 +11,6 @@ use crate::py_eos::{PyEquationOfState,py_residual::ResidualModel};
 
 
 /// A Thermodynamic State 
-/// 
-/// Units in SI.
-/// 
-/// Parameters
-/// ----------
-/// eos : EquationOfState
-///     The equation of state to use.
-/// 
-/// temperature : Kelvin
-/// 
-/// pressure : Pascal 
-/// 
-/// x : numpy.ndarray[float]
-///     Molar fraction of each component.
-/// 
-/// Returns
-/// -------
-/// State : state at (T,P,x) or (T,ρ,x)
 #[pyclass(name="State")]
 pub struct PyState(pub S<ResidualModel>);
 
@@ -146,15 +128,13 @@ impl PyState {
 
     }
 
-    /// bmix.
+    /// Return the Hard-Shere volume 'b' of the mixture.
     ///
     /// Returns
     /// -------
     /// float
     pub fn bmix(&self) -> f64 {
-        
         self.0.bmix()
-
         }
 
     /// Return Pressure.
@@ -163,7 +143,15 @@ impl PyState {
     /// -------
     /// float
     pub fn pressure(&self) -> f64 {
-        self.0.pressure().unwrap()
+        self.0.p
+    }
+    /// Return Temperature.
+    ///
+    /// Returns
+    /// -------
+    /// float
+    pub fn temperature(&self) -> f64 {
+        self.0.t
     }
     /// Return volume.
     ///
@@ -181,6 +169,17 @@ impl PyState {
     pub fn density(&self) -> f64 {
         self.0.rho
     }
+
+    /// Return the composition z of the State.
+    ///
+    /// Returns
+    /// -------
+    /// np.ndarray[float]
+    pub fn composition<'py>(&self,py:Python<'py>) -> Bound<'py, PyArray1<f64>> {
+
+        self.0.x.clone().into_pyarray(py)
+    }
+
 
     /// Return the mininum of TPD and the incipient phase state.
     ///
@@ -221,65 +220,5 @@ impl PyState {
         )
     }
 
-
-
-    // pub fn tpd<'py>(&self,xphase:&str,xguess:&Bound<'py, PyArray1<f64>>)->PyResult<f64>{
-
-    //     let xguess = xguess.to_owned_array();
-
-    //     let xphase = 
-    //     if let Ok(val)=DensityInitialization::from_str(xphase){
-    //         val
-    //     }else{
-    //         return Err(PyErr::new::<PyValueError, _>(
-    //             "xphase must be 'liquid' or 'vapor' "))
-    //     };
-        
-    //     let state=&self.0;
-    //     match state{
-    //         StateCPA::SRK(eos)=>{
-    //             match eos.tpd(xphase, xguess) {
-    //             Ok(dg)=>Ok(dg),
-
-    //             Err(e)=>Err(PyErr::new::<PyValueError, _>(
-    //                 e.to_string()))
-    //             } 
-
-    //         }
-    //         StateCPA::PR(eos)=>{
-    //             match eos.tpd(xphase, xguess) {
-    //             Ok(dg)=>Ok(dg),
-                
-    //             Err(e)=>Err(PyErr::new::<PyValueError, _>(
-    //                 e.to_string()))
-    //             }
-    //         }
- 
-    //     }
-    // }
-
-    // pub fn water_saturation(&self)->PyResult<f64>
-    // {
-    //     let state=&self.0;
-    //     match state{
-    //         StateCPA::SRK(eos)=>{
-    //         match eos.water_saturation(){
-    //             Ok(sat)=>Ok(sat),
-
-    //             Err(e)=>Err(PyErr::new::<PyValueError, _>(
-    //                 e.to_string()))
-    //         }
-
-    //         }
-    //         StateCPA::PR(eos)=>{
-    //             match eos.water_saturation(){
-    //                 Ok(sat)=>Ok(sat),
-
-    //                 Err(e)=>Err(PyErr::new::<PyValueError, _>(
-    //                     e.to_string()))
-    //             }
-    //         }
-    //     }
-    // }
 
 }

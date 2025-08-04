@@ -186,4 +186,10 @@ impl<R:Residual> State<R> {
     pub fn bmix(&self)->f64{
         self.eos.residual.bmix(&self.x)
     }
+    pub fn composition(&self)->Array1<f64>{
+        self.x.clone()
+    }
+    pub fn temperature(&self)->f64{
+        self.t
+    }
 }
