@@ -56,8 +56,11 @@ for i,t in enumerate(PRES):
     
     xascV[i]=VAPOR[i].non_bonded_sites()
 
-plt.plot(xascL,PRES/1e3)
-plt.plot(xascV,PRES/1e3)
+# plt.plot(PRES/1e3,xascL)
+# plt.plot(PRES/1e3,xascV)
+
+plt.plot([LIQUID[i].composition()[0] for i in range(500)],xascL)
+plt.plot([VAPOR[i].composition()[0] for i in range(500)],xascV)
 # plt.yscale('log')
 #%%
 
@@ -209,20 +212,20 @@ plt.plot(VAR,xascV)
 
 
 #%%
-# bubble_diagram(
-#    VAR,
-#    LIQUID,
-#    VAPOR,
-#    factor=1.0,
-#    y_figsize=2.5,
-#    x_figsize=5,
-#    y_inf=360,
-#    y_sup=420,
-#    text=f"{P/1e3}kPa",
-#    y_label="T/K",
-#    x_label=r"$x_1,y_1$",
-#    title="Propanoic Acid 1A(1) and Heptane(2)",
-#    exp_data=exp_data)
+bubble_diagram(
+   VAR,
+   LIQUID,
+   VAPOR,
+   factor=1.0,
+   y_figsize=2.5,
+   x_figsize=5,
+   y_inf=360,
+   y_sup=420,
+   text=f"{P/1e3}kPa",
+   y_label="T/K",
+   x_label=r"$x_1,y_1$",
+   title="Propanoic Acid 1A(1) and Heptane(2)",
+   exp_data=exp_data)
 
 # tsat propanoic estranho
 #%%
