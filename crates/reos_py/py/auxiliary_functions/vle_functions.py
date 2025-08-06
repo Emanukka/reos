@@ -17,7 +17,10 @@ def bubble_diagram(
     x_label="",
     y_label="",
     title="",
-    exp_data=None,
+    text="",
+    bol_linestyle="-",
+    orv_linestyle="-",
+    exp_data=[None,None,None,None],
     save_fig=None,
     plot_dir="plots",
     factor=1.0):
@@ -50,55 +53,54 @@ def bubble_diagram(
     y_sup=np.max(VAR)*1.5
   # print(y_inf,y_sup)
 
-  if exp_data!=None:
-    xorv,orv,xbol,bol=exp_data
+  xorv,orv,xbol,bol=exp_data
+  # Tamanho e limites
+  plt.figure(figsize=(x_figsize, y_figsize))
+  plt.xlim(-0.01,1.01)
+  plt.ylim(y_inf,y_sup)
 
-    plt.figure(figsize=(x_figsize, y_figsize))
-    plt.xlim(-0.01,1.01)
-    plt.ylim(y_inf,y_sup)
+  # Bolha
+  plt.plot(vy,VAR,label=text,linestyle=bol_linestyle,color='black')
 
-    # Bolha
-    plt.plot(vy,VAR,color='black')
-    plt.scatter(xorv,orv,color='black')
-    # Orvalho 
-    plt.plot(vz, VAR,color='black')
-    plt.scatter(xbol,bol,color='black')
+  plt.scatter(xorv,orv,color='black')
+  # Orvalho 
+  plt.plot(vz, VAR,linestyle=orv_linestyle,color='black')
 
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.legend()
-    plt.grid(True)
-    
-    if save_fig:
-      os.makedirs(plot_dir, exist_ok=True)
+  plt.scatter(xbol,bol,color='black')
+  plt.xlabel(x_label)
+  plt.ylabel(y_label)
+  plt.title(title)
+  plt.legend()
+  plt.grid(True)
+  
+  if save_fig:
+    os.makedirs(plot_dir, exist_ok=True)
+    filename = f"{title}.png"
+    filepath = os.path.join(plot_dir, filename)
+    plt.savefig(filepath)
+  plt.show()
 
-      filename = f"{title}.png"
-      filepath = os.path.join(plot_dir, filename)
-      plt.savefig(filepath)
+  # else:
 
-    plt.show()
-  else:
+  #   plt.figure(figsize=(x_figsize, y_figsize))
+  #   plt.xlim(-0.01,1.01)
+  #   plt.ylim(y_inf,y_sup)
 
-    plt.figure(figsize=(x_figsize, y_figsize))
-    plt.xlim(-0.01,1.01)
-    plt.ylim(y_inf,y_sup)
-
-    plt.plot(vy,VAR,color='black')
-    plt.plot(vz, VAR,color='black')
+  #   plt.plot(vy,VAR,color='black')
+  #   plt.plot(vz, VAR,color='black')
 
 
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.legend()
-    plt.grid(True)
-    if save_fig:
-      os.makedirs(plot_dir, exist_ok=True)
+  #   plt.xlabel(x_label)
+  #   plt.ylabel(y_label)
+  #   plt.title(title)
+  #   plt.legend()
+  #   plt.grid(True)
+  #   if save_fig:
+  #     os.makedirs(plot_dir, exist_ok=True)
 
-      filename = f"{title}.png"
-      filepath = os.path.join(plot_dir, filename)
-      plt.savefig(filepath)
+  #     filename = f"{title}.png"
+  #     filepath = os.path.join(plot_dir, filename)
+  #     plt.savefig(filepath)
       
 
   # return XASC
@@ -132,7 +134,7 @@ def linspace_bubble_p(eos,t,antoine,N=100):
 
   return PRES,LIQUID,VAPOR
 
-def linspace_bubble_t(eos,p,antoine,N=100):
+def linspace_bubble_t(eos,p,antoine,N=100,tol=1e-8,it_max=100):
 
   vz=np.linspace(0.00001,0.9999,N)
   TEMP=np.zeros_like(vz)
@@ -143,7 +145,7 @@ def linspace_bubble_t(eos,p,antoine,N=100):
 
     z=np.array([z1,1.0-z1])
 
-    liquid_phase,vapor_phase=bubble_t(eos,p,z,antoine)
+    liquid_phase,vapor_phase=bubble_t(eos,p,z,antoine,tol,it_max)
     TEMP[i]=liquid_phase.temperature()
     LIQUID[i]=liquid_phase 
     VAPOR[i]=vapor_phase 
@@ -306,7 +308,7 @@ def tsat_antoine(P,v):
   return tsats
 
 
-def bubble_p(eos,t,z,antoine):
+def bubble_p(eos,t,z,antoine,tol=1e-8,it_max=100):
   
   """
   Return np.ndarray[State(T,Pb,z),State(T,Pb,y)]
@@ -318,7 +320,7 @@ def bubble_p(eos,t,z,antoine):
     
     # print(P)
     state_z= State.tpx(eos,t,P,z,"liquid")
-    dg,state_x=state_z.min_tpd("vapor",yguess)
+    dg,state_x=state_z.min_tpd("vapor",yguess,tol,it_max)
     return dg,np.array([state_z,state_x])
 
     # F=lambda P: peq.tpd(T,P,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[0]
@@ -331,7 +333,7 @@ def bubble_p(eos,t,z,antoine):
   _,states=F(Pbubble)
   return states
 
-def bubble_t(eos,p,z,antoine):
+def bubble_t(eos,p,z,antoine,tol=1e-8,it_max=100):
   
   """
 
@@ -345,7 +347,7 @@ def bubble_t(eos,p,z,antoine):
 
   def F(T):
     state_z= State.tpx(eos,T,p,z,"liquid")
-    dg,state_x=state_z.min_tpd("vapor",yguess)
+    dg,state_x=state_z.min_tpd("vapor",yguess,tol,it_max)
     return dg,np.array([state_z,state_x])
 
     # F=lambda P: peq.tpd(T,P,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[0]

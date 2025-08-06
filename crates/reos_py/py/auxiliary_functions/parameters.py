@@ -31,10 +31,10 @@ c_acoh=CubicRecord(
 )
 # antes
 c_propanoic=CubicRecord(
-    a0= 1.326756,
+    a0= 1.32676,
     b=0.06406e-3,
-    c1= 0.68908,
-    tc= 612.2,
+    c1= 0.6891,
+    tc= 607.0,
 )
 c_methanol_2b=CubicRecord(
     a0= 0.40531,
