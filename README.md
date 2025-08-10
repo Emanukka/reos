@@ -30,7 +30,7 @@ This command will install reos in your machine, and you can simply import it lik
 from reos.reos import EquationOfState,State,CPAParameters,CubicRecord,AssociationRecord
 
 ```
-Otherwise, if you want to use reos inside a google colab notebook, you can use the ```reos_colab.ipynb```, where will be installed cargo and maturin, to compile the reos in a ```.wheel``` file, and finnaly import it .
+Otherwise, if you want to use reos inside a google colab notebook, you can use the ```reos_colab.ipynb``` ( located in ```/python_examples```), where will be installed cargo and maturin, to compile the reos in a ```.wheel``` file, and finnaly import it .
 
 
 ## python_examples
