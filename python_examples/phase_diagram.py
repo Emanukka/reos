@@ -7,14 +7,14 @@ import scipy.optimize as opt
 
 from auxiliary_functions.parameters import *
 from auxiliary_functions.vle_functions import *
-from auxiliary_functions.data import *
+from python_examples.auxiliary_functions.exp_data import *
 
 from auxiliary_functions.association_functions import get_non_bondend_sites_from_states
 yes_or_no=False
 plt.rcParams.update({
-    "text.usetex": True,               # Usa LaTeX
-    "font.family": "serif",            # Usa fonte serifada (como em artigos)
-    "font.serif": ["Computer Modern"], # Fonte do LaTeX padrão
+    "text.usetex": True,               
+    "font.family": "serif",            
+    "font.serif": ["Computer Modern"], 
     "axes.labelsize": 12,
     "font.size": 12,
     "legend.fontsize": 10,
@@ -42,7 +42,7 @@ exp_data=[xorv,porv,xbol,pbol]
 
 T=343.2
 
-PRES,LIQUID,VAPOR=linspace_bubble_p(ACOH_OCT,T,antoine,N=500)
+PRES,LIQUID,VAPOR=linspace_bubble_p(ACOH_OCT,T,antoine,N=100)
 
 bubble_diagram(
    PRES,
@@ -178,9 +178,7 @@ plt.legend()
 
 #%%
 for (i,s) in enumerate(sites):
-
     plt.plot(xV,XV[:,i],label=s)
-
 
 plt.title("Methanol(1) and Octanol(2) 2B+CR1  Vapor Phase") 
 plt.legend()
@@ -236,7 +234,9 @@ for (i,s) in enumerate(sites):
     plt.plot(xL,XL[:,i],label=s)
 
 
-plt.title("Methanol(1) and Octanol(2) 3B+ECR Liquid Phase") 
+plt.title("Methanol(1) and Octanol(2) 3B+ECR Liquid Phase")
+plt.ylabel("Fraction of Non-Bonded Sites")
+plt.xlabel(r"$x_1$") 
 plt.legend()
 
 #%%

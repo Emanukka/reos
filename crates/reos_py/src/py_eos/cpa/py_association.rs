@@ -1,10 +1,8 @@
-use numpy::{array, IntoPyArray, PyArray, PyArray1, PyArray2, PyArrayMethods};
-use pyo3::{exceptions::PyTypeError, pyclass, pymethods, types::PyTuple, Bound, Py, PyErr, PyResult, Python};
-// use reos::{models::associative::Associative, Array1};
+use numpy::{ IntoPyArray, PyArray1, PyArray2};
+use pyo3::{ pyclass, pymethods, types::PyTuple, Bound, Python};
 use reos::models::cpa::associative::Associative;
 
 
-use crate::py_eos::py_residual::ResidualModel;
 
 #[derive(Clone)]
 
@@ -71,14 +69,14 @@ impl PyAssociation {
     /// 
     /// At the k position in F[k], it's returned a tuple (j,i):
     /// 
-    /// - j is the type of the site (A,B or C),
+    /// - j is the type of the site (A(0),B(1) or C (2)),
     /// - i is the owner of the site.
     /// 
     /// The map is useful to determine in the X which is the site's owner at k position.
     /// 
     /// Returns
     /// -------
-    /// T matrix
+    /// F array
     fn get_fmap<'py>(&self,py: Python<'py>)->Bound<'py,PyTuple>{
 
         let assoc=&self.0;

@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 pub mod cpa;
 pub mod py_residual;
-
+pub mod cubic;
 
 use py_residual::ResidualModel;
 #[derive(Clone)]

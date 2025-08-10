@@ -1,5 +1,4 @@
-
-from auxiliary_functions import *
+from reos.reos  import EquationOfState,State,CPAParameters,PhaseEquilibrium,CubicRecord,AssociationRecord
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import os

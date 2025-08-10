@@ -1,19 +1,15 @@
 use numpy::{IntoPyArray, PyArray1};
-use pyo3::exceptions::{PyTypeError, PyValueError};
+use pyo3::exceptions::{PyTypeError};
 use pyo3::prelude::*;
-// use reos::models::associative::Associative;
 use reos::models::cpa::associative::Associative;
 
 use reos::models::cpa::CPA;
 use reos::models::cubic::{Cubic, CubicModel};
-use reos::parameters::{JsonStruct, Parameters};
 use reos::state::eos::EquationOfState;
-use reos::state::State;
 use std::sync::Arc;
 use crate::py_eos::cpa::py_association::PyAssociation;
 use crate::py_eos::py_residual::ResidualModel;
 use crate::py_eos::PyEquationOfState;
-// // use reos::residual::{Residual};
 use crate::py_parameters::PyCpaParameters;
 use crate::py_state::PyState;
 

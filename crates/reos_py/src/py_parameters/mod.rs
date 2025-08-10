@@ -86,3 +86,43 @@ impl PyCpaParameters {
 
     }
 }
+
+
+#[derive(Clone)]
+#[pyclass(name = "CubicParameters")]
+pub struct PyCubicParameters(
+    pub CubicParameters);
+
+#[pymethods]
+impl PyCubicParameters {
+
+/// Parameters
+/// ----------
+/// 
+/// List[CubicRecord],
+/// 
+/// Returns
+/// -------
+    #[staticmethod]
+    #[pyo3(
+        signature = (parameters),
+        text_signature = "(parameters)"
+    )]
+    pub fn from_records(parameters:Vec<PyCubicRecord>)->Self{
+
+        let p =CubicParameters::from_records(parameters.iter().map(|u|u.0.clone()).collect());
+        
+        Self(
+            p
+        )
+
+    }
+    #[pyo3(
+    signature = (i,j,kij_a=0.0,kij_b=0.0),
+    text_signature = "(i,j,kij_a=0.0,kij_b=0.0)",
+    )]
+
+    pub fn set_cubic_binary(&mut self,i:usize,j:usize,kij_a:f64,kij_b:f64){
+        self.0.set_binary(i, j, Some(kij_a), kij_b);
+    }
+}

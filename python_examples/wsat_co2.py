@@ -14,9 +14,9 @@ from auxiliary_functions.association_functions import *
 import os
 yes_or_no=True
 plt.rcParams.update({
-    "text.usetex": True,               # Usa LaTeX
-    "font.family": "serif",            # Usa fonte serifada (como em artigos)
-    "font.serif": ["Computer Modern"], # Fonte do LaTeX padrão
+    "text.usetex": True,               
+    "font.family": "serif",            
+    "font.serif": ["Computer Modern"], 
     "axes.labelsize": 12,
     "font.size": 12,
     "legend.fontsize": 10,
