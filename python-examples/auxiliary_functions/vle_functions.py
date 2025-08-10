@@ -46,7 +46,7 @@ def bubble_diagram(
 
     vz[i]=z1
 
-  plot_dir=""
+  plot_dir="phase_diagram_plot"
   if (y_sup==None) and (y_inf==None):
 
     y_inf=np.min(VAR)*0.5
@@ -61,12 +61,11 @@ def bubble_diagram(
 
   # Bolha
   plt.plot(vy,VAR,label=text,linestyle=bol_linestyle,color='black')
-
-  plt.scatter(xorv,orv,color='black')
+  plt.scatter(xorv,orv,marker='o',facecolors='none',edgecolors='black',)
   # Orvalho 
   plt.plot(vz, VAR,linestyle=orv_linestyle,color='black')
 
-  plt.scatter(xbol,bol,color='black')
+  plt.scatter(xbol,bol,marker='o',facecolors='none',edgecolors='black')
   plt.xlabel(x_label)
   plt.ylabel(y_label)
   plt.title(title)
@@ -79,31 +78,6 @@ def bubble_diagram(
     filepath = os.path.join(plot_dir, filename)
     plt.savefig(filepath)
   plt.show()
-
-  # else:
-
-  #   plt.figure(figsize=(x_figsize, y_figsize))
-  #   plt.xlim(-0.01,1.01)
-  #   plt.ylim(y_inf,y_sup)
-
-  #   plt.plot(vy,VAR,color='black')
-  #   plt.plot(vz, VAR,color='black')
-
-
-  #   plt.xlabel(x_label)
-  #   plt.ylabel(y_label)
-  #   plt.title(title)
-  #   plt.legend()
-  #   plt.grid(True)
-  #   if save_fig:
-  #     os.makedirs(plot_dir, exist_ok=True)
-
-  #     filename = f"{title}.png"
-  #     filepath = os.path.join(plot_dir, filename)
-  #     plt.savefig(filepath)
-      
-
-  # return XASC
 
 
 def linspace_bubble_p(eos,t,antoine,N=100):
@@ -152,160 +126,9 @@ def linspace_bubble_t(eos,p,antoine,N=100,tol=1e-8,it_max=100):
 
 
   return TEMP,LIQUID,VAPOR
-def VLE_DIAGRAM(p_or_t,
-                eos,antoine,
-                y_label,
-                x_label,
-                title,
-                exp_data=None,
-                factor=1.0,
-                y_lim=None,
-                x_figsize=5,
-                y_figsize=5,
-                save_fig=False,
-                plot_dir="plots",
-                tol=1e-6,
-                N_points=100):
-
-  '''
-  P_or_T: tupla ; ex: ("t",300) em Kelvin; ("p",500) em bar
-  xorv,orv,xbol,bol=exp_data
-  '''
-
-  var_str,var=p_or_t
-  EOS=eos
-  peq=PhaseEquilibrium(EOS)
-  # print(var_str,var)
-  linspaceZ=np.linspace(0.00001,0.9999,N_points)
-  BOL=np.zeros_like(linspaceZ)
-  XPHASE=np.zeros_like(linspaceZ)
-  XASCL=np.zeros_like(linspaceZ,dtype=object)
-  XASCV=np.zeros_like(linspaceZ,dtype=object)
-  
-  for (i,z1) in enumerate(linspaceZ):
-
-    try:
-      z=np.array([z1,1-z1])
-      # print(z)
-
-      # print(z)
-      calc_bol,w1=tpd_root_(var_str,var,z,"vapor",peq ,antoine,tol)
-      BOL[i]=calc_bol/factor
-      XPHASE[i]=w1
-      
-      #novo calculo
-      #dado T,P,x, calcular XASC
-      # t=var
-      # p=calc_bol
-      # state_mae=State.tpx(EOS,t,p,z,"liquid")
-      # rho=1.0/state_mae.volume()
-      # association_residual=EOS.get_association()
-      # X=association_residual.non_bonded_sites(t,rho,z)
-      # XASCL[i]=X*1
-
-      # y=np.array( [w1,1-w1] )
-      # state_fil=State.tpx(EOS,t,p,y,"vapor")
-      # rho=1.0/state_fil.volume()
-      # association_residual=EOS.get_association()
-      # X=association_residual.non_bonded_sites(t,rho,y)
-      # XASCV[i]=X*1      
-
-      # calc_bol,x1=tpd_root_(var_str,var,z,"vapor",peq ,antoine)
-      # calc_orv=tpd_root_(var_str,var,z,"liquid",peq,antoine)
-      # print('z=',z,'var=',var)
-      # print('Tbol=',calc_bol)
-      # print('x1=',x1)
 
 
-    except Exception as e:
-      print(e)
-    # ORV[i]=calc_orv/factor
 
-  if y_lim==None:
-    y_sup=np.max(BOL)*1.1
-    y_inf=np.min(BOL)*0.9
-  else:
-    y_sup=y_lim[1]
-    y_inf=y_lim[0]
-
-  # ORV
-  # plt.scatter(XPHASE,BOL)
-  if exp_data!=None:
-    plt.figure(figsize=(x_figsize, y_figsize))
-    plt.xlim(-0.01,1.01)
-    plt.ylim(y_inf,y_sup)
-    xorv,orv,xbol,bol=exp_data
-
-    plt.plot(XPHASE,BOL,color='black')
-    plt.scatter(xorv,orv,color='black')
-
-    plt.plot(linspaceZ, BOL,color='black')
-    plt.scatter(xbol,bol,color='black')
-
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.legend()
-    plt.grid(True)
-    if save_fig:
-      os.makedirs(plot_dir, exist_ok=True)
-
-      filename = f"{title}.png"
-      filepath = os.path.join(plot_dir, filename)
-      plt.savefig(filepath)
-
-    plt.show()
-  else:
-    plt.figure(figsize=(x_figsize, y_figsize))
-    plt.xlim(-0.01,1.01)
-    plt.ylim(y_inf,y_sup)
-    plt.plot(XPHASE,BOL,color='black')
-    # BOL
-    # plt.scatter(linspaceZ, BOL)
-    plt.plot(linspaceZ, BOL,color='black')
-
-
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
-    plt.title(title)
-    plt.legend()
-    plt.grid(True)
-    if save_fig:
-      os.makedirs(plot_dir, exist_ok=True)
-
-      filename = f"{title}.png"
-      filepath = os.path.join(plot_dir, filename)
-      plt.savefig(filepath)
-      
-  
-  
-
-  return BOL,XPHASE,linspaceZ
-
-def psat_antoine(T,v):
-
-  psats=np.zeros(len(v))
-
-  for (i,vec) in enumerate(v):
-    a,b,c=vec[0],vec[1],vec[2]
-
-    log=a-b/(T+c)
-
-    psats[i]=(10**log)*1e5
-
-  return psats
-
-def tsat_antoine(P,v):
-
-  tsats=np.zeros(len(v))
-
-  for (i,vec) in enumerate(v):
-
-    a,b,c=vec[0],vec[1],vec[2]
-
-    tsats[i]=b/(a-np.log10(P*1e-5))-c
-
-  return tsats
 
 
 def bubble_p(eos,t,z,antoine,tol=1e-8,it_max=100):
@@ -439,3 +262,27 @@ def tpd_root_(tp,
   # return (F,result[0],x[0],x0,incipient_phase_guess)
 
   # return F
+def psat_antoine(T,v):
+
+  psats=np.zeros(len(v))
+
+  for (i,vec) in enumerate(v):
+    a,b,c=vec[0],vec[1],vec[2]
+
+    log=a-b/(T+c)
+
+    psats[i]=(10**log)*1e5
+
+  return psats
+
+def tsat_antoine(P,v):
+
+  tsats=np.zeros(len(v))
+
+  for (i,vec) in enumerate(v):
+
+    a,b,c=vec[0],vec[1],vec[2]
+
+    tsats[i]=b/(a-np.log10(P*1e-5))-c
+
+  return tsats

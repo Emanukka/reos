@@ -9,6 +9,18 @@ from auxiliary_functions.parameters import *
 from auxiliary_functions.vle_functions import *
 from auxiliary_functions.data import *
 
+from auxiliary_functions.association_functions import get_non_bondend_sites_from_states
+yes_or_no=False
+plt.rcParams.update({
+    "text.usetex": True,               # Usa LaTeX
+    "font.family": "serif",            # Usa fonte serifada (como em artigos)
+    "font.serif": ["Computer Modern"], # Fonte do LaTeX padrão
+    "axes.labelsize": 12,
+    "font.size": 12,
+    "legend.fontsize": 10,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
+})
 
 #%%
 pACOH_OCT=CPAParameters.from_records(
@@ -45,9 +57,13 @@ bubble_diagram(
    title="Acetic Acid 1A(1) and Octane(2)",
    y_label="P/kPa",
    x_label=r"$x_1,y_1$",
+save_fig=yes_or_no,
+
    exp_data=exp_data)
 
 #%%
+
+    
 xascL=np.zeros_like(LIQUID,dtype=object)
 xascV=np.zeros_like(VAPOR,dtype=object)
 for i,t in enumerate(PRES):
@@ -56,8 +72,7 @@ for i,t in enumerate(PRES):
     
     xascV[i]=VAPOR[i].non_bonded_sites()
 
-# plt.plot(PRES/1e3,xascL)
-# plt.plot(PRES/1e3,xascV)
+
 
 plt.plot([LIQUID[i].composition()[0] for i in range(500)],xascL)
 plt.plot([VAPOR[i].composition()[0] for i in range(500)],xascV)
@@ -75,7 +90,6 @@ pPROPANOIC_HEPTANE.set_cubic_binary(0,1,0.0, 0.017)
 PROPANOIC_HEPTANE=EquationOfState.cpa(pPROPANOIC_HEPTANE)
 # print(pWATER_ACETIC.as_string())
 
-peq=PhaseEquilibrium(PROPANOIC_HEPTANE)
 antoine=np.array([propanoic_antoine,heptane_antoine])
 # p,y,vx=vle_diagram(T,peq,factor=1e3)
 xorv,porv=propanoic_hep["orv"]
@@ -98,6 +112,8 @@ bubble_diagram(
    y_label="P/kPa",
    x_label=r"$x_1,y_1$",
    title="Propanoic Acid(1) and Heptane",
+    save_fig=yes_or_no,
+
    exp_data=exp_data)
 
 
@@ -136,8 +152,38 @@ bubble_diagram(
    y_figsize=2.5,
    x_figsize=5,
    y_inf=300,y_sup=480,
+   save_fig=yes_or_no,
    exp_data=exp_data)
 
+#%%
+xL=[LIQUID[i].composition()[0] for i in range(100)]
+xV=[VAPOR[i].composition()[0] for i in range(100)]
+
+
+#%%
+XL= get_non_bondend_sites_from_states(LIQUID)
+XV= get_non_bondend_sites_from_states(VAPOR)
+sites=["-MeOH","+MeOH","-OcOH","+OcOH"]
+
+#%%
+
+
+for (i,s) in enumerate(sites):
+
+    plt.plot(xL,XL[:,i],label=s)
+
+
+plt.title("Methanol(1) and Octanol(2) 2B+CR1 Liquid Phase") 
+plt.legend()
+
+#%%
+for (i,s) in enumerate(sites):
+
+    plt.plot(xV,XV[:,i],label=s)
+
+
+plt.title("Methanol(1) and Octanol(2) 2B+CR1  Vapor Phase") 
+plt.legend()
 
 #%%
 antoine=np.array([metoh_antoine,octanol_antoine])
@@ -163,13 +209,91 @@ bubble_diagram(
 #    orv_linestyle="--",
 #    bol_linestyle="--",
    text=f"{P/1e3}kPa",
+   save_fig=yes_or_no,
 
    factor=1.0,
    y_figsize=2.5,
    x_figsize=5,
    y_inf=300,y_sup=480,
+   
    exp_data=exp_data)
 
+#%%
+xL=[LIQUID[i].composition()[0] for i in range(100)]
+xV=[VAPOR[i].composition()[0] for i in range(100)]
+
+
+#%%
+XL= get_non_bondend_sites_from_states(LIQUID)
+XV= get_non_bondend_sites_from_states(VAPOR)
+sites=["-MeOH","+MeOH","-OcOH","+OcOH"]
+
+#%%
+
+
+for (i,s) in enumerate(sites):
+
+    plt.plot(xL,XL[:,i],label=s)
+
+
+plt.title("Methanol(1) and Octanol(2) 3B+ECR Liquid Phase") 
+plt.legend()
+
+#%%
+for (i,s) in enumerate(sites):
+
+    plt.plot(xV,XV[:,i],label=s)
+
+
+plt.title("Methanol(1) and Octanol(2) 3B+ECR Vapor Phase") 
+plt.legend()
+
+
+#%%
+
+#%%
+METHANOL_LIQUID_NEG=[LIQUID[i].non_bonded_sites()[0] for i in range(100)]
+METHANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites()[1] for i in range(100)]
+
+# METHANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites[1] for i in range(100)]
+
+METHANOL_VAPOR_NEG=[VAPOR[i].non_bonded_sites()[0] for i in range(100)]
+METHANOL_VAPOR_POS=[VAPOR[i].non_bonded_sites()[1] for i in range(100)]
+
+
+OCTANOL_LIQUID_NEG=[LIQUID[i].non_bonded_sites()[2] for i in range(100)]
+OCTANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites()[3] for i in range(100)]
+
+# METHANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites[1] for i in range(100)]
+
+OCTANOL_VAPOR_NEG=[VAPOR[i].non_bonded_sites()[2] for i in range(100)]
+OCTANOL_VAPOR_POS=[VAPOR[i].non_bonded_sites()[3] for i in range(100)]
+
+X1=[LIQUID[i].composition()[0] for i in range(100)]
+Y1=[VAPOR[i].composition()[0] for i in range(100)]
+
+
+
+# APENS METANOL
+plt.plot(X1,METHANOL_LIQUID_NEG,label="MetOHL -")
+plt.plot(X1,METHANOL_LIQUID_POS,label="MetOHL +")
+
+plt.plot(Y1,METHANOL_VAPOR_NEG,label="MetOHV -")
+plt.plot(Y1,METHANOL_VAPOR_POS,label="MetOHV +")
+
+# plt.plot(Y1,OCTANOL_VAPOR_NEG,label="OctOH -")
+plt.legend()
+
+#%%
+# APENS OCTANOL
+plt.plot(X1,OCTANOL_LIQUID_NEG,label="OctOH -")
+plt.plot(X1,OCTANOL_LIQUID_POS,label="OctOH +")
+
+plt.plot(Y1,OCTANOL_VAPOR_NEG,label="OctOH -")
+plt.plot(Y1,OCTANOL_VAPOR_POS,label="OctOH +")
+
+# plt.plot(Y1,OCTANOL_VAPOR_NEG,label="OctOH -")
+plt.legend()
 #%%
 #Fig. 7, Application of the CPA equation of state to organic acids
 
@@ -224,6 +348,8 @@ bubble_diagram(
    text=f"{P/1e3}kPa",
    y_label="T/K",
    x_label=r"$x_1,y_1$",
+    save_fig=yes_or_no,
+
    title="Propanoic Acid 1A(1) and Heptane(2)",
    exp_data=exp_data)
 
@@ -260,45 +386,50 @@ bubble_diagram(
    text=f"{T}K",
    y_label="P/kPa",
    x_label=r"$x_1,y_1$",
+   save_fig=yes_or_no,
+
    title="Methanol 2B(1) and AcOH 1A(2) (ECR)",
    exp_data=exp_data)
 
 
-# BOL,_,linspaceZ,XASCL,XASCV=VLE_DIAGRAM(
-#     ("t",T),
-#     METHANOL_ACETIC,antoine,
-#     y_label=r"P/kPa",
-#     x_label=r"$x_1,y_1$",
-#     y_lim=[0,30],
-#     x_figsize=5,
-#     y_figsize=5,
-#     factor=1e3,
-#     exp_data=exp_data,
-#     title=r"Methanol 2B(1) and AcOH 1A(2) (ECR)",
-#     save_fig=False,
-#     N_points=100)
+#%%
 
-# #now testando modelos de grafico de X
-# XASCV=np.stack(XASCV)
-# XASCL=np.stack(XASCL)
+p=CPAParameters.from_records(
+    cubic=[c_w,c_acoh],
+    assoc=[a_w,a_acoh])
 
-# plt.figure()
-# # plt.plot(BOL,XASC)
-# # plt.plot(linspaceZ,XASCV[:,0],label="- MetOH VAP")
-# # plt.plot(linspaceZ,XASCV[:,1],label="+ MetOH VAP")
-# # plt.plot(linspaceZ,XASCV[:,2],label="+-AcOH  VAP")
+p.set_cubic_binary(0,1,0.0,-0.222)
+p.set_assoc_binary(0,1,"ecr")
+eos=EquationOfState.cpa(p)
+# print(pWATER_ACETIC.as_string())
 
-# # plt.plot(linspaceZ,XASCL[:,0],label="-MetOH LIQ")
-# # plt.plot(linspaceZ,XASCL[:,1],label="+MetOH LIQ")
-# # plt.plot(linspaceZ,XASCL[:,2],label="+-AcOH LIQ")
+# p,y,vx=vle_diagram(T,peq,factor=1e3)
 
-# plt.plot(BOL,XASCV[:,0],label="- MetOH VAP")
-# plt.plot(BOL,XASCV[:,1],label="+ MetOH VAP")
-# plt.plot(BOL,XASCV[:,2],label="+-AcOH  VAP")
-# plt.plot(BOL,XASCL[:,0],label="-MetOH LIQ")
-# plt.plot(BOL,XASCL[:,1],label="+MetOH LIQ")
-# plt.plot(BOL,XASCL[:,2],label="+-AcOH LIQ")
+antoine=np.array([water_antoine,acoh_antoine])
+xorv,porv=water_acoh["orv"]
+xbol,pbol=water_acoh["bol"]
+exp_data=[xorv,porv,xbol,pbol]
+T=313.15
 
-# plt.legend()
-# # plt.xlim(-0.01,1.01)
-# plt.ylim(-0.01,1.01)
+
+
+VAR,LIQUID,VAPOR=linspace_bubble_p(eos,T,antoine,N=100)
+
+bubble_diagram(
+   VAR,
+   LIQUID,
+   VAPOR,
+   factor=1e5,
+   y_figsize=2.5,
+   x_figsize=5,
+   y_inf=0.0,
+   y_sup=0.1,
+   text=f"{T}K",
+   y_label="P/bar",
+   x_label=r"$x_1,y_1$",
+   save_fig=yes_or_no,
+
+   title="Water 4C(1) and AcOH 1A(2) ECR",
+   exp_data=exp_data)
+
+#%%
