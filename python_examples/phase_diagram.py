@@ -7,7 +7,8 @@ import scipy.optimize as opt
 
 from auxiliary_functions.parameters import *
 from auxiliary_functions.vle_functions import *
-from python_examples.auxiliary_functions.exp_data import *
+# from python_examples.auxiliary_functions.exp_data import *
+from auxiliary_functions.exp_data import *
 
 from auxiliary_functions.association_functions import get_non_bondend_sites_from_states
 yes_or_no=False
@@ -152,7 +153,7 @@ bubble_diagram(
    y_figsize=2.5,
    x_figsize=5,
    y_inf=300,y_sup=480,
-   save_fig=yes_or_no,
+#    save_fig=yes_or_no,
    exp_data=exp_data)
 
 #%%
@@ -207,7 +208,7 @@ bubble_diagram(
 #    orv_linestyle="--",
 #    bol_linestyle="--",
    text=f"{P/1e3}kPa",
-   save_fig=yes_or_no,
+#    save_fig=yes_or_no,
 
    factor=1.0,
    y_figsize=2.5,
@@ -234,66 +235,51 @@ for (i,s) in enumerate(sites):
     plt.plot(xL,XL[:,i],label=s)
 
 
-plt.title("Methanol(1) and Octanol(2) 3B+ECR Liquid Phase")
+plt.title("Methanol(1) and Octanol(2) 3B+ECRLiquid Phase")
 plt.ylabel("Fraction of Non-Bonded Sites")
 plt.xlabel(r"$x_1$") 
 plt.legend()
+plt.savefig("xassoc_plot/Methanol(1)_and_Octanol(2)_3B+ECR_LiquidPhase.png",format='png')
+#%%
+
+# for (i,s) in enumerate(sites):
+
+#     plt.plot(xL,XL[:,i],label=s)
+
+
+# plt.title("Methanol(2+ and 1-) and Octanol(1+ and 2-)  Liquid Phase")
+# plt.ylabel("Fraction of Non-Bonded Sites")
+# plt.xlabel(r"$x_1$") 
+# plt.legend()
+# plt.savefig("xassoc_plot/Methanol(2+ and 1-)_and_Octanol(1+ and 2-)_LiquidPhase.png",format='png')
+
 
 #%%
 for (i,s) in enumerate(sites):
 
     plt.plot(xV,XV[:,i],label=s)
 
+plt.ylabel("Fraction of Non-Bonded Sites")
+plt.xlabel(r"$x_1$") 
 
 plt.title("Methanol(1) and Octanol(2) 3B+ECR Vapor Phase") 
 plt.legend()
-
-
-#%%
+plt.savefig("xassoc_plot/Methanol(1)_and_Octanol(2)_3B+ECR_VaporPhase.png",format='png')
 
 #%%
-METHANOL_LIQUID_NEG=[LIQUID[i].non_bonded_sites()[0] for i in range(100)]
-METHANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites()[1] for i in range(100)]
-
-# METHANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites[1] for i in range(100)]
-
-METHANOL_VAPOR_NEG=[VAPOR[i].non_bonded_sites()[0] for i in range(100)]
-METHANOL_VAPOR_POS=[VAPOR[i].non_bonded_sites()[1] for i in range(100)]
-
-
-OCTANOL_LIQUID_NEG=[LIQUID[i].non_bonded_sites()[2] for i in range(100)]
-OCTANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites()[3] for i in range(100)]
-
-# METHANOL_LIQUID_POS=[LIQUID[i].non_bonded_sites[1] for i in range(100)]
-
-OCTANOL_VAPOR_NEG=[VAPOR[i].non_bonded_sites()[2] for i in range(100)]
-OCTANOL_VAPOR_POS=[VAPOR[i].non_bonded_sites()[3] for i in range(100)]
-
-X1=[LIQUID[i].composition()[0] for i in range(100)]
-Y1=[VAPOR[i].composition()[0] for i in range(100)]
-
-
-
-# APENS METANOL
-plt.plot(X1,METHANOL_LIQUID_NEG,label="MetOHL -")
-plt.plot(X1,METHANOL_LIQUID_POS,label="MetOHL +")
-
-plt.plot(Y1,METHANOL_VAPOR_NEG,label="MetOHV -")
-plt.plot(Y1,METHANOL_VAPOR_POS,label="MetOHV +")
-
-# plt.plot(Y1,OCTANOL_VAPOR_NEG,label="OctOH -")
-plt.legend()
-
 #%%
-# APENS OCTANOL
-plt.plot(X1,OCTANOL_LIQUID_NEG,label="OctOH -")
-plt.plot(X1,OCTANOL_LIQUID_POS,label="OctOH +")
+# for (i,s) in enumerate(sites):
 
-plt.plot(Y1,OCTANOL_VAPOR_NEG,label="OctOH -")
-plt.plot(Y1,OCTANOL_VAPOR_POS,label="OctOH +")
+#     plt.plot(xV,XV[:,i],label=s)
 
-# plt.plot(Y1,OCTANOL_VAPOR_NEG,label="OctOH -")
-plt.legend()
+# plt.ylabel("Fraction of Non-Bonded Sites")
+# plt.xlabel(r"$x_1$") 
+
+# plt.title("Methanol(2+ and 1-) and Octanol(1+ and 2-) Vapor Phase") 
+# plt.legend()
+# plt.savefig("xassoc_plot/Methanol(2+ and 1-)_and_Octanol(1+ and 2-)_VaporPhase.png",format='png')
+
+
 #%%
 #Fig. 7, Application of the CPA equation of state to organic acids
 

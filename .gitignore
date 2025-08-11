@@ -6,8 +6,6 @@ Cargo.lock
 **/plots
 **/__pycache__/
 **/venv
-**/water_sat_plot
-**/phase_diagram_plot
 **/markdown_examples
 
 

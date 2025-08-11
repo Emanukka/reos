@@ -35,7 +35,7 @@ impl PyState {
     /// 
     /// Returns
     /// -------
-    /// State : state at (T,P,x) 
+    /// State at (T,P,x) 
     #[staticmethod]
     #[pyo3(
     text_signature = "(eos,temperature,pressure,x,density_initialization)"
@@ -88,7 +88,7 @@ impl PyState {
     /// 
     /// Returns
     /// -------
-    /// State : state at (T,ρ,x)
+    /// State at (T,ρ,x)
     #[staticmethod]
     #[pyo3(
     text_signature = "(eos,temperature,density,x)"
@@ -178,6 +178,16 @@ impl PyState {
     pub fn composition<'py>(&self,py:Python<'py>) -> Bound<'py, PyArray1<f64>> {
 
         self.0.x.clone().into_pyarray(py)
+    }
+
+    /// Return the compressibility factor Z.
+    ///
+    /// Returns
+    /// -------
+    /// float
+    pub fn compressibility(&self) -> f64 {
+
+        self.0.eos.compressibility(self.0.t, self.0.rho, &self.0.x).unwrap()
     }
 
 

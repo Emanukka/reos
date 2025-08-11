@@ -77,7 +77,7 @@ impl PyAssociation {
     /// Returns
     /// -------
     /// F array
-    fn get_fmap<'py>(&self,py: Python<'py>)->Bound<'py,PyTuple>{
+    fn get_sites_map<'py>(&self,py: Python<'py>)->Bound<'py,PyTuple>{
 
         let assoc=&self.0;
         let sites:Vec<(usize,usize)>=assoc.

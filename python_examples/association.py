@@ -29,5 +29,10 @@ eos = EquationOfState.cpa(parameters)
 
 assoc=eos.get_association()
 
-F=assoc.get_fmap()
+# array with the all sites in mixture
+# 0=Site of Type A
+# 1=Site of Type B
+# 2=Site of Type C
+
+F=assoc.get_sites_map()
 T=assoc.get_tmat()

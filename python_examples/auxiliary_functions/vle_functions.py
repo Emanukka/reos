@@ -2,6 +2,7 @@ from reos.reos  import EquationOfState,State,CPAParameters,PhaseEquilibrium,Cubi
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 import os
+import numpy as np
 def bubble_diagram(
 
     VAR,
