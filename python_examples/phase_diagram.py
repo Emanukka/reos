@@ -13,7 +13,7 @@ from auxiliary_functions.exp_data import *
 from auxiliary_functions.association_functions import get_non_bondend_sites_from_states
 yes_or_no=False
 plt.rcParams.update({
-    "text.usetex": True,               
+    "text.usetex": False,               
     "font.family": "serif",            
     "font.serif": ["Computer Modern"], 
     "axes.labelsize": 12,
@@ -49,6 +49,7 @@ bubble_diagram(
    PRES,
    LIQUID,
    VAPOR,
+   plot_dir="acetic_octane",
    factor=1e3,
    y_figsize=2.5,
    x_figsize=5,
@@ -58,13 +59,13 @@ bubble_diagram(
    title="Acetic Acid 1A(1) and Octane(2)",
    y_label="P/kPa",
    x_label=r"$x_1,y_1$",
-save_fig=yes_or_no,
+    save_fig=False,
 
    exp_data=exp_data)
 
 #%%
 
-    
+N=100
 xascL=np.zeros_like(LIQUID,dtype=object)
 xascV=np.zeros_like(VAPOR,dtype=object)
 for i,t in enumerate(PRES):
@@ -75,8 +76,8 @@ for i,t in enumerate(PRES):
 
 
 
-plt.plot([LIQUID[i].composition()[0] for i in range(500)],xascL)
-plt.plot([VAPOR[i].composition()[0] for i in range(500)],xascV)
+plt.plot([LIQUID[i].composition()[0] for i in range(N)],xascL)
+plt.plot([VAPOR[i].composition()[0] for i in range(N)],xascV)
 # plt.yscale('log')
 #%%
 
@@ -144,6 +145,7 @@ bubble_diagram(
    VAR,
    LIQUID,
    VAPOR,
+   plot_dir="metanol_octanol",
    title="Methanol(1) and Octanol(2) 2B+CR1 ",
    y_label="T/K",
    x_label=r"$x_1,y_1$",
@@ -153,7 +155,7 @@ bubble_diagram(
    y_figsize=2.5,
    x_figsize=5,
    y_inf=300,y_sup=480,
-#    save_fig=yes_or_no,
+   save_fig=False,
    exp_data=exp_data)
 
 #%%
@@ -173,15 +175,22 @@ for (i,s) in enumerate(sites):
 
     plt.plot(xL,XL[:,i],label=s)
 
+plt.ylabel("Fraction of Non-Bonded Sites")
+plt.title("Methanol(1) and Octanol(2) 2B+CR1 Liquid Phase")
+plt.savefig("metanol_octanol/X2B_liq.pdf") 
+plt.xlabel(r"$x_1$") 
 
-plt.title("Methanol(1) and Octanol(2) 2B+CR1 Liquid Phase") 
 plt.legend()
 
 #%%
 for (i,s) in enumerate(sites):
     plt.plot(xV,XV[:,i],label=s)
+plt.xlabel(r"$x_1$") 
 
-plt.title("Methanol(1) and Octanol(2) 2B+CR1  Vapor Phase") 
+plt.ylabel("Fraction of Non-Bonded Sites")
+plt.title("Methanol(1) and Octanol(2) 2B+CR1  Vapor Phase")
+plt.savefig("metanol_octanol/X2B_vap.pdf") 
+
 plt.legend()
 
 #%%
@@ -202,6 +211,7 @@ bubble_diagram(
    VAR,
    LIQUID,
    VAPOR,
+   plot_dir="metanol_octanol",
    title="Methanol(1) and Octanol(2) 3B+ECR ",
    y_label="T/K",
    x_label=r"$x_1,y_1$",
@@ -218,6 +228,7 @@ bubble_diagram(
    exp_data=exp_data)
 
 #%%
+
 xL=[LIQUID[i].composition()[0] for i in range(100)]
 xV=[VAPOR[i].composition()[0] for i in range(100)]
 
@@ -239,7 +250,7 @@ plt.title("Methanol(1) and Octanol(2) 3B+ECRLiquid Phase")
 plt.ylabel("Fraction of Non-Bonded Sites")
 plt.xlabel(r"$x_1$") 
 plt.legend()
-plt.savefig("xassoc_plot/Methanol(1)_and_Octanol(2)_3B+ECR_LiquidPhase.png",format='png')
+plt.savefig("metanol_octanol/X3B_liq.pdf") 
 #%%
 
 # for (i,s) in enumerate(sites):
@@ -264,7 +275,7 @@ plt.xlabel(r"$x_1$")
 
 plt.title("Methanol(1) and Octanol(2) 3B+ECR Vapor Phase") 
 plt.legend()
-plt.savefig("xassoc_plot/Methanol(1)_and_Octanol(2)_3B+ECR_VaporPhase.png",format='png')
+plt.savefig("metanol_octanol/X3B_vap.pdf") 
 
 #%%
 #%%
@@ -339,7 +350,6 @@ bubble_diagram(
    title="Propanoic Acid 1A(1) and Heptane(2)",
    exp_data=exp_data)
 
-# tsat propanoic estranho
 #%%
 
 pMETHANOL_ACETIC=CPAParameters.from_records(

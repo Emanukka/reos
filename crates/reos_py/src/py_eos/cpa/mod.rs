@@ -99,7 +99,7 @@ impl PyState {
 
         if let ResidualModel::CPA(cpa) = residual{
             let t=self.0.t;
-            let rho=self.0.t;
+            let rho=self.0.rho;
             let x=&self.0.x;
 
             Ok

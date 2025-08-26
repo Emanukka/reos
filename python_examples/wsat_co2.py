@@ -12,9 +12,9 @@ from auxiliary_functions.wsat_data import *
 from auxiliary_functions.water_sat import *
 from auxiliary_functions.association_functions import *
 import os
-yes_or_no=True
+yes_or_no=False
 plt.rcParams.update({
-    "text.usetex": True,               
+    "text.usetex": False,               
     "font.family": "serif",            
     "font.serif": ["Computer Modern"], 
     "axes.labelsize": 12,
@@ -45,10 +45,11 @@ pWATER_CO2.set_cubic_binary(0,1,kij_a=0.000877,kij_b=-0.15508)
 
 pWATER_CO2.set_assoc_binary(0,1,"mcr1",beta=0.1836)
 
-
+markers = ['o', 's', '^', 'D', 'P', 'X'] 
+lines= ['-','--',':']
 eos=EquationOfState.cpa(pWATER_CO2)
 #%%calc
-T=np.array([298.15,308.15,323.15])
+T=np.array([298.15])
 # T=np.array([298.15])
 
 ydg=np.array([0.0,0.5])
@@ -69,9 +70,8 @@ for (i,temp) in enumerate(T):
     print(e)
     pass
     continue
+
 #%%
-markers = ['o', 's', '^', 'D', 'P', 'X'] 
-lines= ['-','--',':']
 plt.figure(figsize=(5, 5))
 
 for (i,t) in enumerate(T):
@@ -101,9 +101,8 @@ for (i,t) in enumerate(T):
 plt.title(f"H2O 4C and CO2 1ea")
 plt.legend()
 
-os.makedirs("water_sat_plot", exist_ok=True)
-filepath = os.path.join("water_sat_plot", "H2O_CO2")
-plt.savefig(filepath)
+
+plt.savefig("water_co2/wsat_co2.pdf")
 # plt.text(500,17500,"H2O 4C, CO2 1ea")
 
 
@@ -122,6 +121,8 @@ i=0
 AGUA_NEGATIVO=np.zeros_like(stateResult[i],dtype=object)
 AGUA_POSITIVO=np.zeros_like(stateResult[i],dtype=object)
 CO2_POSITIVO=np.zeros_like(stateResult[i],dtype=object)
+yW=np.zeros_like(AGUA_NEGATIVO)
+yCO2=np.zeros_like(AGUA_NEGATIVO)
 
 for j,state in enumerate(stateResult[i]):
 
@@ -130,11 +131,13 @@ for j,state in enumerate(stateResult[i]):
     # idx 2 - co2 positivo
     AGUA_NEGATIVO[j],AGUA_POSITIVO[j],CO2_POSITIVO[j]=vX[i][j]
     
-    agua_negativo=AGUA_NEGATIVO[j]
-    agua_positivo=AGUA_POSITIVO[j]
-    co2_positivo=AGUA_POSITIVO[j]
+    yW[j],yCO2[j]=state.composition()
 
-    yw,yco2=state.composition()
+#%%
+AGUA_NEGATIVO=AGUA_NEGATIVO
+AGUA_POSITIVO=AGUA_POSITIVO
+CO2_POSITIVO=CO2_POSITIVO
+
 
 #%%
 
@@ -144,14 +147,13 @@ plt.plot(pResultBAR[i],CO2_POSITIVO, color="black",linestyle=lines[2],label="CO2
 plt.xlabel("P/bar")
 plt.ylabel("Fraction of Non-Bonded Sites")
 plt.xlim(0,200)
-plt.text(150,0.99,"298.15K",fontsize=12)
+plt.text(150,0.8,"298.15K",fontsize=12)
 plt.legend()
-
-os.makedirs("water_sat_plot", exist_ok=True)
-filepath = os.path.join("water_sat_plot", "H2O_CO2_non_bonded_sites_298")
-plt.savefig(filepath)
+plt.title("Water 4C and CO2 1ea")
+plt.savefig("water_co2/X_298K.pdf")
 
 #%%
+
 #%%
 
 

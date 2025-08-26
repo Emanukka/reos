@@ -8,6 +8,7 @@ def bubble_diagram(
     VAR,
     LIQUID,
     VAPOR,
+    plot_dir,
     x_figsize=5,
     y_figsize=5,
     y_inf=None,
@@ -22,7 +23,6 @@ def bubble_diagram(
     orv_linestyle="-",
     exp_data=[None,None,None,None],
     save_fig=None,
-    plot_dir="plots",
     factor=1.0):
 
   """
@@ -46,7 +46,6 @@ def bubble_diagram(
 
     vz[i]=z1
 
-  plot_dir="phase_diagram_plot"
   if (y_sup==None) and (y_inf==None):
 
     y_inf=np.min(VAR)*0.5
@@ -74,7 +73,7 @@ def bubble_diagram(
   
   if save_fig:
     os.makedirs(plot_dir, exist_ok=True)
-    filename = f"{title}.png"
+    filename = f"{title}.pdf"
     filepath = os.path.join(plot_dir, filename)
     plt.savefig(filepath)
   plt.show()

@@ -88,6 +88,47 @@ for (i,t) in enumerate(T):
 
   # plt.xlim(20,100)
 
-# plt.title(f"CO2 1ea")
-
+plt.title(f"Water(4C) and H2S(2ea)")
+# plt.savefig("water_h2s/Water(4C) and H2S(2ea).pdf")
 plt.legend()
+
+#%%
+vX=np.zeros_like(T,dtype=object)
+
+for i in range(len(T)):
+
+  vX[i]=get_non_bondend_sites_from_states(stateResult[i])
+
+#%%
+
+i=0
+AGUA_NEGATIVO=np.zeros_like(stateResult[i],dtype=object)
+AGUA_POSITIVO=np.zeros_like(stateResult[i],dtype=object)
+H2S_POSITIVO=np.zeros_like(stateResult[i],dtype=object)
+# yW=np.zeros_like(AGUA_NEGATIVO)
+# yCO2=np.zeros_like(AGUA_NEGATIVO)
+
+for j,state in enumerate(stateResult[i]):
+
+    # idx 0 - agua negativo
+    # idx 1 - agua positivo 
+    # idx 2 - co2 positivo
+    AGUA_NEGATIVO[j],AGUA_POSITIVO[j],H2S_POSITIVO[j]=vX[i][j]
+    
+    # yW[j],yCO2[j]=state.composition()
+
+
+#%%
+
+plt.plot(pResultBAR[i],AGUA_NEGATIVO,color="black",linestyle=lines[0],label="H2O -")
+plt.plot(pResultBAR[i],AGUA_POSITIVO,color="black",linestyle=lines[1],label="H2O +")
+plt.plot(pResultBAR[i],H2S_POSITIVO, color="black",linestyle=lines[2],label="H2S +")
+# plt.plot(pResultBAR[i],H2S_POSITIVO, color="black",linestyle=lines[2],label="H2S +")
+
+plt.xlabel("P/bar")
+plt.ylabel("Fraction of Non-Bonded Sites")
+plt.xlim(0,200)
+# plt.text(150,0.8,"310.9",fontsize=12)
+plt.legend()
+plt.title("Water 4C and H2S 2ea")
+plt.savefig("water_h2s/X_310.pdf")

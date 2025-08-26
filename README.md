@@ -51,8 +51,7 @@ plt.xlabel(r"$x_1$")
 plt.legend()
 
 ```
-![alt text](<python_examples/phase_diagram_plot/Methanol(1) and Octanol(2) 3B+ECR .png>)
-![alt text](python_examples/xassoc_plot/Methanol(1)_and_Octanol(2)_3B+ECR_VaporPhase.png)
+
 
 # The Project's Sctructre
 

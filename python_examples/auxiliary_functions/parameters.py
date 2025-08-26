@@ -141,6 +141,21 @@ a_octanol_3b=AssociationRecord.associative(
     nb=1,
     nc=0)
 
+#  0.0500 8.5755 1.0564 150.00 17.3
+c_ethanol_3b=CubicRecord(
+    a0= 8.57550e-1,
+    b=0.0500e-3,
+    c1= 1.0564,
+    tc=514.0,
+)
+
+a_ethanol_3b=AssociationRecord.associative(
+    eps=150.00e2,
+    beta= 17.3e-3,
+    b= 0.0500e-3,
+    na=2,
+    nb=1,
+    nc=0)
 
 a_octane=AssociationRecord.inert(0.1424e-3)
 a_heptane=AssociationRecord.inert(0.125350e-3)
@@ -151,6 +166,21 @@ a_h2s=AssociationRecord.solvate(
     na=0,
     nb=2,
     nc=0)
+
+c_mea=CubicRecord(
+    a0= 14.112e-1,
+    b= 0.05656e-3,
+    c1= 0.7012,
+    tc=670.0,
+)
+a_mea=AssociationRecord.associative(
+    eps=181.77e2,
+    beta= 5.35e-3,
+    b= 0.05656e-3,
+    na=2,
+    nb=2,
+    nc=0)
+
 
 # tudo do NIST
 # log10, P/BAR,T/Kelvin
@@ -169,5 +199,5 @@ metoh_antoine=np.array([5.20409,    1581.341,   -33.50])
 
 h2s_antoine=np.array([4.52887	,958.587	,-0.539	])
 
-
+mea_antoine=np.array([4.29252	,1408.873	,-116.093])
 # __all__=[c_co2]
