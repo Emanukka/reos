@@ -1,4 +1,4 @@
-use numpy::{IntoPyArray, PyArray1};
+use numpy::{IntoPyArray, PyArray1, PyArray2};
 use pyo3::exceptions::{PyTypeError};
 use pyo3::prelude::*;
 use reos::models::cpa::associative::Associative;
@@ -107,6 +107,37 @@ impl PyState {
                 cpa.assoc.X_tan(t, rho, x).unwrap().into_pyarray(py)
                 
             )
+        }else {
+            Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
+        }
+
+    }
+
+    fn association_constant<'py>(&self,py:Python<'py>)->PyResult<Bound<'py, PyArray2<f64>>>{
+
+        let residual=&self.0.eos.residual;
+
+        if let ResidualModel::CPA(cpa) = residual{
+            let t=self.0.t;
+            let rho=self.0.rho;
+            let x=&self.0.x;
+            Ok(cpa.assoc.association_strength(t, rho, x).into_pyarray(py))
+        }else {
+            Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
+        }
+
+    }
+
+    fn association_strength<'py>(&self,py:Python<'py>)->PyResult<Bound<'py, PyArray2<f64>>>{
+
+        let residual=&self.0.eos.residual;
+
+        if let ResidualModel::CPA(cpa) = residual{
+            let t=self.0.t;
+            let rho=self.0.rho;
+            let x=&self.0.x;
+            let gmix=cpa.assoc.g_func(rho, x);
+            Ok(cpa.assoc.delta(t, gmix).into_pyarray(py))
         }else {
             Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
         }

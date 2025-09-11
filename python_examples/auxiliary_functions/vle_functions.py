@@ -75,7 +75,7 @@ def bubble_diagram(
     os.makedirs(plot_dir, exist_ok=True)
     filename = f"{title}.pdf"
     filepath = os.path.join(plot_dir, filename)
-    plt.savefig(filepath)
+    plt.savefig(filepath,bbox_inches='tight')
   plt.show()
 
 
@@ -98,6 +98,7 @@ def linspace_bubble_p(eos,t,antoine,N=100):
 
   for (i,z1) in enumerate(vz):
 
+    print(i)
     z=np.array([z1,1.0-z1])
     liquid_phase,vapor_phase=bubble_p(eos,t,z,antoine)
     PRES[i]=liquid_phase.pressure()

@@ -150,13 +150,9 @@ impl Associative {
         delta
     }
 
-    #[allow(non_snake_case)]
-    pub fn X_tan(&self,t:f64,rho:f64,x:&Array1<f64>)-> Result<Array1<f64>,EosError>{
-        
-        let f=&self.parameters.f;
-        let ns=f.len();
-        let s:&Array1<f64> = &self.parameters.s;
+    pub fn association_strength(&self,t:f64,rho:f64,x:&Array1<f64>)->Array2<f64>{
         let m=self.get_m(x);
+        let ns=self.parameters.f.len();
 
         let mmat=m.to_shape((ns,1)).unwrap();
         let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
@@ -164,6 +160,22 @@ impl Associative {
 
         let gmix=self.g_func(rho, x);
         let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
+        kmat
+    }
+    #[allow(non_snake_case)]
+    pub fn X_tan(&self,t:f64,rho:f64,x:&Array1<f64>)-> Result<Array1<f64>,EosError>{
+        
+        let ns=self.parameters.f.len();
+        let s:&Array1<f64> = &self.parameters.s;
+        let m=self.get_m(x);
+
+        // let mmat=m.to_shape((ns,1)).unwrap();
+        // let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
+        // let pmat=&self.parameters.pmat;
+
+        // let gmix=self.g_func(rho, x);
+        // let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
+        let kmat=self.association_strength(t, rho, x);
 
         // println!("K=\n{}",&kmat);
         //nsX1
@@ -217,6 +229,21 @@ impl Associative {
     
     }   
 
+
+    // pub fn grad(&self,t:f64,rho:f64,x:&Array1<f64>,x_assoc:&Array1<f64>,)->Array1<f64>{
+
+    //     let m=self.get_m(x);
+    //     let ns=self.parameters.s.len();
+    //     let multplicity:&Array1<f64> = &self.parameters.s;
+    //     let mmat=m.to_shape((ns,1)).unwrap();
+    //     let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
+    //     let pmat=&self.parameters.pmat;
+
+    //     let gmix=self.g_func(rho, x);
+    //     let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
+
+    //     m*(1.0/x_assoc-1.0) -kmat.dot(&(x_assoc*multplicity))
+    // }
 }
 
 

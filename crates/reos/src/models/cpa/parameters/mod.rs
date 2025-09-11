@@ -869,6 +869,7 @@ pub mod tests{
         println!{"{}",format!("{}",state)};
 
     }
+    #[test]
     pub fn associative_3b(){
 
         println!("---MeOH 3B---\n");
@@ -894,7 +895,10 @@ pub mod tests{
         assert_relative_eq!(2.*xa-1.0,xb,epsilon=1e-10);
 
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+        
+        // let grad=state.eos.residual.assoc.grad(t, rho, &x,&xassoc);
 
+        // dbg!(&grad);
         println!{"{}",format!("{}",state)};
 
     }

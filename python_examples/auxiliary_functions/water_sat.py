@@ -90,18 +90,20 @@ def tpd_root_given_tp(eos,eos_pure_water,T,P,y_dry_gas):
   yw_log_root=opt.root(fun,[yw_guess_log] ).x
 
   # print(pbol)
-  state=F([yw_log_root])[1]
+  tpd_res,zstate=F([yw_log_root])
 
+  xstate=tpd_res[1]
   yw=np.exp(yw_log_root)
 
-  return yw,state
+  return yw,xstate,zstate
 
 
 def linspace_wsat(eos,eos_pure_water,T,ydg,pi=1,pf=600,N=100):
    
   PRESS_BAR=np.linspace(pi,pf,N)
   yw_PPM=np.zeros_like(PRESS_BAR)
-  vSTATE=np.zeros_like(PRESS_BAR,dtype=object)
+  zSTATE=np.zeros_like(PRESS_BAR,dtype=object)
+  xSTATE=np.zeros_like(PRESS_BAR,dtype=object)
 
   for (i,P_BAR) in enumerate(PRESS_BAR):
 
@@ -111,9 +113,12 @@ def linspace_wsat(eos,eos_pure_water,T,ydg,pi=1,pf=600,N=100):
 
       P_PA=P_BAR*1e5
 
-      result,state=tpd_root_given_tp(eos,eos_pure_water,T,P_PA,ydg)
+      result,xstate,zstate=tpd_root_given_tp(eos,eos_pure_water,T,P_PA,ydg)
 
-      vSTATE[i]=state
+      zSTATE[i]=zstate
+      xSTATE[i]=xstate
+
+
       yw_PPM[i]=result[0]*1e6
 
     except Exception as e:
@@ -121,4 +126,4 @@ def linspace_wsat(eos,eos_pure_water,T,ydg,pi=1,pf=600,N=100):
       pass
       continue
   
-  return PRESS_BAR,yw_PPM,vSTATE
+  return PRESS_BAR,yw_PPM, zSTATE,xSTATE

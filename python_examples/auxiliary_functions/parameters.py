@@ -20,8 +20,21 @@ c_w=CubicRecord(
     a0= 0.12277,
     b=0.0145e-3,
     c1=0.6736,
-    tc=647.14,
+    tc=647.096,
 )
+c_w3b=CubicRecord(
+    a0= 3.005960e-1,
+    b=0.014969e-3,
+    c1=0.35928,
+    tc=647.096,
+)
+a_w3b=AssociationRecord.associative(
+    eps=207.97e2,
+    beta=21.3e-3,
+    b=0.014969e-3,
+    na=1,
+    nb=2,
+    nc=0)
 
 c_acoh=CubicRecord(
     a0= 0.91196,
@@ -200,4 +213,22 @@ metoh_antoine=np.array([5.20409,    1581.341,   -33.50])
 h2s_antoine=np.array([4.52887	,958.587	,-0.539	])
 
 mea_antoine=np.array([4.29252	,1408.873	,-116.093])
+
+ethanol_antoine=np.array([5.24677,1598.673,-46.424])
+
+# antoine = {
+#     "water":water_antoine,
+#     "acoh":acoh_antoine,
+#     "co2":co2_antoine,
+#     "octane":octane_antoine,
+#     "propanoic":propanoic_antoine,
+#     "heptane":heptane_antoine,
+#     "octanol":octanol_antoine,
+#     "methanol":metoh_antoine,
+#     "h2s":h2s_antoine,
+#     "mea":mea_antoine,
+#     "ethanol":ethanol_antoine
+# }
+
+
 # __all__=[c_co2]

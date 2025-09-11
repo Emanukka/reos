@@ -6,11 +6,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.optimize as opt
 from auxiliary_functions.parameters import *
+
 # from auxiliary_functions.vle_functions import *
 # from auxiliary_functions.data import *
 from auxiliary_functions.wsat_data import *
 from auxiliary_functions.water_sat import *
 from auxiliary_functions.association_functions import *
+xsize=3.15
+ysize=3.15
+yes_or_no=False
+plt.rcParams.update({
+    "font.serif": ["Computer Modern"], 
+    "axes.labelsize": 10,
+    "font.size": 10,
+    "legend.fontsize": 10,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
+    "figure.figsize": (xsize, ysize),  
+
+})
+
 
 
 
@@ -43,16 +58,19 @@ T=np.array([310.9])
 ydg=np.array([0.0,0.5])
 pResultBAR=np.zeros_like(T,dtype=object)
 yResultPPM=np.zeros_like(T,dtype=object)
-stateResult=np.zeros_like(T,dtype=object)
+VAP=np.zeros_like(T,dtype=object)
+LIQ=np.zeros_like(T,dtype=object)
 
 for (i,temp) in enumerate(T):
 
   try:
      
-    p,y,s=linspace_wsat(eos,eos_pure_water,temp,ydg,pi=5,pf=250)
+    p,y,s1,s2=linspace_wsat(eos,eos_pure_water,temp,ydg,pi=5,pf=250)
     pResultBAR[i]=p*1
     yResultPPM[i]=y*1
-    stateResult[i]=s
+    VAP[i]=s1
+    LIQ[i]=s2
+
 
   except Exception as e:
     print(e)
@@ -61,7 +79,6 @@ for (i,temp) in enumerate(T):
 #%%
 markers = ['o', 's', '^', 'D', 'P', 'X'] 
 lines= ['-','--',':']
-plt.figure(figsize=(6, 5))
 
 for (i,t) in enumerate(T):
 
@@ -89,7 +106,7 @@ for (i,t) in enumerate(T):
   # plt.xlim(20,100)
 
 plt.title(f"Water(4C) and H2S(2ea)")
-# plt.savefig("water_h2s/Water(4C) and H2S(2ea).pdf")
+plt.savefig("plots/water_h2s/Water(4C) and H2S(2ea).pdf",bbox_inches='tight')
 plt.legend()
 
 #%%
@@ -97,18 +114,18 @@ vX=np.zeros_like(T,dtype=object)
 
 for i in range(len(T)):
 
-  vX[i]=get_non_bondend_sites_from_states(stateResult[i])
+  vX[i]=get_non_bondend_sites_from_states(VAP[i])
 
 #%%
 
 i=0
-AGUA_NEGATIVO=np.zeros_like(stateResult[i],dtype=object)
-AGUA_POSITIVO=np.zeros_like(stateResult[i],dtype=object)
-H2S_POSITIVO=np.zeros_like(stateResult[i],dtype=object)
+AGUA_NEGATIVO=np.zeros_like(VAP[i],dtype=object)
+AGUA_POSITIVO=np.zeros_like(VAP[i],dtype=object)
+H2S_POSITIVO=np.zeros_like(VAP[i],dtype=object)
 # yW=np.zeros_like(AGUA_NEGATIVO)
 # yCO2=np.zeros_like(AGUA_NEGATIVO)
 
-for j,state in enumerate(stateResult[i]):
+for j,state in enumerate(VAP[i]):
 
     # idx 0 - agua negativo
     # idx 1 - agua positivo 
@@ -131,4 +148,5 @@ plt.xlim(0,200)
 # plt.text(150,0.8,"310.9",fontsize=12)
 plt.legend()
 plt.title("Water 4C and H2S 2ea")
-plt.savefig("water_h2s/X_310.pdf")
+plt.savefig("plots/water_h2s/X_310.pdf")
+# %%
