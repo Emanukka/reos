@@ -12,7 +12,7 @@ use reos::{models::{cpa::{CPA}, cubic::{Cubic}}, residual::Residual, state::eos:
 pub enum ResidualModel{
 
     CPA(CPA),
-    SRK(Cubic)
+    Cubic(Cubic),
 
 } 
 
@@ -28,7 +28,7 @@ impl Residual for ResidualModel {
             ResidualModel::CPA(eos)=>{
                 eos.pressure(t, rho, x)
             },
-            ResidualModel::SRK(eos)=>{
+            ResidualModel::Cubic(eos)=>{
                 eos.pressure(t, rho, x)
             }
 
@@ -41,7 +41,7 @@ impl Residual for ResidualModel {
             ResidualModel::CPA(eos)=>{
                 eos.residual_chemical_potential(t, rho, x)
             },
-            ResidualModel::SRK(eos)=>{
+            ResidualModel::Cubic(eos)=>{
                 eos.residual_chemical_potential(t, rho, x)
             },
 
@@ -53,7 +53,7 @@ impl Residual for ResidualModel {
             ResidualModel::CPA(eos)=>{
                 eos.bmix(x)
             },
-            ResidualModel::SRK(eos)=>{
+            ResidualModel::Cubic(eos)=>{
                 eos.bmix(x)
             },
 

@@ -30,7 +30,7 @@ impl PyEquationOfState {
 
         let eos=Cubic::new(p.0,CubicModel::SRK);
 
-        let r=ResidualModel::SRK(eos);
+        let r=ResidualModel::Cubic(eos);
 
         let arc=Arc::new(EquationOfState::from_residual(r));
 
@@ -39,5 +39,30 @@ impl PyEquationOfState {
         )
     }
 
+    /// PR Equation Of State.
+    /// 
+    /// Parameters
+    /// ----------
+    /// 
+    /// parameters : CubicParameters object
+    /// 
+    /// Returns
+    /// -------
+    /// PR Equation Of State
+    #[staticmethod]
+    pub fn pr(parameters: Bound<'_,PyCubicParameters>)->PyResult<Self>{
+
+        let p: PyCubicParameters=parameters.extract()?;
+
+        let eos=Cubic::new(p.0,CubicModel::PR);
+
+        let r=ResidualModel::Cubic(eos);
+
+        let arc=Arc::new(EquationOfState::from_residual(r));
+
+        Ok(
+            PyEquationOfState(arc)
+        )
+    }
 
 }

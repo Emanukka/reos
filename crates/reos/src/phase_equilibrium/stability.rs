@@ -5,7 +5,22 @@ use crate::{phase_equilibrium::PhaseEquilibrium, residual::Residual, state::{den
 
 impl <R:Residual> State<R> {
 
+    pub fn tpd(
+        &self,
+        x:Array1<f64>,
+        xphase:DensityInitialization)
+        ->EosResult<f64>{
+        
+        let hy = self.lnphi()?+self.x.ln();
+        let lnx=x.ln();
+        let daughter_phase = State::new_tpx(&self.eos, self.t, self.p, x, xphase )?;
+        let hx=daughter_phase.lnphi()?+&lnx;
+        Ok(
+        (lnx.exp()*(hx-hy)).sum()
+        )
+        
 
+    }
     pub fn min_tpd(
         &self,
         xphase:DensityInitialization,

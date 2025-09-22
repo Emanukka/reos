@@ -230,5 +230,43 @@ impl PyState {
         )
     }
 
+    /// Return the TPD (delta gibbs energy for formation of incipient phase x).
+    ///
+    /// Parameters
+    /// -------
+    /// xphase: 'liquid' or 'vapor'
+    ///     incipiente phase 
+    /// 
+    /// x: numpy.ndarray[float] 
+    ///     xphase's composition 
+    /// 
+    /// Returns
+    /// -------
+    /// ΔG formation of the incipient phase from mother phase State at (T,P,z) condition.
+    #[pyo3(
+    text_signature = "(xphase,x)"
+    )]
+    #[pyo3(signature = (xphase,x))]
+
+    pub fn tpd<'py>(&self,xphase:&str,x:&Bound<'py, PyArray1<f64>>,)->PyResult<f64>{
+
+        let state=&self.0;
+        
+        let xphase = DensityInitialization::from_str(xphase);
+        let xarray=x.to_owned_array();
+        if xphase.is_err(){
+            return Err(PyErr::new::<PyValueError, _>(
+                                "`density_initialization` must be 'vapor' or 'liquid'.".to_string(),
+                            ))
+        }
+
+        let dg=state.tpd(xarray, xphase.unwrap()).unwrap();
+
+
+        Ok(
+        dg
+        )
+    }
+
 
 }
