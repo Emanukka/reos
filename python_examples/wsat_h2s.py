@@ -105,9 +105,11 @@ for (i,t) in enumerate(T):
 
   # plt.xlim(20,100)
 
+# plt.text(170,15000,"T=310.9K")
 plt.title(f"Water(4C) and H2S(2ea)")
-plt.savefig("plots/water_h2s/Water(4C) and H2S(2ea).pdf",bbox_inches='tight')
 plt.legend()
+
+plt.savefig("plots/water_h2s/Water(4C) and H2S(2ea).pdf",bbox_inches='tight')
 
 #%%
 vX=np.zeros_like(T,dtype=object)

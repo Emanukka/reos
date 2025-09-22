@@ -210,7 +210,6 @@ impl ASCParameters {
                 //Nao utilizar isso lá dentro, porque vai afetar no caso de solvatação
                 // deixa a matriz P agir na correção
 
-                //apesar de ser nao fisico, é muito útil para obter eps do componente
                 let ecross=(veps[compi]+veps[compk])*0.5;
                 let bcross=((vbeta[compi]*vbeta[compk])).sqrt();
 
@@ -776,7 +775,7 @@ pub mod tests{
     use std::sync::Arc;
 
     use approx::assert_relative_eq;
-    use ndarray::{array, linalg::Dot};
+    use ndarray::{arr1, array, linalg::Dot, Array2};
 
     use crate::{models::cpa::parameters::{acetic_acid_water, acoh_octane, co2_water, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2, water_octane_acetic_acid}, state::{density_solver::DensityInitialization, S}};
     
@@ -822,6 +821,7 @@ pub mod tests{
         let x=array![0.2,0.8];
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
         println!{"{}",format!("{}",state)};
+
     }
     #[test]
 
@@ -836,7 +836,7 @@ pub mod tests{
 
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
 
-
+        
         println!{"{}",format!("{}",state)};
 
         
@@ -916,6 +916,23 @@ pub mod tests{
     }
 
     #[test]
+    pub fn ig(){
+
+    let diag = arr1(&[1., 4.]);
+    // let array = Array2::from_diag(&diag);
+
+    // println!("arr={}",&array);
+    let a=diag.to_shape((2,1)).unwrap();
+
+    let b=a.dot(&a.t());
+
+    println!("arr={}",&b);
+
+
+
+    }
+
+    // #[test]
     pub fn dbg_assoc_p(){
 
         associative_solvate();

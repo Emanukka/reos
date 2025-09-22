@@ -144,12 +144,21 @@ mod tests {
         let xb_2=x_2[1];
         // println!("cmp_metoh_3b_2b_xassoc");
         // println!("rh");
-        println!("X2B=\n{}",eos_1.residual.assoc.X_tan(t, s1.rho, &x).unwrap());
-        println!("X3B=\n{}",eos_2.residual.assoc.X_tan(t, s2.rho, &x).unwrap());
+        println!("X2B=\n{}",x_1);
+        println!("X3B=\n{}",x_2);
         assert_relative_eq!(2.0*xa_2-1.0,xb_2,epsilon=1e-8);
         assert_relative_eq!(x_1[0],x_1[1],epsilon=1e-8);
         assert_relative_eq!(phi_1[0],cmp_1[0],epsilon=1e-9);
         assert_relative_eq!(phi_2[0],cmp_2[0],epsilon=1e-9);
+
+
+        let grad1=eos_1.residual.assoc.grad(t, rho_1, &x, &x_1);
+        let grad2=eos_2.residual.assoc.grad(t, rho_2, &x, &x_2);
+
+        // println!("dX1={}\n",grad1);
+        // println!("dX2={}",grad2);
+
+
 
     }
 
@@ -178,7 +187,6 @@ mod tests {
     #[test]
     fn test_val(){
 
-
         //State Variables
         let p=500e5;
         let t=298.15;
@@ -188,15 +196,20 @@ mod tests {
         // let s=State::new_tpx(&Arc::new(eos), t, p, x, DensityInitialization::Vapor).unwrap();   //0.09s
         let s=State::new_tpx(&Arc::new(eos), t, p, x, DensityInitialization::Vapor).unwrap();   //
 
+        let rho=s.rho;
+        println!("{}",rho);
         let phi: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>=s.lnphi().unwrap().exp();
 
         let cmp=array![0.00009551080457744488, 0.00007903286580072037];
         // dbg!(s.rho);
+
+        println!("{}",s);
         assert_relative_eq!(phi[0],cmp[0],epsilon=1e-10);
         assert_relative_eq!(phi[1],cmp[1],epsilon=1e-10);
 
     }
 
+ 
     #[test]
 
     fn x_from_state(){

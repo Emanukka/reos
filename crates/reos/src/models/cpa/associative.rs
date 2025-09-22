@@ -107,49 +107,56 @@ impl Associative {
 }
 
 impl Associative {
-    #[allow(non_snake_case)]
-    
-    pub fn cr1(&self,t:f64,gmix:f64,alpha:usize,beta:usize)->f64{
+
+    pub fn cr1_mat(&self,t:f64,gmix:f64)->Array2<f64>{
 
         let p = &self.parameters;
-        let f=&p.f;
-        let map=&p.asc_into_global;
-        let eps_cross= p.epsmat[(alpha,beta)];
-        let beta_cross= p.betamat[(alpha,beta)];
-        // let vb: ArrayBase<ndarray::OwnedRepr<&[f64]>, Dim<[usize; 2]>>= array![[vb_sclice.in]];
-        // let b=(vb+vb.t())*0.5;
+        let ns= p.s.len();
+
+        let eps_mat= &p.epsmat;
+        let beta_mat= &p.betamat;
+
         let vb=&p.vb;
-        let i=f[alpha].i();
-        let j=f[beta].i();
 
-        ((vb[map[i]]+vb[map[j]])*0.5)*beta_cross * gmix *(
-            (( 
-                ( eps_cross) / (IDEAL_GAS_CONST * t) ) ).exp() -1.0 )
-    }
-
-    pub fn ecr(&self,t:f64,gmix:f64,alpha:usize,beta:usize)->f64{
-        (self.cr1(t, gmix, alpha, alpha)*self.cr1(t, gmix, beta,beta)).sqrt()
-    }
-
-    pub fn delta(&self,t:f64,gmix: f64)->Array2<f64>{
         
-        let ns=self.parameters.s.len();
+        let b_asc=p.hmat.t().dot(vb);
+        
+        let b_sites=p.tmat.t().dot(&b_asc);
+        let b_mat=b_sites.to_shape((ns,1)).unwrap();
+
+        let bij_mat=(&b_mat+&b_mat.t())*0.5;
+
+        
+        bij_mat*beta_mat*gmix*((eps_mat/(IDEAL_GAS_CONST*t)).exp()-1.0)
+
+
+
+                
+    }
+
+    pub fn ecr_mat(&self,cr1:&Array2<f64>)->Array2<f64>{
+
+        let ns=cr1.dim().0;
+        let diag=cr1.diag();
+        let diag=diag.to_shape((ns,1)).unwrap();
+        let diag_mult=diag.dot(&diag.t());
+
+        (diag_mult).sqrt()
+    }
+
+
+
+    pub fn delta_mat(&self,t:f64,gmix: f64)->Array2<f64>{
+        
         let alphamat=&self.parameters.alphamat;
-        let mut delta =Array2::zeros((ns,ns));
-        for alpha in 0..ns{
-            for beta in alpha..ns{
 
-                let dcr1=self.cr1(t, gmix, alpha, beta);
-                let decr=self.ecr(t, gmix, alpha, beta);
-                let alpha_ij=alphamat[(alpha,beta)];
-                delta[(alpha,beta)]=dcr1*(1.0-alpha_ij)+decr*alpha_ij;
-                delta[(beta,alpha)]=delta[(alpha,beta)]
 
-            }
-        }
+        let cr1=self.cr1_mat(t, gmix);
+        let ecr=self.ecr_mat(&cr1);
+
+        let delta=cr1*(1.0-alphamat)+ecr*alphamat;
         delta
     }
-
     pub fn association_strength(&self,t:f64,rho:f64,x:&Array1<f64>)->Array2<f64>{
         let m=self.get_m(x);
         let ns=self.parameters.f.len();
@@ -159,7 +166,10 @@ impl Associative {
         let pmat=&self.parameters.pmat;
 
         let gmix=self.g_func(rho, x);
-        let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
+        // let delta=self.delta(t, gmix);
+        let delta=self.delta_mat(t, gmix);
+
+        let kmat=delta*mm_mat*pmat*rho;
         kmat
     }
     #[allow(non_snake_case)]
@@ -168,26 +178,10 @@ impl Associative {
         let ns=self.parameters.f.len();
         let s:&Array1<f64> = &self.parameters.s;
         let m=self.get_m(x);
-
-        // let mmat=m.to_shape((ns,1)).unwrap();
-        // let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
-        // let pmat=&self.parameters.pmat;
-
-        // let gmix=self.g_func(rho, x);
-        // let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
         let kmat=self.association_strength(t, rho, x);
 
-        // println!("K=\n{}",&kmat);
-        //nsX1
-        // let mut x_novo =  Array2::from_elem((ns,1),0.2);
         let mut x_novo =  Array1::from_elem(ns,0.2);
-        // let mut x_assoc =  Array2::from_elem((NS,ncomp),0.2);
-
-
-        // dbg!(&x_novo);
-        // dbg!(&(&x_novo*s));
-        // dbg!(&(&x_n);
-        // let mut x_assoc =  a.data.clone();
+;
 
         let omega=0.25;
         // let mut mat_error:Array2<f64> = Array2::zeros((NS,ncomp));
@@ -196,7 +190,7 @@ impl Associative {
         let mut x_old: Array1<f64>;
         let mut res = 1.0;
         let mut it:i32 = 0; 
-        const TOL:f64 = 1e-11; 
+        const TOL:f64 = 1e-12;
         const MAX:i32 = 10000;
         // let n=NS*n_assoc;
 
@@ -230,20 +224,32 @@ impl Associative {
     }   
 
 
-    // pub fn grad(&self,t:f64,rho:f64,x:&Array1<f64>,x_assoc:&Array1<f64>,)->Array1<f64>{
+    pub fn grad(&self,t:f64,rho:f64,x:&Array1<f64>,x_assoc:&Array1<f64>,)->Array1<f64>{
 
-    //     let m=self.get_m(x);
-    //     let ns=self.parameters.s.len();
-    //     let multplicity:&Array1<f64> = &self.parameters.s;
-    //     let mmat=m.to_shape((ns,1)).unwrap();
-    //     let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
-    //     let pmat=&self.parameters.pmat;
+        let m=self.get_m(x);
+        let ns=self.parameters.s.len();
+        let multplicity:&Array1<f64> = &self.parameters.s;
+        let mmat=m.to_shape((ns,1)).unwrap();
+        let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
+        let pmat=&self.parameters.pmat;
 
-    //     let gmix=self.g_func(rho, x);
-    //     let kmat=self.delta(t, gmix)*mm_mat*pmat*rho;
+        let gmix=self.g_func(rho, x);
+        let kmat=self.delta_mat(t, gmix)*mm_mat*pmat*rho;
 
-    //     m*(1.0/x_assoc-1.0) -kmat.dot(&(x_assoc*multplicity))
-    // }
+        m*(1.0/x_assoc-1.0) -kmat.dot(&(x_assoc*multplicity))
+    }
+
+
+    pub fn hessian(&self,m:&Array1<f64>,k:&Array2<f64>,x_assoc:&Array1<f64>)->Array2<f64>{
+
+        let ns=self.parameters.s.len();
+        let id=Array2::<f64>::eye(ns);
+        let div=m/x_assoc.pow2();
+        let d=div.to_shape((ns,1)).unwrap();
+
+        -(id.dot(&d)+k)
+
+    }
 }
 
 
@@ -278,7 +284,6 @@ impl Residual for Associative {
         let nassoc=&self.parameters.nassoc;
 
         let s=&self.parameters.s;
-        let n =nassoc.len();
 
         let lnx_s=(xassoc.ln())*s;
         // let f=&self.parameters.f;

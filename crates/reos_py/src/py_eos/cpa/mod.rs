@@ -137,7 +137,7 @@ impl PyState {
             let rho=self.0.rho;
             let x=&self.0.x;
             let gmix=cpa.assoc.g_func(rho, x);
-            Ok(cpa.assoc.delta(t, gmix).into_pyarray(py))
+            Ok(cpa.assoc.delta_mat(t, gmix).into_pyarray(py))
         }else {
             Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
         }

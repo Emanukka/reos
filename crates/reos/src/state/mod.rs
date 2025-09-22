@@ -71,7 +71,7 @@ impl Display for State<CPA> {
         let dlng_dni=assoc.dlngdni(rho, x);
 
         let frac_non_assoc_sites=assoc.X_tan(t, rho, x).unwrap_or_default();
-        let delta=assoc.delta(t, gmix);
+        let delta=assoc.delta_mat(t, gmix);
         let mu_assoc=assoc.residual_chemical_potential(t, rho, x).unwrap_or_default();
 
         let m=assoc.get_m(x);
