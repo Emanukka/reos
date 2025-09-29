@@ -185,10 +185,6 @@ impl ASCParameters {
 
         assert_eq!(f.len(),s.len());
 
-        //1. Criando Matriz P de interçaões permitidas
-        //2. Criando Matriz T de existencia do sítio ativo alpha no componente i //nsXn
-        //3. Criando matriz eps e beta (ns x ns)
-        // sitios->associativo->mistura
         for (alpha,site_alpha) in f.iter().enumerate(){
 
             let compi=site_alpha.i();
@@ -197,29 +193,18 @@ impl ASCParameters {
             for (beta,site_beta) in f.iter().enumerate(){
 
                 let compk=site_beta.i();
-
-                //Pega os tipos do sítio alpha e beta
                 let j=site_alpha.t();
                 let l=site_beta.t();
 
                 if W[j][l]==1.0{
                     pmat[(alpha,beta)]=1.0;
                     pmat[(beta,alpha)]=1.0;
-
                 }
-                //Nao utilizar isso lá dentro, porque vai afetar no caso de solvatação
-                // deixa a matriz P agir na correção
 
-                let ecross=(veps[compi]+veps[compk])*0.5;
-                let bcross=((vbeta[compi]*vbeta[compk])).sqrt();
-
-                mepsilon_cross[(alpha,beta)]=ecross;
-                mbeta_cross[(alpha,beta)]=bcross;
-
-
-  
+                //CR1 is default
+                mepsilon_cross[(alpha,beta)]=(veps[compi]+veps[compk])*0.5;
+                mbeta_cross[(alpha,beta)]=((vbeta[compi]*vbeta[compk])).sqrt();
             }
-
         }
 
         ASCParameters{
@@ -473,6 +458,7 @@ impl std::fmt::Display for ASCParameters {
 
 
 //ready-to parameters
+
 
 pub fn water_acetic_acid()->E<CPA>{
             //Records
@@ -816,10 +802,17 @@ pub mod tests{
         
         println!("---WATER & ACETIC ACID---\n");
         let eos = water_acetic_acid().into();
-        let p=500e5;
+        let p=10e5;
         let t=298.15;
+        let rho=20235.78796260737;
+
         let x=array![0.2,0.8];
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+        // let state=S::new_trx(eos, t, rho, x);
+        
+        // let p=state.eos.residual.assoc.parameters.clone();
+
+        // println!{"{}",format!("{}",p)};
         println!{"{}",format!("{}",state)};
 
     }
@@ -831,13 +824,26 @@ pub mod tests{
         let eos = water_octane_acetic_acid().into();
         let p=500e5;
         let t=298.15;
-        let xtotal=1.+1e-20;
-        let x=array![0.2/xtotal,1e-20/xtotal,0.8/xtotal];
+
+        let x=array![0.2,0.1,0.7];
 
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-
         
+        let rho=state.rho;
+        let xasc=state.eos.residual.assoc.X_tan(t, rho, &x).unwrap();
+        
+        let kmat=state.eos.residual.assoc.association_strength(t, rho, &x);
+        let m=state.eos.residual.assoc.get_m(&x);
+        let mult=&state.eos.residual.assoc.parameters.s;
+
+        let xtest=&m/(&m+kmat.dot(&(&xasc*mult)));
+
         println!{"{}",format!("{}",state)};
+
+        println!("K={}\n",kmat);
+        println!("m={}",m);
+        println!("X={}\n",xasc);
+        println!("Xtest={}\n",xtest);
 
         
     }

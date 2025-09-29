@@ -181,7 +181,6 @@ impl Associative {
         let kmat=self.association_strength(t, rho, x);
 
         let mut x_novo =  Array1::from_elem(ns,0.2);
-;
 
         let omega=0.25;
         // let mut mat_error:Array2<f64> = Array2::zeros((NS,ncomp));
