@@ -144,9 +144,27 @@ impl Residual for Cubic {
         Ok(
         (dbdni/bm)*z_residual +ln - dqni*i
         )
-        
-
     }
     
+    fn residual_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
+        let bm=self.bmix(x);
+        let am = self.calc_amix(t, x);
+        let dbdni=&self.parameters.vb;
+        let vm=1./rho;
+        let ln=(vm/(vm-bm)).ln();
+        let q=am/(bm*R*t);
+
+        let sig=self.sig();
+        let eps=self.eps();
+        let maij= self.calc_sqrt_aij_matrix(t);
+        let aij_dot_vx:Array1<f64> = maij.dot(x);
+
+        
+        let i: f64 = (1.0/(sig-eps))*f64::ln((vm + sig*bm )/(vm + eps*bm));
+
+        Ok(
+            ln-q*i
+        )     
+    }
 }
 

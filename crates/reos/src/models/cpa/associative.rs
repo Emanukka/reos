@@ -303,6 +303,20 @@ impl Residual for Associative {
         // )
     }
     
+    fn residual_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
+        let xassoc=self.X_tan(t,rho, x).unwrap();
+
+        let m=self.get_m(x);
+
+        let multiplicity=&self.parameters.s;
+
+        let v=xassoc.ln()-0.5*xassoc+0.5;
+        let w=multiplicity*m;
+        Ok(
+        IDEAL_GAS_CONST*t*(w.dot(&v))
+        )
+
+    }
 }
 
 

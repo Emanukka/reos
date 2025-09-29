@@ -87,6 +87,15 @@ c_heptane=CubicRecord(
     tc=540.0,
 )
 
+
+c_decane=CubicRecord(
+    a0= 4.7389,
+    b=0.17865e-3,
+    c1= 1.13243,
+    tc=617.7,
+)
+a_decane=AssociationRecord.inert(b=0.17865e-3)
+
 c_h2s=CubicRecord(
     a0= 4.45050e-1,
     b=0.0285e-3,
@@ -193,6 +202,7 @@ a_mea=AssociationRecord.associative(
     na=2,
     nb=2,
     nc=0)
+
 
 
 # tudo do NIST

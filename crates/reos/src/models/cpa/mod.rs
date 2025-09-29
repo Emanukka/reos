@@ -56,6 +56,11 @@ impl Residual for CPA {
         self.cubic.bmix(x)
     }
 
+    fn residual_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
+        Ok(
+        self.cubic.residual_helmholtz(t, rho, x)?+self.assoc.residual_helmholtz(t, rho, x)?)
+        
+    }
 }
 
 
