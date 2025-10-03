@@ -2,7 +2,7 @@
 use ndarray::Array1;
 use thiserror::Error;
 
-use crate::{models::IDEAL_GAS_CONST, residual::Residual};
+use crate::{models::{cubic::parameters::CubicParameters, IDEAL_GAS_CONST}, residual::Residual};
 
 
 // Define: 
@@ -16,14 +16,19 @@ use crate::{models::IDEAL_GAS_CONST, residual::Residual};
 pub type EosResult<T> = Result<T, EosError>;
 
 
+
 pub struct EquationOfState<R>{
     pub residual:R,
+    // pub properties:Option<PureProperties>
 }
 
 impl<R:Residual> EquationOfState<R> {
     
     pub fn from_residual(r:R)->Self{
-        Self{residual:r}
+        Self{
+            residual:r,
+
+        }
     }
 }
 impl <R:Residual> EquationOfState<R> {

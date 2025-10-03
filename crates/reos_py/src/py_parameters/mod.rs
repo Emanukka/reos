@@ -88,6 +88,7 @@ impl PyCpaParameters {
 }
 
 
+
 #[derive(Clone)]
 #[pyclass(name = "CubicParameters")]
 pub struct PyCubicParameters(
@@ -117,6 +118,14 @@ impl PyCubicParameters {
         )
 
     }
+
+    pub fn as_string(&self)->String{
+
+        let cub =format!("{}",&self.0);
+        cub 
+
+    }
+
     #[pyo3(
     signature = (i,j,kij_a=0.0,kij_b=0.0),
     text_signature = "(i,j,kij_a=0.0,kij_b=0.0)",

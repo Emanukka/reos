@@ -192,4 +192,5 @@ impl<R:Residual> State<R> {
     pub fn temperature(&self)->f64{
         self.t
     }
+
 }

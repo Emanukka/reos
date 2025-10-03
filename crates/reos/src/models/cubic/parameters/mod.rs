@@ -134,8 +134,8 @@ impl fmt::Display for CubicParameters {
 
         writeln!(f, "  Number of Components (ncomp): {}", self.ncomp)?;
 
-        writeln!(f, "  a0 (va0): {:?}", self.va0.to_vec())?;
-        writeln!(f, "  b (vb):  {:?}", self.vb.to_vec())?;
+        writeln!(f, "  a0: {:?}", self.va0.to_vec())?;
+        writeln!(f, "  b :  {:?}", self.vb.to_vec())?;
         writeln!(f, "  kappa (c1):   {:?}", self.vkappa.to_vec())?;
         writeln!(f, "  T_crit (vtc): {:?}", self.vtc.to_vec())?;
 

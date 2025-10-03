@@ -48,6 +48,18 @@ impl Residual for ResidualModel {
         }
     }
 
+    fn residual_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
+        match self{
+            ResidualModel::CPA(eos)=>{
+                eos.residual_helmholtz(t, rho, x)
+            },
+            ResidualModel::Cubic(eos)=>{
+                eos.residual_helmholtz(t, rho, x)
+            },
+
+        }        
+    }
+
     fn bmix(&self,x:&Array1<f64>)->f64 {
         match self{
             ResidualModel::CPA(eos)=>{
