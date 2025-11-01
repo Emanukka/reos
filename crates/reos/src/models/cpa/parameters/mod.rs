@@ -141,40 +141,77 @@ impl ASCParameters {
         // let mut mepsilon_cross=Array2::<f64>::zeros((n,n));
         // let mut mbeta_cross=Array2::<f64>::zeros((n,n));
 
+        let mut tspc= Vec::<usize>::new(); //total sites per associtive component
 
-        for i in 0..n{
-            //j : indice do componente associativo i no vetor global de tamanho Ntotal 
-            //necessário pois records é len=Ntotal
 
-            let j=get_global_from_associative[i]; 
-            let record=&records[j];
+        for k in 0..n{
 
+            // let i=get_global_from_associative[k];
+            let i =nassoc[k]; 
+            let record=&records[i];
+            
+            let mut ts= 0;
+            
             let na=record.na as f64;
             let nb=record.nb as f64;
             let nc=record.nc as f64;
             //Não importa a ordem de f
             // mas é necessário que a ordem de f e s batam
+
+            // no caso de que cada componente associativo tem varios sitios de memso tipo
+            // e distintos, haveria um for na lista de sitios
+
             if na!=0.0{
-                f.push(Site::A(i));
+                f.push(Site::A(k));
                 s1.push(na);
+                ts+=1;
             }
             if nb!=0.0{
-                f.push(Site::B(i));
+                f.push(Site::B(k));
                 s1.push(nb);
+                ts+=1;
 
             }
             if nc!=0.0{
-                f.push(Site::C(i));
+                f.push(Site::C(k));
                 s1.push(nc);
+                ts+=1;
+            
             }
 
+            tspc.push(ts);
+            
             //veps tem tamanho n 
-            veps[i]= record.epsilon;
-            vbeta[i]=record.beta;
+            veps[k]= record.epsilon;
+            vbeta[k]=record.beta;
         }
 
-        let f=Array1::from_vec(f);
-        let ns=f.len();
+        // dbg!(&tspc);  
+        // let tspc=Array1::from_vec(tspc);
+
+        let sites=Array1::from_vec(f);
+        let ns=sites.len();
+        // assert_eq!(ns,tspc.sum());
+        
+        // let mut sumjk=0;
+        // for k in 0..n{
+            
+        //     println!("k={k}");
+
+        //     let jk=tspc[k];
+
+        //     for j in 0..jk{
+        //         // ;
+        //         dbg!(&sites[j+sumjk]);
+        //     }
+
+        //     sumjk+=jk;
+
+        //     println!("sumjk={sumjk}")
+        // }
+
+
+
         let s=Array1::from_vec(s1);
         let mut mepsilon_cross=Array2::<f64>::zeros((ns,ns));
         let mut mbeta_cross=Array2::<f64>::zeros((ns,ns));
@@ -183,27 +220,27 @@ impl ASCParameters {
         let mut pmat:Array2<f64>=Array2::zeros((ns,ns));
         let mut tmat:Array2<f64>= Array2::zeros((n,ns));
 
-        assert_eq!(f.len(),s.len());
+        assert_eq!(sites.len(),s.len());
 
-        for (alpha,site_alpha) in f.iter().enumerate(){
+        for (j,site_j) in sites.iter().enumerate(){
 
-            let compi=site_alpha.i();
-            tmat[(compi,alpha)]=1.0;
+            let compi=site_j.i();
+            tmat[(compi,j)]=1.0;
             
-            for (beta,site_beta) in f.iter().enumerate(){
+            for (l,site_l) in sites.iter().enumerate(){
 
-                let compk=site_beta.i();
-                let j=site_alpha.t();
-                let l=site_beta.t();
+                let compk=site_l.i();
+                let type_j=site_j.t();
+                let type_l=site_l.t();
 
-                if W[j][l]==1.0{
-                    pmat[(alpha,beta)]=1.0;
-                    pmat[(beta,alpha)]=1.0;
+                if W[type_j][type_l]==1.0{
+                    pmat[(j,l)]=1.0;
+                    pmat[(l,j)]=1.0;
                 }
 
                 //CR1 is default
-                mepsilon_cross[(alpha,beta)]=(veps[compi]+veps[compk])*0.5;
-                mbeta_cross[(alpha,beta)]=((vbeta[compi]*vbeta[compk])).sqrt();
+                mepsilon_cross[(j,l)]=(veps[compi]+veps[compk])*0.5;
+                mbeta_cross[(j,l)]=((vbeta[compi]*vbeta[compk])).sqrt();
             }
         }
 
@@ -216,7 +253,7 @@ impl ASCParameters {
             epsmat:mepsilon_cross,
             betamat:mbeta_cross,
             hmat,
-            f,
+            f:sites,
             tmat,
             s,
             vb
@@ -625,31 +662,7 @@ pub fn co2_water()->E<CPA>{
         E::from_residual(cpa)
 
 } 
-pub fn multiple_water(n:usize)->E<CPA>{
-            //Records
-        //1:Water, 2:Acetic Acid
-        let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
 
-        let a1=AssociationPureRecord::associative(
-            166.55e2, 
-            0.0692, 
-            [1,1,1],
-            0.0145e-3
-        );
-        let mut vec_asc: Vec<AssociationPureRecord>=vec![];
-        let mut vec_cub: Vec<CubicPureRecord>=vec![];
-        for _ in 0..n{
-            vec_asc.push(a1.clone());
-            vec_cub.push(c1.clone());
-        }
-
-        let cpa=CPA::from_records(vec_cub,vec_asc);
-
-
-        //Create new State
-        E::from_residual(cpa)
-
-} 
 
 pub fn methanol_2b()->E<CPA>{
             //Records
@@ -761,9 +774,9 @@ pub mod tests{
     use std::sync::Arc;
 
     use approx::assert_relative_eq;
-    use ndarray::{arr1, array, linalg::Dot, Array2};
+    use ndarray::{Array1, Array2, arr1, array, linalg::Dot};
 
-    use crate::{models::cpa::parameters::{acetic_acid_water, acoh_octane, co2_water, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2, water_octane_acetic_acid}, state::{density_solver::DensityInitialization, S}};
+    use crate::{models::cpa::{CPA, parameters::{acetic_acid_water, acoh_octane, co2_water, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2, water_octane_acetic_acid}}, state::{S, density_solver::DensityInitialization, eos::EquationOfState}};
     
     pub fn map_assoc(){
         let eos = octane_acoh();
@@ -797,7 +810,31 @@ pub mod tests{
         println!{"{}",format!("{}",state)};
 
     }
-    #[test]
+
+    // #[test]
+    pub fn associative_4c_associative_1a_parameters(){
+        
+        println!("---WATER & ACETIC ACID---\n");
+        let eos:Arc<EquationOfState<CPA>> = water_acetic_acid().into();
+        
+        &eos.residual.assoc.parameters;
+        // eos
+        // // let p=10e5;
+        // let t=298.15;
+        // let rho=20235.78796260737;
+
+        // let x=array![0.2,0.8];
+        // let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+        // let state=S::new_trx(eos, t, rho, x);
+        
+        // let p=state.eos.residual.assoc.parameters.clone();
+
+        // println!{"{}",format!("{}",p)};
+        // println!{"{}",format!("{}",state)};
+
+    }
+
+    // #[test]
     pub fn associative_4c_associative_1a(){
         
         println!("---WATER & ACETIC ACID---\n");
@@ -816,7 +853,7 @@ pub mod tests{
         println!{"{}",format!("{}",state)};
 
     }
-    #[test]
+    // #[test]
 
     pub fn associative_4c_inert_associative_1a(){
         
@@ -847,7 +884,27 @@ pub mod tests{
 
         
     }
-    pub fn associative_1a_associative_4c(){
+
+    // #[test]
+    pub fn get_phi_4c_1a()->Array1<f64>{
+        
+        println!("---WATER & ACETIC ACID---\n");
+        let eos = water_acetic_acid().into();
+        let p=500e5;
+        let t=298.15;
+
+        let x=array![0.2,0.8];
+        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+        // let state=S::new_trx(eos, t, rho, x);
+        
+        // let p=state.eos.residual.assoc.parameters.clone();
+
+        let phi=state.lnphi().unwrap().exp();
+
+        phi
+    }
+
+    pub fn get_phi_1a_4c()->Array1<f64>{
         
         println!("---ACETIC ACID & WATER---\n");
         let eos = acetic_acid_water().into();
@@ -857,11 +914,27 @@ pub mod tests{
 
         let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
 
-        println!{"{}",format!("{}",state)};
+        // println!{"{}",format!("{}",state)};
+        let phi_1a_4c=state.lnphi().unwrap().exp();
+
+        phi_1a_4c
+
 
         
     }
-    #[test]
+
+    // #[test]
+    pub fn test_permutation_between_1a_4c(){
+
+        let phi_1a4c=get_phi_1a_4c();
+        let phi_4c1a_inv=get_phi_4c_1a().slice(ndarray::s![..;-1]).to_owned();
+
+        let dif=&phi_1a4c-phi_4c1a_inv;
+        let err_norm=dif.mapv(|x|x.powi(2)).sum().sqrt();
+        assert_relative_eq!(err_norm,0.0,epsilon=1e-12);
+
+    }
+    // #[test]
     pub fn associative_1a_inert(){
         println!("---AcOH & Octane---\n");
 
@@ -875,7 +948,7 @@ pub mod tests{
         println!{"{}",format!("{}",state)};
 
     }
-    #[test]
+    // #[test]
     pub fn associative_3b(){
 
         println!("---MeOH 3B---\n");
@@ -920,24 +993,6 @@ pub mod tests{
         println!{"{}",format!("{}",state)};
 
     }
-
-    #[test]
-    pub fn ig(){
-
-    let diag = arr1(&[1., 4.]);
-    // let array = Array2::from_diag(&diag);
-
-    // println!("arr={}",&array);
-    let a=diag.to_shape((2,1)).unwrap();
-
-    let b=a.dot(&a.t());
-
-    println!("arr={}",&b);
-
-
-
-    }
-
     // #[test]
     pub fn dbg_assoc_p(){
 
@@ -946,12 +1001,13 @@ pub mod tests{
         solvate_associative();
         println!("\n");
 
-        associative_4c_associative_1a();
-        println!("\n");
-        associative_4c_inert_associative_1a();
-        println!("\n");
+        // associative_4c_associative_1a();
+        // println!("\n");
+        // associative_4c_inert_associative_1a();
+        // println!("\n");
 
-        associative_1a_associative_4c();
+        // associative_1a_associative_4c();
+        test_permutation_between_1a_4c();
         println!("\n");
 
         associative_1a_inert();

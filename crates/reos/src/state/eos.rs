@@ -2,16 +2,7 @@
 use ndarray::Array1;
 use thiserror::Error;
 
-use crate::{models::{cubic::parameters::CubicParameters, IDEAL_GAS_CONST}, residual::Residual};
-
-
-// Define: 
-// 1) trait Residual: 
-// 
-// 2) struct EquationOfState: (Equação de estado genérica
-// de uma Estado Termodinâmico, possibilitando assim cálculos de propriedades)
-// (genérica pois possui um objeto que necessariamente implemente trait/interface 'Residual';
-
+use crate::{models::{ IDEAL_GAS_CONST}, residual::Residual};
 
 pub type EosResult<T> = Result<T, EosError>;
 

@@ -5,7 +5,6 @@ use ndarray::{Array1};
 use crate::{residual::Residual, state::E};
 pub mod stability;
 pub mod vle;
-pub mod bubble_dew;
 
 //Contém EOS
 // Antoine Parameters

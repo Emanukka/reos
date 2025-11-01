@@ -83,12 +83,38 @@ mod tests {
     // use nalgebra::{DMatrix, DVector};
     use ndarray::{array, Array1};
 
-    use crate::{ models::cpa::parameters::{methanol_2b, methanol_3b, water_acetic_acid, water_co2}, state::{density_solver::DensityInitialization, State}};
+    use crate::{ models::cpa::parameters::{acetic_acid_water, methanol_2b, methanol_3b, water_acetic_acid, water_co2, water_octane_acetic_acid}, state::{S, State, density_solver::DensityInitialization}};
 
     // use ndarray_linalg::{lapack::solve, solve, Solve};
+    // #[test]
+    // pub fn test_phi_4c_inert_1a(){
+        
+    //     println!("---WATER & OCTANE & ACETIC ACID---\n");
+    //     let eos = water_octane_acetic_acid().into();
+    //     let p=500e5;
+    //     let t=298.15;
+
+    //     let x=array![0.2,1e-12,0.8];
+
+    //     let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+        
+    //     let phi=state.lnphi().unwrap().exp();
+
+    //     let phi_4c_1a_with_inert=array![phi[0],phi[2]];
+
+    //     let phi_4c_1a=get_phi_4c_1a();
+    //     dbg!(&phi_4c_1a);
+    //     dbg!(&phi_4c_1a_with_inert)
+
+
+    //     let dif=&phi_4c_1a-phi_4c_1a_with_inert;
+    //     let err_norm=dif.mapv(|x|x.powi(2)).sum().sqrt();
+        
+    //     assert_relative_eq!(err_norm,0.0,epsilon=1e-12);
+    // }
 
     #[test]
-    fn cmp_phi_water_co2_vapor(){
+    fn test_phi_water_co2(){
 
 
         let p=500e5;
@@ -118,8 +144,57 @@ mod tests {
 
     }
 
+    pub fn get_phi_4c_1a()->Array1<f64>{
+        
+        println!("---WATER & ACETIC ACID---\n");
+        let eos = water_acetic_acid().into();
+        let p=500e5;
+        let t=298.15;
+
+        let x=array![0.2,0.8];
+        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+        // let state=S::new_trx(eos, t, rho, x);
+        
+        // let p=state.eos.residual.assoc.parameters.clone();
+
+        let phi=state.lnphi().unwrap().exp();
+
+        phi
+    }
+
+    pub fn get_phi_1a_4c()->Array1<f64>{
+        
+        println!("---ACETIC ACID & WATER---\n");
+        let eos = acetic_acid_water().into();
+        let p=500e5;
+        let t=298.15;
+        let x=array![0.8,0.2];
+
+        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
+
+        // println!{"{}",format!("{}",state)};
+        let phi_1a_4c=state.lnphi().unwrap().exp();
+
+        phi_1a_4c
+
+
+        
+    }
+
     #[test]
-    fn cmp_metoh_3b_2b_xassoc(){
+    pub fn test_permutation_between_1a_4c(){
+
+        let phi_1a4c=get_phi_1a_4c();
+        let phi_4c1a_inv=get_phi_4c_1a().slice(ndarray::s![..;-1]).to_owned();
+
+        let dif=&phi_1a4c-phi_4c1a_inv;
+        let err_norm=dif.mapv(|x|x.powi(2)).sum().sqrt();
+        assert_relative_eq!(err_norm,0.0,epsilon=1e-12);
+
+    }
+
+    #[test]
+    fn test_phi_metoh_2b_3b(){
 
         //State Variables
         let p=500e5;
@@ -189,61 +264,20 @@ mod tests {
         assert_relative_eq!(phi[1],cmp[1],epsilon=1e-10);
 
     }
-    #[test]
-    fn test_val(){
 
-        //State Variables
-        let p=500e5;
-        let t=298.15;
-        let x=Array1::from_vec(vec![1e-6,1.0]);
 
-        let eos = water_acetic_acid();
-        // let s=State::new_tpx(&Arc::new(eos), t, p, x, DensityInitialization::Vapor).unwrap();   //0.09s
-        let s=State::new_tpx(&Arc::new(eos), t, p, x, DensityInitialization::Vapor).unwrap();   //
+        // #[test]
+    pub fn dbg_assoc_p(){
 
-        let rho=s.rho;
-        println!("{}",rho);
-        let phi: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>=s.lnphi().unwrap().exp();
+        test_permutation_between_1a_4c(); // also test ECR 
+        println!("\n");
+        test_phi_metoh_2b_3b();
+        println!("\n");
 
-        let cmp=array![0.00009551080457744488, 0.00007903286580072037];
-        // dbg!(s.rho);
+        test_phi_water_co2();
+        println!("\n");
 
-        println!("{}",s);
-        assert_relative_eq!(phi[0],cmp[0],epsilon=1e-10);
-        assert_relative_eq!(phi[1],cmp[1],epsilon=1e-10);
+        // cargo test dbg_assoc_p -- --nocapture >src/parameters/dbg/dbg_assoc_p.txt
 
     }
-
- 
-    #[test]
-
-    fn x_from_state(){
-
-        let p=500e5;
-        let t=298.15;
-        let x=Array1::from_vec(vec![0.5,0.5]);
-
-        let eos =water_co2().into();
-
-        let s=State::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        
-        // let rho=1e3;
-        // // let D=eos.residual.assoc.calc_delta_mat(t, rho, &x);
-        // // let X=eos.residual.assoc.calc_non_assoc_sites_mat(1e3, &x, None, &D);
-        let phi: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>=s.lnphi().unwrap().exp();
-
-        let xasc=s.non_bonded_sites();
-
-
-        println!("X=\n{}",xasc);
-        // println!("K=\n{}",kmat);
-        // println!("phi={}",phi);
-        let phi_cmp=array![2.14385745e-04, 5.65853284e-01];
-
-        assert_relative_eq!(phi[0],phi_cmp[0],epsilon=1e-8);
-        assert_relative_eq!(phi[1],phi_cmp[1],epsilon=1e-8);
-
-
-    }
-
 }
