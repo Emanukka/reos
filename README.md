@@ -50,7 +50,7 @@ print(f"Non-Bonded Sites fraction = {X}")
    
 ```
 phi = [2.14385748e-04 5.65853284e-01]
-Sites = ((0, 0), (1, 0), (1, 1)) <span style="color:green">#(type, owner)</span>
+Sites = ((0, 0), (1, 0), (1, 1)) #(type, owner)
 Non-Bonded Sites fraction = [0.07333045 0.22590468 0.69485154]
 ```
 
