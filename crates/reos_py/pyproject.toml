@@ -4,6 +4,10 @@ build-backend = "maturin"
 
 [project]
 name = "reos"
+authors=[
+    {name = "Emanuel", email = "emanuka@eq.ufrj.br"}
+]
+description = "A Library for Thermodynamics using Cubic & Associative contributions written in Rust."
 requires-python = ">=3.8"
 repository="https://github.com/Emanukka/reos"
 readme = "README.md"
