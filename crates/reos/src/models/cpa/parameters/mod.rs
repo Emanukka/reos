@@ -224,12 +224,12 @@ impl ASCParameters {
 
         for (j,site_j) in sites.iter().enumerate(){
 
-            let compi=site_j.i();
+            let compi=site_j.c();
             tmat[(compi,j)]=1.0;
             
             for (l,site_l) in sites.iter().enumerate(){
 
-                let compk=site_l.i();
+                let compk=site_l.c();
                 let type_j=site_j.t();
                 let type_l=site_l.t();
 
@@ -278,11 +278,11 @@ impl ASCParameters {
         // dbg!(f);
 
         for (idx_alpha,site_alpha) in f.iter().enumerate(){
-            let compi_from_site_alpha=site_alpha.i();
+            let compi_from_site_alpha=site_alpha.c();
             if compi_from_site_alpha!=compi{continue;}
 
             for (idx_beta,site_beta) in f.iter().enumerate(){
-                let compj_from_site_beta=site_beta.i();
+                let compj_from_site_beta=site_beta.c();
                 if compj_from_site_beta!=compj{continue;}       
 
                 match rule {
@@ -778,248 +778,16 @@ pub mod tests{
 
     use crate::{models::cpa::{CPA, parameters::{acetic_acid_water, acoh_octane, co2_water, methanol_2b, methanol_3b, octane_acoh, water_acetic_acid, water_co2, water_octane_acetic_acid}}, state::{S, density_solver::DensityInitialization, eos::EquationOfState}};
     
-    pub fn map_assoc(){
-        let eos = octane_acoh();
-        let h=&eos.residual.assoc.parameters.hmat;
-        // println!("Assoc=\n{}",eos.residual.assoc.parameters);
-        let x1=0.4;
-        let x=array![x1,1.-x1];
-        let x_= h.dot(&x.t());
-        assert_eq!(x_[0],0.6);
-    }
-    // #[test]
-    pub fn associative_solvate(){
-        println!("---WATER & CO2---\n");
-        let p=500e5;
-        let t=298.15;
-        let x=array![0.8,0.2];
-        let eos = Arc::new(water_co2());
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        println!{"{}",format!("{}",state)};
 
-    }
-    // #[test]
-    pub fn solvate_associative(){
-        println!("---CO2 & WATER---\n");
-        let eos = co2_water().into();
-        let p=500e5;
-        let t=298.15;
-        let x=array![0.2,0.8];
+    #[test]
+    fn show_sites(){
+        let eos=water_co2();
+        let sites=&eos.residual.assoc.parameters.f;
 
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        println!{"{}",format!("{}",state)};
+        println!("Sites = {}" ,sites);
+        let eos=water_octane_acetic_acid();
+        let sites=&eos.residual.assoc.parameters.f;
 
-    }
-
-    // #[test]
-    pub fn associative_4c_associative_1a_parameters(){
-        
-        println!("---WATER & ACETIC ACID---\n");
-        let eos:Arc<EquationOfState<CPA>> = water_acetic_acid().into();
-        
-        &eos.residual.assoc.parameters;
-        // eos
-        // // let p=10e5;
-        // let t=298.15;
-        // let rho=20235.78796260737;
-
-        // let x=array![0.2,0.8];
-        // let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        // let state=S::new_trx(eos, t, rho, x);
-        
-        // let p=state.eos.residual.assoc.parameters.clone();
-
-        // println!{"{}",format!("{}",p)};
-        // println!{"{}",format!("{}",state)};
-
-    }
-
-    // #[test]
-    pub fn associative_4c_associative_1a(){
-        
-        println!("---WATER & ACETIC ACID---\n");
-        let eos = water_acetic_acid().into();
-        let p=10e5;
-        let t=298.15;
-        let rho=20235.78796260737;
-
-        let x=array![0.2,0.8];
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        // let state=S::new_trx(eos, t, rho, x);
-        
-        // let p=state.eos.residual.assoc.parameters.clone();
-
-        // println!{"{}",format!("{}",p)};
-        println!{"{}",format!("{}",state)};
-
-    }
-    // #[test]
-
-    pub fn associative_4c_inert_associative_1a(){
-        
-        println!("---WATER & OCTANE & ACETIC ACID---\n");
-        let eos = water_octane_acetic_acid().into();
-        let p=500e5;
-        let t=298.15;
-
-        let x=array![0.2,0.1,0.7];
-
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        
-        let rho=state.rho;
-        let xasc=state.eos.residual.assoc.X_tan(t, rho, &x).unwrap();
-        
-        let kmat=state.eos.residual.assoc.association_strength(t, rho, &x);
-        let m=state.eos.residual.assoc.get_m(&x);
-        let mult=&state.eos.residual.assoc.parameters.s;
-
-        let xtest=&m/(&m+kmat.dot(&(&xasc*mult)));
-
-        println!{"{}",format!("{}",state)};
-
-        println!("K={}\n",kmat);
-        println!("m={}",m);
-        println!("X={}\n",xasc);
-        println!("Xtest={}\n",xtest);
-
-        
-    }
-
-    // #[test]
-    pub fn get_phi_4c_1a()->Array1<f64>{
-        
-        println!("---WATER & ACETIC ACID---\n");
-        let eos = water_acetic_acid().into();
-        let p=500e5;
-        let t=298.15;
-
-        let x=array![0.2,0.8];
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        // let state=S::new_trx(eos, t, rho, x);
-        
-        // let p=state.eos.residual.assoc.parameters.clone();
-
-        let phi=state.lnphi().unwrap().exp();
-
-        phi
-    }
-
-    pub fn get_phi_1a_4c()->Array1<f64>{
-        
-        println!("---ACETIC ACID & WATER---\n");
-        let eos = acetic_acid_water().into();
-        let p=500e5;
-        let t=298.15;
-        let x=array![0.8,0.2];
-
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-
-        // println!{"{}",format!("{}",state)};
-        let phi_1a_4c=state.lnphi().unwrap().exp();
-
-        phi_1a_4c
-
-
-        
-    }
-
-    // #[test]
-    pub fn test_permutation_between_1a_4c(){
-
-        let phi_1a4c=get_phi_1a_4c();
-        let phi_4c1a_inv=get_phi_4c_1a().slice(ndarray::s![..;-1]).to_owned();
-
-        let dif=&phi_1a4c-phi_4c1a_inv;
-        let err_norm=dif.mapv(|x|x.powi(2)).sum().sqrt();
-        assert_relative_eq!(err_norm,0.0,epsilon=1e-12);
-
-    }
-    // #[test]
-    pub fn associative_1a_inert(){
-        println!("---AcOH & Octane---\n");
-
-        let eos = acoh_octane().into();
-        let t=298.15;
-        let p=500e5;
-        
-        let x=array![0.2,0.8];
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-
-        println!{"{}",format!("{}",state)};
-
-    }
-    // #[test]
-    pub fn associative_3b(){
-
-        println!("---MeOH 3B---\n");
-        let eos=Arc::new(methanol_3b());
-        let x=array![1.0];
-
-        let t=298.15;
-        let p=500e5;
-        let cmp= [0.0007471714606619553];
-
-        let state=S::new_tpx(&eos,
-             t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-
-        let rho=state.rho;
-
-        let phi=state.lnphi().unwrap().exp();
-        assert_relative_eq!(phi[0],cmp[0],epsilon=1e-8);
-
-        let xassoc=eos.residual.assoc.X_tan(t, rho, &x).unwrap();
-        let xa=xassoc[0];
-        let xb=xassoc[1];
-        // let gmix=eos.residual.assoc.g_func(rho, &x);
-        assert_relative_eq!(2.*xa-1.0,xb,epsilon=1e-10);
-
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        
-        // let grad=state.eos.residual.assoc.grad(t, rho, &x,&xassoc);
-
-        // dbg!(&grad);
-        println!{"{}",format!("{}",state)};
-
-    }
-    pub fn associative_2b(){
-        println!("---MeOH 2B---\n");
-
-        let eos = methanol_2b().into();
-        let t=298.15;
-        let p=500e5;
-        let x=array![1.0];
-
-        let state=S::new_tpx(&eos, t, p, x.clone(), DensityInitialization::Vapor).unwrap();
-        println!{"{}",format!("{}",state)};
-
-    }
-    // #[test]
-    pub fn dbg_assoc_p(){
-
-        associative_solvate();
-        println!("\n");
-        solvate_associative();
-        println!("\n");
-
-        // associative_4c_associative_1a();
-        // println!("\n");
-        // associative_4c_inert_associative_1a();
-        // println!("\n");
-
-        // associative_1a_associative_4c();
-        test_permutation_between_1a_4c();
-        println!("\n");
-
-        associative_1a_inert();
-        println!("\n");
-
-        associative_2b();
-        println!("\n");
-
-        associative_3b();
-        println!("\n");
-
-        // cargo test dbg_assoc_p -- --nocapture >src/parameters/dbg/dbg_assoc_p.txt
-
+        println!("Sites = {}" ,sites);
     }
 }

@@ -1,54 +1,58 @@
 # REOS 
 
-```py
-#Array with [A,B,C] for each component
-antoine=np.array([metoh_antoine,octanol_antoine])
+```python
+import numpy as np
+from reos.reos import EquationOfState,State,CPAParameters,CubicRecord,AssociationRecord
 
-p=CPAParameters.from_records(
-    cubic=[c_methanol_3b,c_octanol_3b],
-    assoc=[a_methanol_3b,a_octanol_3b])
 
-p.set_cubic_binary(0,1,0.0,-0.025)
-p.set_assoc_binary(0,1,"ecr")
-eos_3b=EquationOfState.cpa(p)
-P=101.32e3
 
-VAR,LIQUID,VAPOR=linspace_bubble_t(eos_3b,P,antoine,N=100)
+#1) Cubic pure parameters
+c_water = CubicRecord(a0 = 0.12277, b = 0.0145e-3, c1 = 0.6736, tc = 647.14)
+c_co2 = CubicRecord(a0 = 0.35079, b = 0.0272e-3, c1 = 0.7602, tc = 304.12)
 
-bubble_diagram(
-   VAR,
-   LIQUID,
-   VAPOR,
-   title="Methanol(1) and Octanol(2) 3B+ECR ",
-   y_label="T/K",
-   x_label=r"$x_1,y_1$",
-   text=f"{P/1e3}kPa",
-   factor=1.0,
-   y_figsize=2.5,
-   x_figsize=5,
-   y_inf=300,y_sup=480,
-   exp_data=exp_data)
 
-xL=[LIQUID[i].composition()[0] for i in range(100)]
-xV=[VAPOR[i].composition()[0] for i in range(100)]
+#2) Associative pure parameters (Water 4C and CO2 1ea, data from  Tsivintzelis,2011)  
+a_water  = AssociationRecord.associative(b = 0.0145e-3, eps = 166.55e2, beta = 0.0692, na = 2, nb = 2, nc = 0)
+a_co2  = AssociationRecord.solvate(b = 0.0272e-3, na = 0, nb = 1, nc = 0)
 
-#Get the non-bonded sites fraction from each state
-XL=np.array([LIQUID[i].non_bonded_sites() for i in range(100)])
-XV=np.array([VAPOR[i].non_bonded_sites() for i in range(100)])
+#3) Build a CPAParameters object 
+parameters = CPAParameters.from_records(
+    cubic = [c_water,c_co2],
+    assoc = [a_water,a_co2])
 
-sites=["-MeOH","+MeOH","-OcOH","+OcOH"]
+# Set the combination's rule 
+parameters.set_cubic_binary(j = 0, i = 1, kij_a =  0.000877, kij_b = -0.15508 ) #kij = aT + b
+parameters.set_assoc_binary(j = 0, i = 1, rule = "mcr1", beta = 0.1836) # modified CR1
 
-plt.figure(figsize=(5, 2.5))
+#4) Create a EoS object w\ CPA contribution
+eos = EquationOfState.cpa(parameters)
 
-for (i,s) in enumerate(sites):
+#5) Instantiate a State object from the EoS
+T=298.15
+P=500e5
+x=np.array([0.5,0.5])
+state= State.tpx(eos,T,P,x,density_initialization="vapor")
 
-    plt.plot(xL,XL[:,i],label=s)
+# Compute thermodynamic properties
+phi=np.exp(state.ln_phi())
+print(f"phi = {phi}")
 
-plt.title("Methanol(1) and Octanol(2) 3B+ECR Liquid Phase")
-plt.ylabel("Fraction of Non-Bonded Sites")
+# Get association variables
+assoc = eos.get_association()
+sites_map =assoc.get_sites_map()
 
-plt.xlabel(r"$x_1$") 
-plt.legend()
+X=state.non_bonded_sites()
+
+print(f"Sites = {sites_map}") 
+
+print(f"Non-Bonded Sites fraction = {X}")
+```
+   
+```
+phi = [2.14385748e-04 5.65853284e-01]
+Sites = ((0, 0), (1, 0), (1, 1)) <span style="color:green">#(type, owner)</span>
+Non-Bonded Sites fraction = [0.07333045 0.22590468 0.69485154]
+```
 
 ```
 

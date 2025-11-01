@@ -1,5 +1,7 @@
 use core::fmt;
 
+use ndarray::Array1;
+
 
 // Association
 pub const A: usize = 0;
@@ -18,7 +20,7 @@ pub enum Site{
 impl Site {
     
     ///Get component of site alpha
-    pub fn i(&self)->usize{
+    pub fn c(&self)->usize{
         match self {
             Self::A(i)=>*i,
             Self::B(i)=>*i,
@@ -36,13 +38,6 @@ impl Site {
 
 }
 
-impl From<Site> for (usize,usize) {
-
-    fn from(value: Site) -> Self {
-        
-        (value.t(),value.i())
-    }
-}
 
 
 pub const SITES:[usize;3]=[A,B,C];
@@ -50,9 +45,40 @@ pub const SITES:[usize;3]=[A,B,C];
 impl fmt::Display for Site {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Site::A(i) => write!(f, "A({})", i),
-            Site::B(i) => write!(f, "B({})", i),
-            Site::C(i) => write!(f, "C({})", i),
+            Site::A(i) => write!(f, "A(owner={})", i),
+            Site::B(i) => write!(f, "B(owner={})", i),
+            Site::C(i) => write!(f, "C(owner={})", i),
         }
+    }
+}
+impl From<Site> for (usize,usize) {
+
+    fn from(value: Site) -> Self {
+        
+        (value.t(),value.c())
+    }
+}
+
+#[cfg(test)]
+pub mod tests{
+    use ndarray::array;
+
+    use crate::models::cpa::sites::Site;
+
+
+    #[test]
+    fn print_sites(){
+
+        let s1=Site::A(0);
+        let s2=Site::B(0);
+
+        println!("Site1 = {}",s1);
+        println!("Site2 = {}",s2);
+
+
+        let sites=array![s1,s2];
+
+        println!("Sites = {}",sites)
+        
     }
 }

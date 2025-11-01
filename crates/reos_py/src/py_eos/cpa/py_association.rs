@@ -63,20 +63,20 @@ impl PyAssociation {
         tmat.into_pyarray(py)
 
     }
-    /// Get the map F.
+    /// Get the map f.
     /// 
-    /// Map's size is the number of distinctive sites (NS) in mixture.
+    /// Map's size is the number of distinctive sites (S) in mixture.
     /// 
-    /// At the k position in F[k], it's returned a tuple (j,i):
+    /// At the j position in f[j], it's returned a tuple (type,owner):
     /// 
-    /// - j is the type of the site (A(0),B(1) or C (2)),
-    /// - i is the owner of the site.
+    /// - 'type' is the type of the site (A,B or C),
+    /// - 'owner' is the owner of the site.
     /// 
-    /// The map is useful to determine in the X which is the site's owner at k position.
+    /// The map is useful to determine in the X which is the site's owner at j position.
     /// 
     /// Returns
     /// -------
-    /// F array
+    /// f array
     fn get_sites_map<'py>(&self,py: Python<'py>)->Bound<'py,PyTuple>{
 
         let assoc=&self.0;
