@@ -54,10 +54,9 @@ Sites = ((0, 0), (1, 0), (1, 1)) #(type, owner)
 Non-Bonded Sites fraction = [0.07333045 0.22590468 0.69485154]
 ```
 
-```
 
 
-# The Project's Sctructre
+#The Project's Sctructre
 
 ```
 ├── crates
