@@ -1,10 +1,7 @@
 # REOS 
-
 ```python
 import numpy as np
 from reos.reos import EquationOfState,State,CPAParameters,CubicRecord,AssociationRecord
-
-
 
 #1) Cubic pure parameters
 c_water = CubicRecord(a0 = 0.12277, b = 0.0145e-3, c1 = 0.6736, tc = 647.14)
