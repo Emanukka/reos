@@ -4,22 +4,25 @@ use pyo3::prelude::*;
 use reos::models::cpa::associative::Associative;
 
 use reos::models::cpa::CPA;
+use reos::models::cpa::rdf::{CarnahanStarlingRDF, ElliotRDF};
 use reos::models::cubic::{Cubic, CubicModel};
 use reos::state::eos::EquationOfState;
 use std::sync::Arc;
-use crate::py_eos::cpa::py_association::PyAssociation;
+// use crate::py_eos::cpa::py_association::PyAssociation;
 use crate::py_eos::py_residual::ResidualModel;
 use crate::py_eos::PyEquationOfState;
 use crate::py_parameters::PyCpaParameters;
 use crate::py_state::PyState;
 
-pub mod py_association;
+// pub mod py_association;
 
 #[pymethods]
 impl PyEquationOfState {
 
 
-    /// A CPA Equation Of State.
+    /// A sCPA-SRK Equation Of State.
+    /// 
+    /// CPA with Elliot RDF
     /// 
     /// Parameters
     /// ----------
@@ -28,17 +31,91 @@ impl PyEquationOfState {
     /// 
     /// Returns
     /// -------
-    /// CPA Equation Of State
+    /// sCPA Equation Of State
     #[staticmethod]
-    pub fn cpa(parameters: Bound<'_,PyCpaParameters>)->PyResult<Self>{
+    pub fn scpa_srk(parameters: Bound<'_,PyCpaParameters>)->PyResult<Self>{
 
         let p: PyCpaParameters=parameters.extract()?;
 
-        let cpa=CPA::new(
-            Cubic::new(p.cub.clone(), CubicModel::SRK),
-            Associative::new(p.asc.clone())
-        );
+        let cpa = CPA::<ElliotRDF>::srk_from_parameters(p.cub.clone(), p.asc.clone());
+        let r=ResidualModel::sCPA(cpa);
 
+        let arc=Arc::new(EquationOfState::from_residual(r));
+
+        Ok(
+            PyEquationOfState(arc)
+        )
+    }
+
+
+    /// A sCPA-PR Equation Of State.
+    /// 
+    /// CPA with Elliot RDF
+    /// 
+    /// Parameters
+    /// ----------
+    /// 
+    /// parameters : CPAParameters object
+    /// 
+    /// Returns
+    /// -------
+    /// sCPA-PR Equation Of State
+    #[staticmethod]
+    pub fn scpa_pr(parameters: Bound<'_,PyCpaParameters>)->PyResult<Self>{
+
+        let p: PyCpaParameters=parameters.extract()?;
+
+        let cpa = CPA::<ElliotRDF>::pr_from_parameters(p.cub.clone(), p.asc.clone());
+        let r=ResidualModel::sCPA(cpa);
+
+        let arc=Arc::new(EquationOfState::from_residual(r));
+
+        Ok(
+            PyEquationOfState(arc)
+        )
+    }
+
+    /// A CPA-SRK Equation Of State.
+    /// 
+    /// CPA with Carnahan-Starling RDF
+    /// Parameters
+    /// ----------
+    /// 
+    /// parameters : CPAParameters object
+    /// 
+    /// Returns
+    /// -------
+    /// CPA-SRK Equation Of State
+    #[staticmethod]
+    pub fn cpa_srk(parameters: Bound<'_,PyCpaParameters>)->PyResult<Self>{
+
+        let p: PyCpaParameters=parameters.extract()?;
+
+        let cpa = CPA::<CarnahanStarlingRDF>::srk_from_parameters(p.cub.clone(), p.asc.clone());
+        let r=ResidualModel::CPA(cpa);
+
+        let arc=Arc::new(EquationOfState::from_residual(r));
+
+        Ok(
+            PyEquationOfState(arc)
+        )
+    }
+    /// A CPA-PR Equation Of State.
+    /// 
+    /// CPA with Carnahan-Starling RDF
+    /// Parameters
+    /// ----------
+    /// 
+    /// parameters : CPAParameters object
+    /// 
+    /// Returns
+    /// -------
+    /// CPA-PR Equation Of State
+    #[staticmethod]
+    pub fn cpa_pr(parameters: Bound<'_,PyCpaParameters>)->PyResult<Self>{
+        let p: PyCpaParameters=parameters.extract()?;
+
+        let cpa = CPA::<CarnahanStarlingRDF>::pr_from_parameters(p.cub.clone(), p.asc.clone());
         let r=ResidualModel::CPA(cpa);
 
         let arc=Arc::new(EquationOfState::from_residual(r));
@@ -48,28 +125,29 @@ impl PyEquationOfState {
         )
     }
 
-    /// Returns the Association contribution object of EOS.
-    /// 
-    /// The object returned can calculate associative properties
-    /// from the properties converged in the 'State initialization'
-    /// e.g: calculate the fraction of non-bonded sites X
-    /// 
-    /// Warning! If the EoS doens't have an associative contribution,
-    /// an error will be thrown
-    fn get_association(&self)->PyResult<PyAssociation>{
 
-        let residual=&self.0.residual;
+    // /// Returns the Association contribution object of EOS.
+    // /// 
+    // /// The object returned can calculate associative properties
+    // /// from the properties converged in the 'State initialization'
+    // /// e.g: calculate the fraction of non-bonded sites X
+    // /// 
+    // /// Warning! If the EoS doens't have an associative contribution,
+    // /// an error will be thrown
+    // fn get_association(&self)->PyResult<PyAssociation>{
 
-        if let ResidualModel::CPA(cpa) = residual{
-            Ok(
-                PyAssociation(cpa.assoc.clone())
-            )
-        }
-        else {
+    //     let residual=&self.0.residual;
 
-            Err(PyErr::new::<PyTypeError, _>("Error! EOS doens't contai Associative Contribution."))
-        }
-    }
+    //     if let ResidualModel::CPA(cpa) = residual{
+    //         Ok(
+    //             PyAssociation(cpa.assoc.clone())
+    //         )
+    //     }
+    //     else {
+
+    //         Err(PyErr::new::<PyTypeError, _>("Error! EOS doens't contai Associative Contribution."))
+    //     }
+    // }
 }
 #[pymethods]
 
@@ -97,50 +175,37 @@ impl PyState {
         let residual=&self.0.eos.residual;
 
 
-        if let ResidualModel::CPA(cpa) = residual{
-            let t=self.0.t;
-            let rho=self.0.rho;
-            let x=&self.0.x;
+        match residual{
+            ResidualModel::sCPA(cpa)=>{
+                let t=self.0.t;
+                let rho=self.0.rho;
+                let x=&self.0.x;
 
-            Ok
-            (
-                cpa.assoc.X_tan(t, rho, x).unwrap().into_pyarray(py)
-                
-            )
-        }else {
-            Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
-        }
+                Ok
+                (
+                    cpa.assoc.X_tan(t, rho, x).unwrap().into_pyarray(py)
+                    
+                )
+            }
+            ResidualModel::CPA(cpa)=>{
+                let t=self.0.t;
+                let rho=self.0.rho;
+                let x=&self.0.x;
 
-    }
+                Ok
+                (
+                    cpa.assoc.X_tan(t, rho, x).unwrap().into_pyarray(py)
+                    
+                )
+            }
+            _ => {
+                Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
+            }
+            
+        } 
 
-    fn association_constant<'py>(&self,py:Python<'py>)->PyResult<Bound<'py, PyArray2<f64>>>{
-
-        let residual=&self.0.eos.residual;
-
-        if let ResidualModel::CPA(cpa) = residual{
-            let t=self.0.t;
-            let rho=self.0.rho;
-            let x=&self.0.x;
-            Ok(cpa.assoc.association_strength(t, rho, x).into_pyarray(py))
-        }else {
-            Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
-        }
-
-    }
-
-    fn association_strength<'py>(&self,py:Python<'py>)->PyResult<Bound<'py, PyArray2<f64>>>{
-
-        let residual=&self.0.eos.residual;
-
-        if let ResidualModel::CPA(cpa) = residual{
-            let t=self.0.t;
-            let rho=self.0.rho;
-            let x=&self.0.x;
-            let gmix=cpa.assoc.g_func(rho, x);
-            Ok(cpa.assoc.delta_mat(t, gmix).into_pyarray(py))
-        }else {
-            Err(PyErr::new::<PyTypeError, _>("Error! State doens't contain Associative Contribution."))
-        }
 
     }
+
+
 }

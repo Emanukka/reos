@@ -18,19 +18,6 @@ pub struct PyCpaParameters{
 impl PyCpaParameters {
 
 
-
-    // pub fn from_json(json:String,components:Vec<String>)->Self{
-
-    //     let c:Vec<&str>=components.iter().map(|a|a.as_str()).collect();
-        
-    //     PyCpaParameters{
-    //         asc:ASCParameters::from_json(&json, c.clone()),
-    //         cub:CubicParameters::from_json(&json, c)
-    //     }
-
-
-    // }
-
 /// Parameters
 /// ----------
 ///     cubic: List[CubicRecord],
@@ -38,7 +25,7 @@ impl PyCpaParameters {
 /// 
 /// Returns
 /// -------
-    /// Return SRK-CPA Parameters from cubic & assoc records.
+    /// Return CPA Parameters from cubic & assoc records.
     #[staticmethod]
     #[pyo3(
         signature = (cubic,assoc),
@@ -78,6 +65,22 @@ impl PyCpaParameters {
         }
     }
 
+    #[pyo3(
+    signature = (sitej,sitel,eps,beta),
+    text_signature = "(sitej,sitel,eps,beta)",
+    )]
+    pub fn change_sites_p(&mut self,sitej:usize,sitel:usize,eps:f64,beta:f64)->PyResult<()>{
+
+        self.asc.change_sites_parameters(sitej, sitel, eps, beta);
+        
+        return Ok(());
+
+        // Err(e)=> {
+        //     Err(PyErr::new::<PyValueError, _>(
+        //         e.to_string(),
+        //     ))}
+        // }
+    }
     pub fn as_string(&self)->String{
 
         let asc =format!("{}",&self.asc);
@@ -133,5 +136,23 @@ impl PyCubicParameters {
 
     pub fn set_cubic_binary(&mut self,i:usize,j:usize,kij_a:f64,kij_b:f64){
         self.0.set_binary(i, j, Some(kij_a), kij_b);
+    }
+}
+#[cfg(test)]
+pub mod tests{
+    use std::sync::Arc;
+
+    
+    use reos::models::cpa::parameters::water_co2;
+    #[test]
+    fn show_sites(){
+        let eos=water_co2();
+        let sites=&eos.residual.assoc.parameters.f;
+
+        // println!("Sites = {}" ,sites);
+        // let eos=water_octane_acetic_acid();
+        // let sites=&eos.residual.assoc.parameters.f;
+
+        // println!("Sites = {}" ,sites);
     }
 }

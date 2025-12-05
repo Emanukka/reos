@@ -2,53 +2,22 @@
 use ndarray::{Array1, Array2};
 use crate::models::IDEAL_GAS_CONST;
 use crate::models::cpa::parameters::{ ASCParameters, AssociationRule};
+use crate::models::cpa::rdf::RDF;
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EosResult};
 
 
 #[derive(Clone)]
-pub struct Associative{
+pub struct Associative<T:RDF>{
     pub parameters:ASCParameters,
-}
-// pub struct Associative{
-//     pub parameters:ASCParameters,
-//     pub X:RefCell< X>,
-// }
-#[derive(Clone)]
-struct NonBondedSites{
-    pub data:Array1<f64>,
-    pub rho:f64,
+    pub rdf: T
 }
 
-// impl X {
-    
-//     fn default(rho:f64,ncomp:usize)->Self{
-//         Self{
-//             data:Array2::<f64>::from_elem((NS,ncomp),0.2),
-//             rho
-//         }
-//     }a
-//     pub fn change_coordinate(&mut self,rho:f64,vb:&Array1<f64>,x:&Array1<f64>){
-        
-//         let rhomax=1.0/vb.dot(x);
-//         let ncomp=x.len();
-//         let s0=self.rho/rhomax;
-//         let s1=rho/rhomax;
-//         let eps=0.4;
-//         let dif = (s1-s0).abs();
-//         self.rho=rho;
-//         if dif<=eps{
-//         }else {
-//             // println!("Mudança de coordenada");
-//             self.data=Array2::<f64>::from_elem((NS,ncomp),0.2)
-//         }
-//     }
-// }
 
-impl Associative {
+impl<T:RDF> Associative<T> {
     
-    pub fn new(p:ASCParameters)->Self{
-        Self{parameters:p}
+    pub fn new(p:ASCParameters, rdf: T)->Self{
+        Self{parameters:p, rdf}
         // Self{x:Array1::<f64>::default(p.f.len()),parameters:p}
     }
 
@@ -64,28 +33,28 @@ impl Associative {
 
 
 }
-impl Associative {
-    pub fn g_func(&self,rho:f64,x:&Array1<f64>)->f64{
-        1.0 / (1.0 - 1.9 * (rho * self.parameters.vb.dot(x) / 4.0))
-    }
+impl<T:RDF> Associative<T> {
+    // pub fn g_func(&self,rho:f64,x:&Array1<f64>)->f64{
+    //     1.0 / (1.0 - 1.9 * (rho * self.parameters.vb.dot(x) / 4.0))
+    // }
 
-    pub fn dlngdrho(&self,rho:f64,x:&Array1<f64>)->f64{
+    // pub fn dlngdrho(&self,rho:f64,x:&Array1<f64>)->f64{
 
-        let bm = self.parameters.vb.dot(x);
-        let gm =self.g_func(rho,x);
+    //     let bm = self.parameters.vb.dot(x);
+    //     let gm =self.g_func(rho,x);
 
-        let result = (1.0 / gm) * (-1.0) * (gm*gm) * (-1.9 * bm / 4.0);
-        // println!("dlngdrho={result}");
-        result
+    //     let result = (1.0 / gm) * (-1.0) * (gm*gm) * (-1.9 * bm / 4.0);
+    //     // println!("dlngdrho={result}");
+    //     result
 
-    }
+    // }
 
-    // !!!
-    pub fn dlngdni(&self,rho:f64,x:&Array1<f64>)->Array1<f64>{
+    // // !!!
+    // pub fn dlngdni(&self,rho:f64,x:&Array1<f64>)->Array1<f64>{
 
-        let gmix = self.g_func(rho,x);
-        gmix * 1.9 *(rho*&self.parameters.vb/4.0)
-    }
+    //     let gmix = self.g_func(rho,x);
+    //     gmix * 1.9 *(rho*&self.parameters.vb/4.0)
+    // }
     pub fn get_m(&self,x:&Array1<f64>)->Array1<f64>{
         let t=&self.parameters.tmat;
         let h=&self.parameters.hmat;
@@ -106,7 +75,7 @@ impl Associative {
     }
 }
 
-impl Associative {
+impl<T:RDF> Associative<T> {
 
     pub fn cr1_mat(&self,t:f64,gmix:f64)->Array2<f64>{
 
@@ -165,7 +134,9 @@ impl Associative {
         let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
         let pmat=&self.parameters.pmat;
 
-        let gmix=self.g_func(rho, x);
+        // let gmix=self.g_func(rho, x);
+        let gmix = self.rdf.rdf(rho, x, &self.parameters.vb);
+
         // let delta=self.delta(t, gmix);
         let delta=self.delta_mat(t, gmix);
 
@@ -232,7 +203,7 @@ impl Associative {
         let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
         let pmat=&self.parameters.pmat;
 
-        let gmix=self.g_func(rho, x);
+        let gmix = self.rdf.rdf(rho, x, &self.parameters.vb);
         let kmat=self.delta_mat(t, gmix)*mm_mat*pmat*rho;
 
         m*(1.0/x_assoc-1.0) -kmat.dot(&(x_assoc*multplicity))
@@ -253,7 +224,7 @@ impl Associative {
 
 
 
-impl Residual for Associative {
+impl<T: RDF> Residual for Associative<T> {
 
     fn components(&self)->usize {
         self.parameters.vb.len()
@@ -269,7 +240,7 @@ impl Residual for Associative {
         // dbg!("aqui");
 
         let h = self.h_func(x,&xassoc);
-        let dlngdrho = self.dlngdrho(rho,x);
+        let dlngdrho = self.rdf.dlngdrho(rho,x,&self.parameters.vb);
 
         Ok(
         -IDEAL_GAS_CONST*t*((1.0/(2.*(1./rho)))*((h)*(1.+(1./(1./rho))*dlngdrho)))
@@ -291,7 +262,9 @@ impl Residual for Associative {
         let hmat=&self.parameters.hmat;
         // println!("T@(ln(X)*S)=\n{}",mu1);
         let h = self.h_func(x,&xassoc);
-        let mu2 = -0.5*h*self.dlngdni(rho,x); // Vetor Ntotal
+        // let mu2 = -0.5*h*self.dlngdni(rho,x); // Vetor Ntotal
+        let mu2 = -0.5*h*self.rdf.ndlngdni(rho,x,&self.parameters.vb); // Vetor Ntotal
+
         let mu=hmat.dot(&mu1)+mu2;
         Ok(
             mu

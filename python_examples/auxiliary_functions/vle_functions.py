@@ -156,6 +156,31 @@ def bubble_p(eos,t,z,antoine,tol=1e-8,it_max=100):
   _,states=F(Pbubble)
   return states
 
+def orv_p(eos,t,z,antoine,tol=1e-8,it_max=100):
+  
+  """
+  Return np.ndarray[State(T,Pb,z),State(T,Pb,y)]
+  """
+  psat=psat_antoine(t,antoine)
+  P0=z.dot(psat)
+  yguess=(z*psat)/P0
+  def F(P):
+    
+    # print(P)
+    state_z= State.tpx(eos,t,P,z,"vapor")
+    dg,state_x=state_z.min_tpd("liquid",yguess,tol,it_max)
+    return dg,np.array([state_z,state_x])
+
+    # F=lambda P: peq.tpd(T,P,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[0]
+    # F_return_x=lambda X: peq.tpd(T,X,z,incipient_phase,incipient_phase_guess,tol=tol,it_max=100)[1]
+  
+  
+  f=lambda x: F(x)[0]
+
+  RESULT=opt.root(f,P0)
+  Porv=RESULT.x
+  _,states=F(Porv)
+  return states
 def bubble_t(eos,p,z,antoine,tol=1e-8,it_max=100):
   
   """

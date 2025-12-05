@@ -6,12 +6,13 @@
 // - python é run-time comp.)
 // 
 
-use reos::{models::{cpa::{CPA}, cubic::{Cubic}}, residual::Residual, state::eos::EosResult, Array1};
+use reos::{Array1, models::{cpa::{CPA, rdf::{CarnahanStarlingRDF, ElliotRDF}}, cubic::Cubic}, residual::Residual, state::eos::EosResult};
 
 #[derive(Clone)]
 pub enum ResidualModel{
 
-    CPA(CPA),
+    sCPA(CPA<ElliotRDF>),
+    CPA(CPA<CarnahanStarlingRDF>),
     Cubic(Cubic),
 
 } 
@@ -25,6 +26,10 @@ impl Residual for ResidualModel {
     }
     fn pressure(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
         match self{
+            ResidualModel::sCPA(eos)=>{
+                eos.pressure(t, rho, x)
+            },
+
             ResidualModel::CPA(eos)=>{
                 eos.pressure(t, rho, x)
             },
@@ -38,6 +43,9 @@ impl Residual for ResidualModel {
 
     fn residual_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<Array1<f64>> {
         match self{
+            ResidualModel::sCPA(eos)=>{
+                eos.residual_chemical_potential(t, rho, x)
+            },
             ResidualModel::CPA(eos)=>{
                 eos.residual_chemical_potential(t, rho, x)
             },
@@ -50,6 +58,9 @@ impl Residual for ResidualModel {
 
     fn residual_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
         match self{
+            ResidualModel::sCPA(eos)=>{
+                eos.residual_helmholtz(t, rho, x)
+            },
             ResidualModel::CPA(eos)=>{
                 eos.residual_helmholtz(t, rho, x)
             },
@@ -62,6 +73,9 @@ impl Residual for ResidualModel {
 
     fn bmix(&self,x:&Array1<f64>)->f64 {
         match self{
+            ResidualModel::sCPA(eos)=>{
+                eos.bmix(x)
+            },
             ResidualModel::CPA(eos)=>{
                 eos.bmix(x)
             },

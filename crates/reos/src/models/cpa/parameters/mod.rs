@@ -3,6 +3,7 @@ use core::panic;
 use std::fmt::Debug;
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
+use crate::models::cpa::rdf::ElliotRDF;
 use crate::models::cpa::sites::{Site, NS};
 use crate::models::cubic::parameters::CubicPureRecord;
 use crate::state::eos::{EosError};
@@ -261,6 +262,23 @@ impl ASCParameters {
 
     }
     //
+
+    pub fn change_sites_parameters(
+        &mut self,
+        sitej:usize,
+        sitel:usize,
+        eps:f64,
+        beta:f64,
+    ){
+        let me=&mut self.epsmat;
+        let mb=&mut self.betamat;
+        me[(sitej,sitel)] = eps;
+        mb[(sitej,sitel)] = beta;
+        me[(sitel,sitej)] = eps;
+        mb[(sitel,sitej)] = beta;
+
+
+    }
     pub fn set_binary_interaction(
         &mut self,
         compi:usize,
@@ -497,7 +515,7 @@ impl std::fmt::Display for ASCParameters {
 //ready-to parameters
 
 
-pub fn water_acetic_acid()->E<CPA>{
+pub fn water_acetic_acid()->E<CPA<ElliotRDF>>{
             //Records
         //1:Water, 2:Acetic Acid
         let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
@@ -518,7 +536,7 @@ pub fn water_acetic_acid()->E<CPA>{
 
 
         //CPA eos
-        let mut cpa=CPA::from_records(
+        let mut cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c1,c2],
             vec![a1,a2]);
 
@@ -530,7 +548,7 @@ pub fn water_acetic_acid()->E<CPA>{
         E::from_residual(cpa)
 
 } 
-pub fn water_octane_acetic_acid()->E<CPA>{
+pub fn water_octane_acetic_acid()->E<CPA<ElliotRDF>>{
             //Records
         //1:Water, 2:Acetic Acid
         let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
@@ -554,7 +572,7 @@ pub fn water_octane_acetic_acid()->E<CPA>{
 
 
         //CPA eos
-        let mut cpa=CPA::from_records(
+        let mut cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c1,c3,c2],
             vec![a1,a3,a2]);
 
@@ -566,7 +584,7 @@ pub fn water_octane_acetic_acid()->E<CPA>{
         E::from_residual(cpa)
 
 } 
-pub fn acetic_acid_water()->E<CPA>{
+pub fn acetic_acid_water()->E<CPA<ElliotRDF>>{
             //Records
         //1:Water, 2:Acetic Acid
         let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
@@ -587,7 +605,7 @@ pub fn acetic_acid_water()->E<CPA>{
 
 
         //CPA eos
-        let mut cpa=CPA::from_records(
+        let mut cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c2,c1],
             vec![a2,a1]);
 
@@ -600,7 +618,7 @@ pub fn acetic_acid_water()->E<CPA>{
 
 } 
 
-pub fn water_co2()->E<CPA>{
+pub fn water_co2()->E<CPA<ElliotRDF>>{
             //Records
         //1:Water, 2:Acetic Acid
         let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
@@ -619,7 +637,7 @@ pub fn water_co2()->E<CPA>{
 
         //CPA eos
         
-        let mut cpa=CPA::from_records(
+        let mut cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c1,c2],
             vec![a1,a2]);
 
@@ -631,7 +649,7 @@ pub fn water_co2()->E<CPA>{
         E::from_residual(cpa)
 
 } 
-pub fn co2_water()->E<CPA>{
+pub fn co2_water()->E<CPA<ElliotRDF>>{
             //Records
         //1:Water, 2:Acetic Acid
         let c1=CubicPureRecord::new(0.12277, 0.0145e-3, 0.6736, 647.14);
@@ -650,7 +668,7 @@ pub fn co2_water()->E<CPA>{
 
         //CPA eos
         
-        let mut cpa=CPA::from_records(
+        let mut cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c2,c1],
             vec![a2,a1]);
 
@@ -664,7 +682,7 @@ pub fn co2_water()->E<CPA>{
 } 
 
 
-pub fn methanol_2b()->E<CPA>{
+pub fn methanol_2b()->E<CPA<ElliotRDF>>{
             //Records
         //1:metoh, 2:oct
         let c1=CubicPureRecord::new(0.40531, 0.0000309, 0.4310, 513.);
@@ -676,7 +694,7 @@ pub fn methanol_2b()->E<CPA>{
             0.0000309
         );
 
-        let  cpa=CPA::from_records(
+        let  cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c1],
             vec![a1]);
 
@@ -684,7 +702,7 @@ pub fn methanol_2b()->E<CPA>{
         //Create new State
         E::from_residual(cpa)
 } 
-pub fn methanol_3b()->E<CPA>{
+pub fn methanol_3b()->E<CPA<ElliotRDF>>{
             //Records
         //1:metoh, 2:oct
         let c1=
@@ -702,7 +720,7 @@ pub fn methanol_3b()->E<CPA>{
             0.0334e-3
         );
 
-        let  cpa=CPA::from_records(
+        let  cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c1],
             vec![a1]);
 
@@ -712,7 +730,7 @@ pub fn methanol_3b()->E<CPA>{
 } 
 
 
-pub fn acoh_octane()->E<CPA>{
+pub fn acoh_octane()->E<CPA<ElliotRDF>>{
             //Records
         //1:Acetic Acid, 2:Octane
         let c1=CubicPureRecord::new(0.91196, 0.0468e-3, 0.4644, 594.8);
@@ -728,7 +746,7 @@ pub fn acoh_octane()->E<CPA>{
 
 
         //CPA eos
-        let mut cpa=CPA::from_records(
+        let mut cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c1,c2],
             vec![a1,a2]);
 
@@ -740,7 +758,7 @@ pub fn acoh_octane()->E<CPA>{
 
         
 } 
-pub fn octane_acoh()->E<CPA>{
+pub fn octane_acoh()->E<CPA<ElliotRDF>>{
             //Records
         //1:Acetic Acid, 2:Octane
         let c1=CubicPureRecord::new(0.91196, 0.0468e-3, 0.4644, 594.8);
@@ -756,7 +774,7 @@ pub fn octane_acoh()->E<CPA>{
 
 
         //CPA eos
-        let mut cpa=CPA::from_records(
+        let mut cpa=CPA::<ElliotRDF>::srk_from_records(
             vec![c2,c1],
             vec![a2,a1]);
 
