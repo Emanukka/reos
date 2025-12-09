@@ -3,118 +3,240 @@ use crate::state::eos::EosResult;
 use crate::residual::Residual;
 use ndarray::Array1;
 use ndarray::Array2;
+use ndarray::ArrayView1;
 use crate::models::IDEAL_GAS_CONST as R;
 
+
+pub const SRK_KAPPA_FACTORS:  [f64; 3] = [0.480000, 1.57400, -0.17600];
+pub const PR76_KAPPA_FACTORS: [f64; 3] = [0.374640, 1.54226, -0.26992];
+pub const PR78_KAPPA_FACTORS: [f64; 4] = [0.374642, 1.48503, -0.164423, 0.016666];
+
 pub mod parameters;
-#[derive(Clone)]
-pub struct Cubic{
-    pub parameters:CubicParameters,
-    pub model:CubicModel,
+
+pub trait CubicModel{
+    fn model() -> Self where Self: Sized;
+    fn eps(&self)->f64;
+    fn sig(&self)->f64;
+    fn omega(&self,)->f64;
+    fn psi(&self)->f64;
+    fn kappa_from_w(&self,w:&Array1<f64>)->Array1<f64>;
+
+    fn acrit(&self,tc:&Array1<f64>,pc:&Array1<f64>)->Array1<f64>{
+        self.psi()*(R*tc).powf(2.0)/pc
+    }
+    fn bcrit(&self,tc:&Array1<f64>,pc:&Array1<f64>)->Array1<f64>{
+        self.omega()*R*tc/pc
+    }
+    fn which(&self)-> String;
+}
+// #[derive(Clone)]
+pub struct Cubic<T:CubicModel>{
+    pub parameters:CubicParameters<T>,
 }
 
-impl Cubic {
-    pub fn new(p:CubicParameters,model:CubicModel)->Self{
-        Self { parameters: p, model }
+impl<T:CubicModel> Cubic<T> {
+    
+    pub fn from_parameters(parameters:CubicParameters<T>)->Self{
+        Self { parameters }
     }
 
-    pub fn set_binary(&mut self,i:usize,j:usize,kij_a:Option<f64>,kij_b:f64){
-        self.parameters.pbinary.insert((i,j), (kij_a.unwrap_or(0.0),kij_b));
-    } }
-
-#[derive(Clone)]
-pub enum CubicModel{
-    SRK,
-    PR
 }
-// Models (only SRK and PR)
-impl Cubic{
-    fn eps(&self)->f64{
-        match self.model {
-            CubicModel::SRK=>{0.0}
-            CubicModel::PR=>{1.0-2.0_f64.sqrt()}
+pub struct SRK;
+pub struct PR76;
+pub struct PR78;
+
+
+impl CubicModel for SRK{
+    
+    fn model()->Self where Self: Sized {
+        SRK
+    }
+    fn omega(&self,)->f64 {
+        0.08664
+    }
+    fn psi(&self)->f64 {
+        0.42748
+    }
+    fn eps(&self)->f64 {
+        0.0
+    }
+    fn sig(&self)->f64 {
+        1.0
+    }
+    fn which(&self)-> String {
+        "SRK".to_string()
+    }
+
+    fn kappa_from_w(&self,w:&Array1<f64>)->Array1<f64> {
+        let factors = &SRK_KAPPA_FACTORS;
+        let n = w.len();
+        let mut kappa = Array1::<f64>::zeros(n);
+        // let mut w_pow = w;
+        for i in 0..n{
+            let wi = w[i];
+            kappa[i] = factors[0] + wi*factors[1] + wi.powi(2)*factors[2];
         }
+        kappa
     }
-    fn sig(&self)->f64{
-        match self.model {
-            CubicModel::SRK=>{1.0}
-            CubicModel::PR=>{1.0+2.0_f64.sqrt()}
-        }    
+
+}
+
+
+impl CubicModel for PR76 {
+    
+    fn model()->Self where Self: Sized {
+        PR76
+    }
+    fn omega(&self,)->f64 {
+        0.07780
+    }
+    fn psi(&self)->f64 {
+        0.45724
+    }
+    fn eps(&self)->f64 {
+        1.0-2.0_f64.sqrt()
+    }
+
+    fn sig(&self)->f64 {
+        1.0+2.0_f64.sqrt()
+    }
+
+    fn which(&self)-> String {
+        "PR76".to_string()    
+    }
+
+    fn kappa_from_w(&self,w:&Array1<f64>)->Array1<f64> {
+        let factors = &PR76_KAPPA_FACTORS;
+        let n = w.len();
+        let mut kappa = Array1::<f64>::zeros(n);
+        // let mut w_pow = w;
+        for i in 0..n{
+            let wi = w[i];
+            kappa[i] = factors[0] + wi*factors[1] + wi.powi(2)*factors[2];
+        }
+        kappa
     }
 }
-impl Cubic {
-    fn calc_sqrt_aij_matrix(
-        &self,t:f64
-    )->Array2<f64>{
-        
-        let p=&self.parameters;
-        let vtr =  t/&p.vtc;
 
-        let alpha =  (1.0+&p.vkappa*(1.0 - vtr.sqrt())).pow2();
+impl CubicModel for PR78 {
+    
+    fn model()->Self where Self: Sized {
+        PR78
+    }
+    fn omega(&self,)->f64 {
+        PR76.omega()
+    }
+    fn psi(&self)->f64 {
+        PR76.psi()
+    }
+    fn eps(&self)->f64 {
+        PR76.eps()
+    }
 
-        let va = &p.va0*alpha;
-        
-        // println!("a({} K)={}",t,&va);
-        let n = p.va0.len();
-        let mut aij = Array2::<f64>::zeros((n,n));
-        for i in 0..n {
-            for j in i..n{
+    fn sig(&self)->f64 {
+        PR76.sig()
+    }
 
-                let ij=&(i,j);
-                let ji=&(j,i);
+    fn which(&self)-> String {
+        "PR78".to_string()    
+    }
 
-                let binary_parameters= p.pbinary.get(ij).or_else(||p.pbinary.get(ji));
+    fn kappa_from_w(&self,w:&Array1<f64>)->Array1<f64> {
+        let factors76 = &PR76_KAPPA_FACTORS;
+        let factors78 = &PR78_KAPPA_FACTORS;
+        let n = w.len();
+        let mut kappa = Array1::<f64>::zeros(n);
+        // let mut w_pow = w;
+        for i in 0..n{
+            let wi = w[i];
 
-                // if binary not contains (a,b), then kij=0.0
+            if (wi<0.491) {
+                kappa[i] = factors76[0] + wi*factors76[1] + wi.powi(2)*factors76[2];
+           
+            } else {
+                kappa[i] = factors78[0] + wi*factors78[1] + wi.powi(2)*factors78[2] + wi.powi(3)*factors78[3];
 
-                let mut kij=0.0;
-                match binary_parameters{
-                Some(tup)=>{
-                    let (a,b)=(tup.0,tup.1);
-                    kij=a*t+b;
-                }
-                None=>{}
-                }
-                let prod = va[i]*va[j];
-                let sqrt_aij = prod.sqrt();
-                aij[(i,j)] = sqrt_aij*(1.0-kij); 
-                aij[(j,i)] = aij[(i,j)]; 
             }
         }
-
-        aij
+        kappa
     }
-    fn calc_amix(&self, t: f64, vx:&Array1<f64>)->f64{
-
-        // a = x*Aij*x
-        let aij_mat = self.calc_sqrt_aij_matrix(t);
-        
-        let aij_mul_x: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>> = aij_mat.dot(vx);
-
-        let a = vx.dot(&aij_mul_x);
-        a
-    }
-
-
-    
 }
 
-impl Residual for Cubic {
+impl <T:CubicModel> Cubic<T>{
+
+    fn falpha(&self,
+        t:f64,
+        )->Array2<f64>{
+        let p = &self.parameters;
+        let tr =  t/&p.tc;
+        let alpha =  (1.0 + &p.kappa * (1.0 - tr.sqrt())).pow2();
+        alpha
+    }
+    
+    fn faij(&self,
+        t:f64,
+        alpha:&Array2<f64>
+        )->Array2<f64>{
+        
+        let p = &self.parameters;
+        let ai = &p.a0*alpha;
+        let ait = ai.t();
+        let sqrt_ai_ait = (ai.dot(&ait)).sqrt();
+        let kij = &p.aij + &p.bij*t; //kij = Aij + Bij*T
+        (1. - kij)*sqrt_ai_ait
+    }
+
+    fn famix(&self,
+        x:&Array1<f64>,
+        aij:&Array2<f64>
+        )->f64{
+
+        x.dot(&aij.dot(x))
+    }
+
+    fn fq(&self,amix:f64,bmix:f64,t:f64)->f64{
+        amix/bmix/R/t
+    }
+    fn fdadni(&self,amix:f64,x:&Array1<f64>,aij:&Array2<f64>)->Array1<f64>{
+        2.*aij.dot(x) - amix
+    }
+    fn fdbdni(&self,)->ArrayView1<f64>{
+        self.parameters.b.column(0)
+    }
+    
+    fn fdqdni(&self,q:f64,amix:f64,bmix:f64,dadni:&Array1<f64>,dbdni:&ArrayView1<f64>)->Array1<f64>{
+        q*(1. + dadni/amix - dbdni/bmix)
+    }
+
+    fn fi(&self,bmix:f64,vm:f64)->f64{
+        let sig = self.parameters.model.sig();
+        let eps = self.parameters.model.eps();
+
+        (1.0/(sig-eps))*f64::ln((vm + sig*bmix )/(vm + eps*bmix))
+    }
+    
+
+}
+
+impl<T:CubicModel> Residual for Cubic<T> {
 
     fn components(&self)->usize {
         self.parameters.ncomp
     }
     fn bmix(&self,x:&Array1<f64>)->f64 {
-        self.parameters.vb.dot(x)
+        self.parameters.b.t().dot(x)[0] //1xN Nx1
     }
 
     fn pressure(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
-        let bm=self.bmix(x);
-        let am=self.calc_amix(t, x);
+        let bmix=self.bmix(x);
+        let alpha = self.falpha(t);
+        let aij = self.faij(t, &alpha);
+        let amix=self.famix(x, &aij);
         let vm=1.0/rho;
-        let delta= (vm+self.sig()*bm)*(vm+self.eps()*bm);
+        let delta= (vm+self.parameters.model.sig()*bmix)*(vm+self.parameters.model.eps()*bmix);
 
-        let repulsive= (R*t*bm)/(vm*(vm-bm));
-        let attractive = am/delta;
+        let repulsive= (R*t*bmix)/(vm*(vm-bmix));
+        let attractive = amix/delta;
 
         Ok(
             repulsive-attractive
@@ -123,41 +245,34 @@ impl Residual for Cubic {
     }
 
     fn residual_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<Array1<f64>> {
-        let bm=self.bmix(x);
-        let am = self.calc_amix(t, x);
-        let dbdni=&self.parameters.vb;
         let vm=1./rho;
-        let ln=(vm/(vm-bm)).ln();
-        let q=am/(bm*R*t);
+        let bmix=self.bmix(x);
+        let alpha = self.falpha(t);
+        let aij = self.faij(t, &alpha);
+        let amix = self.famix(x, &aij);
+        let dadni = &self.fdadni(amix, x, &aij);
+        let dbdni=&self.fdbdni();
+        let ln=(vm/(vm-bmix)).ln();
+        let q = self.fq(amix, bmix, t);
+        let dqdni = self.fdqdni(q, amix, bmix, dadni, dbdni);
 
-        let sig=self.sig();
-        let eps=self.eps();
-        let maij= self.calc_sqrt_aij_matrix(t);
-        let aij_dot_vx:Array1<f64> = maij.dot(x);
-
-        let dadni=2.0*aij_dot_vx - am;
-        
-        let dqni=q*(1.0 + dadni/am - dbdni/bm);
-        let i: f64 = (1.0/(sig-eps))*f64::ln((vm + sig*bm )/(vm + eps*bm));
+        let i = self.fi(bmix, vm);
         let z_residual=(self.pressure(t,rho,x)?)/(rho*R*t);
 
         Ok(
-        (dbdni/bm)*z_residual +ln - dqni*i
+        (dbdni/bmix)*z_residual +ln - dqdni*i
         )
     }
     
     fn residual_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
-        let bm=self.bmix(x);
-        let am = self.calc_amix(t, x);
         let vm=1./rho;
-        let ln=(vm/(vm-bm)).ln();
-        let q=am/(bm*R*t);
-
-        let sig=self.sig();
-        let eps=self.eps();
-
-        
-        let i: f64 = (1.0/(sig-eps))*f64::ln((vm + sig*bm )/(vm + eps*bm));
+        let bmix=self.bmix(x);
+        let alpha = self.falpha(t);
+        let aij = self.faij(t, &alpha);
+        let amix = self.famix(x, &aij);
+        let ln=(vm/(vm-bmix)).ln();
+        let q= self.fq(amix, bmix, t);
+        let i = self.fi(bmix, vm);        
 
         Ok(
             ln-q*i
@@ -165,3 +280,40 @@ impl Residual for Cubic {
     }
 }
 
+
+mod tests{
+    use crate::{models::cubic::{Cubic, SRK, parameters::{CubicParameters, CubicPureRecord}}, parameters::Parameters, residual::Residual};
+
+
+    #[test]
+
+    fn it_works() {
+        //1:Acetic Acid, 2:Octane
+        let c1=CubicPureRecord::new(0.91196, 0.0468e-3, 0.4644, 594.8);
+        let c2=CubicPureRecord::new(34.8750e-1, 0.1424e-3, 0.99415, 568.7);
+
+        let mut c = Cubic::from_parameters(CubicParameters::<SRK>::from_records(vec![c1,c2]));
+        c.parameters.set_kij(0, 1,  0.064 );
+        //Set binary parameters 
+        // cpa.cubic.set_binary(0,1, Some(0.0), 0.064 );
+        let t = 353.15;
+        let alpha = c.falpha(t);
+        let faij = c.faij(t, &alpha); 
+        let x = ndarray::arr1(&[0.5,0.5]);
+        let bmix = c.bmix(&x);
+        let amix = c.famix(&x, &faij);
+        println!("amix: {}", amix);
+        println!("bmix: {}", bmix);
+        println!("fq: {}", c.fq(amix, bmix, t));
+
+        let p = c.pressure(353.15, 200.0, &x).unwrap();
+        println!("P: {}", p);       
+        let mu = c.residual_chemical_potential(353.15, 200.0, &x).unwrap();
+        println!("mu: {}", mu);       
+        let a = c.residual_helmholtz(353.15, 200.0, &x).unwrap();
+        println!("A: {}", a);       
+        //Create new State
+        // E::from_residual(cpa)
+    }
+
+}

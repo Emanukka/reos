@@ -1,7 +1,11 @@
 
 use ndarray::{Array1, Array2};
+pub mod sites;
+pub mod parameters;
+// pub mod parameters;
 use crate::models::IDEAL_GAS_CONST;
-use crate::models::cpa::parameters::{ ASCParameters, AssociationRule};
+use crate::models::associative::parameters::{ASCParameters, AssociationRule};
+// use crate::models::cpa::parameters::{ ASCParameters, AssociationRule};
 use crate::models::cpa::rdf::RDF;
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EosResult};
@@ -9,15 +13,14 @@ use crate::state::eos::{EosError, EosResult};
 
 #[derive(Clone)]
 pub struct Associative<T:RDF>{
-    pub parameters:ASCParameters,
-    pub rdf: T
+    pub parameters:ASCParameters<T>,
 }
 
 
 impl<T:RDF> Associative<T> {
     
-    pub fn new(p:ASCParameters, rdf: T)->Self{
-        Self{parameters:p, rdf}
+    pub fn from_parameters(p:ASCParameters<T>)->Self{
+        Self{parameters:p}
         // Self{x:Array1::<f64>::default(p.f.len()),parameters:p}
     }
 
@@ -28,33 +31,9 @@ impl<T:RDF> Associative<T> {
         rule:AssociationRule,
         eps:Option<f64>,
         beta:Option<f64>){self.parameters.set_binary_interaction(i, j, rule, eps, beta);}
-            
-
-
-
 }
 impl<T:RDF> Associative<T> {
-    // pub fn g_func(&self,rho:f64,x:&Array1<f64>)->f64{
-    //     1.0 / (1.0 - 1.9 * (rho * self.parameters.vb.dot(x) / 4.0))
-    // }
 
-    // pub fn dlngdrho(&self,rho:f64,x:&Array1<f64>)->f64{
-
-    //     let bm = self.parameters.vb.dot(x);
-    //     let gm =self.g_func(rho,x);
-
-    //     let result = (1.0 / gm) * (-1.0) * (gm*gm) * (-1.9 * bm / 4.0);
-    //     // println!("dlngdrho={result}");
-    //     result
-
-    // }
-
-    // // !!!
-    // pub fn dlngdni(&self,rho:f64,x:&Array1<f64>)->Array1<f64>{
-
-    //     let gmix = self.g_func(rho,x);
-    //     gmix * 1.9 *(rho*&self.parameters.vb/4.0)
-    // }
     pub fn get_m(&self,x:&Array1<f64>)->Array1<f64>{
         let t=&self.parameters.tmat;
         let h=&self.parameters.hmat;
@@ -135,7 +114,7 @@ impl<T:RDF> Associative<T> {
         let pmat=&self.parameters.pmat;
 
         // let gmix=self.g_func(rho, x);
-        let gmix = self.rdf.rdf(rho, x, &self.parameters.vb);
+        let gmix = self.parameters.rdf.rdf(rho, x, &self.parameters.vb);
 
         // let delta=self.delta(t, gmix);
         let delta=self.delta_mat(t, gmix);
@@ -203,7 +182,7 @@ impl<T:RDF> Associative<T> {
         let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
         let pmat=&self.parameters.pmat;
 
-        let gmix = self.rdf.rdf(rho, x, &self.parameters.vb);
+        let gmix = self.parameters.rdf.rdf(rho, x, &self.parameters.vb);
         let kmat=self.delta_mat(t, gmix)*mm_mat*pmat*rho;
 
         m*(1.0/x_assoc-1.0) -kmat.dot(&(x_assoc*multplicity))
@@ -240,7 +219,7 @@ impl<T: RDF> Residual for Associative<T> {
         // dbg!("aqui");
 
         let h = self.h_func(x,&xassoc);
-        let dlngdrho = self.rdf.dlngdrho(rho,x,&self.parameters.vb);
+        let dlngdrho = self.parameters.rdf.dlngdrho(rho,x,&self.parameters.vb);
 
         Ok(
         -IDEAL_GAS_CONST*t*((1.0/(2.*(1./rho)))*((h)*(1.+(1./(1./rho))*dlngdrho)))
@@ -251,7 +230,6 @@ impl<T: RDF> Residual for Associative<T> {
     fn residual_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<Array1<f64>>{
 
         let xassoc=self.X_tan(t,rho, x).unwrap();
-        let nassoc=&self.parameters.nassoc;
 
         let s=&self.parameters.s;
 
@@ -263,7 +241,7 @@ impl<T: RDF> Residual for Associative<T> {
         // println!("T@(ln(X)*S)=\n{}",mu1);
         let h = self.h_func(x,&xassoc);
         // let mu2 = -0.5*h*self.dlngdni(rho,x); // Vetor Ntotal
-        let mu2 = -0.5*h*self.rdf.ndlngdni(rho,x,&self.parameters.vb); // Vetor Ntotal
+        let mu2 = -0.5*h*self.parameters.rdf.ndlngdni(rho,x,&self.parameters.vb); // Vetor Ntotal
 
         let mu=hmat.dot(&mu1)+mu2;
         Ok(

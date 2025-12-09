@@ -63,7 +63,7 @@ impl From<Site> for (usize,usize) {
 pub mod tests{
     use ndarray::array;
 
-    use crate::models::cpa::sites::Site;
+    use super::Site;
 
 
     #[test]

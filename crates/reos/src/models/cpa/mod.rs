@@ -1,86 +1,41 @@
-
-pub mod associative;
-pub mod sites;
 pub mod parameters;
 pub mod rdf;
-use crate::models::cpa::parameters::{ASCParameters, AssociationPureRecord};
+use crate::models::cpa::parameters::CPAParameters;
+// use crate::models::cpa::parameters::{ASCParameters, AssociationPureRecord};
 use crate::models::cpa::rdf::{CarnahanStarlingRDF, ElliotRDF, RDF};
 use crate::models::cubic::CubicModel;
 use crate::models::cubic::parameters::{CubicParameters, CubicPureRecord};
-use crate::models::{cubic::Cubic,cpa::associative::Associative};
+use crate::models::{cubic::Cubic,associative::Associative};
 use crate::residual::Residual;
 use crate::state::eos::EosResult;
 use crate::state::State;
 use core::f64;
 use ndarray::Array1;
 
-#[derive(Clone)]
-pub struct CPA<T: RDF>{
-    pub cubic: Cubic,
-    pub assoc:Associative<T>,
-    // pub type_:CPAType,
 
+
+
+// #[derive(Clone)]
+pub struct CPA<C:CubicModel,R: RDF>{
+    pub cubic: Cubic<C>,
+    pub assoc: Associative<R>,
 }
 
-impl<T: RDF> CPA<T> {
-    pub fn new(c:Cubic,a:Associative<T>)->Self{
+impl<C:CubicModel,R: RDF> CPA<C,R> {
+
+    pub fn from_parameters(parameters:CPAParameters<C,R>)->Self{
+        let cubic=Cubic::from_parameters(parameters.0);
+        let assoc=Associative::from_parameters(parameters.1);
+        Self{cubic,assoc}
+    }
+    pub fn from_models(c:Cubic<C>,a:Associative<R>)->Self{
         Self{cubic:c,assoc:a}
     }
 
-    pub fn from_records(cubic_model:CubicModel, rdf_typ: T, c:Vec<CubicPureRecord>,a:Vec<AssociationPureRecord>)->Self{
-        
-        CPA::new(
-            Cubic::new(CubicParameters::from_records(c),cubic_model), 
-            Associative::new(ASCParameters::from_records(a), rdf_typ))        
-    }
 
-    pub fn from_parameters(cubic_model:CubicModel, rdf_typ: T, c:CubicParameters,a:ASCParameters)->Self{
-        
-        CPA::new(
-            Cubic::new(c,cubic_model), 
-            Associative::new(a, rdf_typ))        
-    }
 }
 
-impl CPA<ElliotRDF> {
-    
-    pub fn srk_from_records(c:Vec<CubicPureRecord>,a:Vec<AssociationPureRecord>)->Self{
-        
-        CPA::from_records(CubicModel::SRK, ElliotRDF, c, a)
-
-    }
-    pub fn pr_from_records(c:Vec<CubicPureRecord>,a:Vec<AssociationPureRecord>)->Self{
-        
-        CPA::from_records(CubicModel::PR, ElliotRDF, c, a)
-    }
-
-    pub fn srk_from_parameters(c:CubicParameters,a:ASCParameters)->Self{
-        CPA::from_parameters(CubicModel::SRK, ElliotRDF, c, a)
-    }
-    pub fn pr_from_parameters(c:CubicParameters,a:ASCParameters)->Self{
-        CPA::from_parameters(CubicModel::PR, ElliotRDF, c, a)
-    }
-}
-
-impl CPA<CarnahanStarlingRDF> {
-    
-    pub fn srk_from_parameters(c:CubicParameters,a:ASCParameters)->Self{
-        CPA::from_parameters(CubicModel::SRK, CarnahanStarlingRDF, c, a)
-    }
-    pub fn pr_from_parameters(c:CubicParameters,a:ASCParameters)->Self{
-        CPA::from_parameters(CubicModel::PR, CarnahanStarlingRDF, c, a)
-    }
-    pub fn srk_from_records(c:Vec<CubicPureRecord>,a:Vec<AssociationPureRecord>)->Self{
-        
-        CPA::from_records(CubicModel::SRK, CarnahanStarlingRDF, c, a)
-
-    }
-    pub fn pr_from_records(c:Vec<CubicPureRecord>,a:Vec<AssociationPureRecord>)->Self{
-        
-        CPA::from_records(CubicModel::PR, CarnahanStarlingRDF, c, a)
-    }
-}
-impl<T:RDF> Residual for CPA<T> {
+impl<C:CubicModel,T:RDF> Residual for CPA<C,T> {
     
     fn components(&self)->usize {
         self.cubic.components()
@@ -111,7 +66,7 @@ impl<T:RDF> Residual for CPA<T> {
 }
 
 
-impl<T:RDF> State<CPA<T>> {
+impl<C:CubicModel,T:RDF> State<CPA<C,T>> {
     
     pub fn non_bonded_sites(&self)->Array1<f64> {
 
