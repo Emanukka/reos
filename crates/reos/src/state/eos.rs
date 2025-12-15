@@ -24,23 +24,24 @@ impl<R:Residual> EquationOfState<R> {
 }
 impl <R:Residual> EquationOfState<R> {
     
-    fn ideal_gas_pressure(t: f64,rho: f64)->f64{
+    pub fn ideal_gas_pressure(&self,t: f64,rho: f64)->f64{
         rho*IDEAL_GAS_CONST*t
     }
     pub fn pressure(&self,t: f64,rho: f64,x: &ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 1]>>)->EosResult<f64>{
-        Ok(self.residual.pressure(t, rho, x)? + Self::ideal_gas_pressure(t, rho))
+        let p_res_dimenssionless = self.residual.r_pressure(t, rho, x)?;
+        let p_ig_dimenssionless = rho;
+        // Ok(IDEAL_GAS_CONST*t*self.residual.r_pressure(t, rho, x)? + Self::ideal_gas_pressure(t, rho))
+        Ok( IDEAL_GAS_CONST*t*( p_res_dimenssionless + p_ig_dimenssionless))
     }
     pub fn compressibility(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64>{
 
-        // P_residual + P_gas_ideal
-        // dbg!(self.pressure(t, rho, x)?);
-        Ok(self.pressure(t, rho, x)?/(rho*IDEAL_GAS_CONST*t))
+        Ok(self.pressure(t, rho, x)?/self.ideal_gas_pressure(t, rho))
+
     }
 
-    /// Potencial Químico Adimensional - lnZ
     pub fn lnphi(&self,t:f64,rho:f64,x:&Array1<f64>)->Result<Array1<f64>,EosError>{
         Ok(
-            self.residual.residual_chemical_potential(t, rho, x)? - self.compressibility(t, rho, x)?.ln()
+            self.residual.r_chemical_potential(t, rho, x)? - self.compressibility(t, rho, x)?.ln()
         )
     }
 }

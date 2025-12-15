@@ -2,16 +2,10 @@
 pub mod eos;
 pub mod density_solver;
 
-
-
-
-use ndarray::{Array1, Array2};
-use std::fmt::{Display, Write};
+use ndarray::{Array1};
 use std::sync::Arc;
 
-use crate::models::cpa::CPA;
 use crate::models::IDEAL_GAS_CONST;
-use crate::models::cpa::rdf::ElliotRDF;
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EosResult, EquationOfState};
 use crate::state::density_solver::{DensityInitialization,density};
@@ -32,27 +26,7 @@ pub struct State<R:Residual>{
     pub x:Array1<f64>,
     // pub cache: Option<Cache>
 }
-pub fn fmt_array2<W: Write>(
-    f: &mut W,
-    name: &str,
-    mat: &Array2<f64>,
-    decimals: usize,
-) -> std::fmt::Result {
-    writeln!(f, "{} = [", name)?;
-    for row in mat.rows() {
-        write!(f, "    [")?;
-        for (j, val) in row.iter().enumerate() {
-            if j > 0 {
-                write!(f, ", ")?;
-            }
-            write!(f, "{:.*}", decimals, val)?;
-        }
-        writeln!(f, "],")?;
-    }
-    writeln!(f, "]")?;
-    Ok(())
-}
-// 
+
 impl<R:Residual> State<R> {
 
     pub fn new_trx(eos:&Arc<E<R>>,t:f64,rho:f64,x:Array1<f64>)->StateResult<R>{

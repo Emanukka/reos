@@ -188,7 +188,7 @@ pub mod tests{
 
     use ndarray::{array, Array1};
  
-    use crate::{models::cpa::parameters::water_acetic_acid, phase_equilibrium::PhaseEquilibrium, state::{density_solver::DensityInitialization::{Vapor,Liquid}, State}};
+    use crate::{models::cpa::tests::water_acetic_acid, phase_equilibrium::PhaseEquilibrium, state::{density_solver::DensityInitialization::{Vapor,Liquid}, State}};
 
     #[test]
     fn verify_tpd_close_to_bbpoint(){

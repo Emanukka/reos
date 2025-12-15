@@ -1,361 +1,285 @@
-use ndarray::{Array1, Array2};
-use serde::{Deserialize, Serialize};
 
-use crate::{models::{associative::sites::{NS, Site}, cpa::rdf::{CarnahanStarlingRDF, ElliotRDF, RDF}}, parameters::{Parameters, PureRecord}, state::eos::EosError};
+
+use std::fmt::write;
+
+use ndarray::{Array1, Array2};
+use serde::{Deserialize, Serialize, ser::SerializeStruct};
+
+use crate::{models::{ associative::sites::{NS, Site, SiteType}}, parameters::{Parameters, PureRecord}, state::eos::EosError};
 
 pub const W:[[f64;3];3]=[[0.0,1.0,1.0],[1.0,0.0,1.0],[1.0,1.0,1.0]];
 
 
-#[derive(PartialEq,Debug,Clone,Copy,Serialize, Deserialize)]
-#[serde(rename_all="lowercase")]
-pub enum AssociationRule {
-    ///Eps^{ij} and Beta^{ij} from Experimental data
-    EXP,
-    ///Combining Rule for Solvation Interaction (Only Beta^{ij} from Experimental data )
-    MCR1,
-    ///Elliot's Combining Rule
-    ECR,
-    ///Konteogeorgis' Combining Rule
-    CR1
-}
 
-impl TryFrom<String,> for AssociationRule {
-    type Error =EosError;
+pub trait CombiningRule{
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        
-        match value.to_lowercase().as_str() {
-            "cr1"=>{Ok(Self::CR1)},
-            "ecr"=>{Ok(Self::ECR)},
-            "mcr1"=>{Ok(Self::MCR1)},
-            "exp"=>{Ok(Self::EXP)},
-            &_=>{
-                Err(
-                    EosError::RuleError
-                )
-            }
-        }
-    }
-}
+    fn which()->Self where  Self: Sized;
 
+    fn to_string()->String;
 
-#[derive(PartialEq,Debug,Clone,Copy)]
-pub struct AssocBin{
-    pub lij:f64,
-    pub rule:AssociationRule,
-}
+    fn association_strength_jl(
+        t:f64,
+        g_contact:f64,
+        bij:&Array2<f64>,
+        epsilon:&Array2<f64>,
+        beta:&Array2<f64>,
+    )->Array2<f64>;
 
-impl Default for AssocBin {
-    
-    fn default() -> Self {
-        Self::new(0.0, AssociationRule::CR1)
-    }
-}
-impl AssocBin
-{
-
-    pub fn new(lij:f64,rule:AssociationRule)->Self{
-        Self{lij,rule}
-    }
 }
 
 
 
 #[derive(Clone)]
-pub struct ASCParameters<T:RDF>{
-    //Pure
-    pub nassoc:   Vec<usize>,
-    pub nsolv:   Vec<usize>,
-    pub vb:       Array1<f64>,
-    ///Indicates if compi and compj are CR1 (alpha_ij=0) or ECR (alpha_ij=1) 
-    pub alphamat: Array2<f64>,
-    pub epsmat: Array2<f64>,
-    pub betamat: Array2<f64>,
-    pub asc_into_global: Array1<usize>,
-    ///f map ( site_alpha--->(type_of_Site,component) )
-    pub f: Array1<Site>,
-    pub s: Array1<f64>,
-    /// ns x ns (allowed interactions between sites)
-    pub pmat:Array2<f64>,
-    /// nAssoc x ns (m=Tx'^T))
-    pub tmat:Array2<f64>,
-    /// N x nAssoc (x'=Hx^T)
-    pub hmat:Array2<f64>,
-    pub rdf:T
-
-
+pub struct AssociativeParameters{
+    pub multiplicity: Array1<f64>,
+    pub p:            Array2<f64>,
+    pub epsilon:      Array2<f64>,
+    pub beta:         Array2<f64>,
+    pub sites:        Vec<Site>  ,
+    pub lambda:       Array2<f64>,
+    pub gamma:        Array2<f64>,
+    pub lambda_t:     Array2<f64>,
+    pub gamma_t:      Array2<f64>,
 }
 
-impl<T:RDF> ASCParameters<T> {
+impl AssociativeParameters {
     
-    /// Todas interações binárias são CR1; para modificar, usar 'set_binary( )'
-    pub fn new(rdf_model:T,records:Vec<AssociationPureRecord>)->Self{
-
-        let ncomp = records.len();
-        let mut vb = Array1::<f64>::zeros(ncomp);
-        let mut nsolv:Vec<usize>=Vec::with_capacity(ncomp);
-        let mut nassoc:Vec<usize>=Vec::with_capacity(ncomp);
-        for (i,record) in records.iter().enumerate(){
-            vb[i]=record.b.clone();
-            match record.typ {
-                AssociationType::Inert=>{continue;}
-                AssociationType::Solvate=>{nsolv.push(i);nassoc.push(i);}
-                AssociationType::Associative=>{nassoc.push(i)}
-            }
-        }
-
-        // let nassoc=([nself.clone(),nsolv.clone()]).concat(); // altera a ordem
-        let n =nassoc.len();
-
-        let mut veps=Array1::<f64>::zeros(n);
-        let mut vbeta=Array1::<f64>::zeros(n);
-
-        let mut hmat:Array2<f64>=Array2::zeros((ncomp,n)); // N x nAssoc
-
-        let mut get_global_from_associative:Array1<usize>=Array1::zeros(n); //só vou utilizar aqui; quando for realziar conta no associative.rs,
-        //vou apenas fazert as operações matriciais
+    pub fn set_binary_from_owners(&mut self,i:usize,k:usize,epsilon:Option<f64>,beta:Option<f64>) {
         
-        for i in 0..ncomp{
-            for (idx_assoc,&j) in nassoc.iter().enumerate(){
-                if i==j{
-                    get_global_from_associative[idx_assoc]=i;
-                    hmat[(i,idx_assoc)]=1.0;
+        let mut hit = 0;
+        for (j,site_j) in self.sites.iter().enumerate(){
+            for (l,site_l) in self.sites.iter().enumerate(){
+                hit+=1;
+                if (site_j.has_owner(i)) && (site_l.has_owner(k)){
 
-                    break;
+                    match epsilon {
+                        Some(eps)=>{
+                            self.epsilon[(j,l)] = eps;
+                            self.epsilon[(l,j)] = eps
+                        }
+                        None => {}
+                    }
+
+                    match beta {
+                        Some(bet)=>{
+                            self.beta[(j,l)] = bet;
+                            self.beta[(l,j)] = bet;
+                        }
+                        None => {}
+                    }
                 }
             }
         }
 
-        let mut f:Vec<Site>=Vec::with_capacity(NS*n); //transformação F
-        let mut s1:Vec<f64>=Vec::with_capacity(NS); //nao necessariamente vai ser preenchido, pois i pode não conter j
-        
-        // let mut S=Array2::<Site>::default((NS,ncomp));
-        // let mut mepsilon_cross=Array2::<f64>::zeros((n,n));
-        // let mut mbeta_cross=Array2::<f64>::zeros((n,n));
+        if hit == 0{
+            println!("no site-pair was match")
+        }
+    }
+}
 
-        let mut tspc= Vec::<usize>::new(); //total sites per associtive component
+impl Parameters <AssociationPureRecord> for AssociativeParameters {
+    
+    fn from_records(records:Vec<AssociationPureRecord>)->Self{
+
+        let ncomp = records.len();
+        // let mut nsolv:Vec<usize>=Vec::with_capacity(ncomp);
+        let mut nassoc:Vec<usize>=Vec::with_capacity(ncomp);
+        for (i,record) in records.iter().enumerate(){
+            // vb[i]=record.b.clone();
+            match record.get_type() {
+                AssociationType::Inert=>{continue;}
+                AssociationType::Associative=>{nassoc.push(i)}
+
+                // AssociationType::Solvate=>{nassoc.push(i);}
+            }
+        }
+        let n = nassoc.len();
+        let mut veps= Vec::<f64>::new();
+        let mut vbeta= Vec::<f64>::new();
 
 
+        let mut sites:Vec<Site> = Vec::with_capacity(NS*n); 
+        let mut m:Vec<f64> = Vec::with_capacity(NS); 
+        #[allow(non_snake_case)]
+        let mut S = 0; //Site counter
+        let mut total_sites_per_component = Vec::with_capacity(n);
         for k in 0..n{
 
-            // let i=get_global_from_associative[k];
-            let i =nassoc[k]; 
+            let i = nassoc[k]; 
             let record=&records[i];
-            
-            let mut ts= 0;
             
             let na=record.na as f64;
             let nb=record.nb as f64;
             let nc=record.nc as f64;
-            //Não importa a ordem de f
-            // mas é necessário que a ordem de f e s batam
-
-            // no caso de que cada componente associativo tem varios sitios de memso tipo
-            // e distintos, haveria um for na lista de sitios
+            
+            let mut total_sites_k = 0;
 
             if na!=0.0{
-                f.push(Site::A(k));
-                s1.push(na);
-                ts+=1;
+                sites.push(Site::new(SiteType::A, i, S,record.epsilon,record.beta));
+                veps.push(record.epsilon);
+                vbeta.push(record.beta);
+                m.push(na);
+                S+=1;
+                total_sites_k+=1;
             }
             if nb!=0.0{
-                f.push(Site::B(k));
-                s1.push(nb);
-                ts+=1;
-
+                sites.push(Site::new(SiteType::B, i, S,record.epsilon,record.beta));
+                veps.push(record.epsilon);
+                vbeta.push(record.beta);
+                m.push(nb);
+                S+=1;
+                total_sites_k+=1;
             }
             if nc!=0.0{
-                f.push(Site::C(k));
-                s1.push(nc);
-                ts+=1;
-            
+                sites.push(Site::new(SiteType::C, i, S,record.epsilon,record.beta));
+                veps.push(record.epsilon);
+                vbeta.push(record.beta);
+
+                m.push(nc);
+                S+=1;
+                total_sites_k+=1;
             }
 
-            tspc.push(ts);
-            
-            //veps tem tamanho n 
-            veps[k]= record.epsilon;
-            vbeta[k]=record.beta;
+            total_sites_per_component.push(total_sites_k);            
+
         }
 
-        // dbg!(&tspc);  
-        // let tspc=Array1::from_vec(tspc);
+        let veps = Array2::from_shape_vec((S,1), veps).unwrap();
+        let vbeta = Array2::from_shape_vec((S,1), vbeta).unwrap();
 
-        let sites=Array1::from_vec(f);
+        let multiplicity = Array1::from_vec(m);
         let ns=sites.len();
-        // assert_eq!(ns,tspc.sum());
-        
-        // let mut sumjk=0;
-        // for k in 0..n{
-            
-        //     println!("k={k}");
+        assert_eq!(ns,S);
 
-        //     let jk=tspc[k];
+        let epsilon:Array2<f64> = 0.5*(&veps + &veps.t());
+        let beta:Array2<f64> = (&vbeta * &vbeta.t()).sqrt();
 
-        //     for j in 0..jk{
-        //         // ;
-        //         dbg!(&sites[j+sumjk]);
-        //     }
+        let mut p:Array2<f64>=Array2::zeros((S,S));
 
-        //     sumjk+=jk;
-
-        //     println!("sumjk={sumjk}")
-        // }
-
-
-
-        let s=Array1::from_vec(s1);
-        let mut mepsilon_cross=Array2::<f64>::zeros((ns,ns));
-        let mut mbeta_cross=Array2::<f64>::zeros((ns,ns));
-        let alpha_mat: ndarray::ArrayBase<ndarray::OwnedRepr<f64>, ndarray::Dim<[usize; 2]>>=Array2::default((ns,ns));
-
-        let mut pmat:Array2<f64>=Array2::zeros((ns,ns));
-        let mut tmat:Array2<f64>= Array2::zeros((n,ns));
-
-        assert_eq!(sites.len(),s.len());
 
         for (j,site_j) in sites.iter().enumerate(){
-
-            let compi=site_j.c();
-            tmat[(compi,j)]=1.0;
-            
             for (l,site_l) in sites.iter().enumerate(){
 
-                let compk=site_l.c();
-                let type_j=site_j.t();
-                let type_l=site_l.t();
+                if W[site_j.t()][site_l.t()] == 1.0{
+                    // && (epsilon[(l,l)] != 0.0){
 
-                if W[type_j][type_l]==1.0{
-                    pmat[(j,l)]=1.0;
-                    pmat[(l,j)]=1.0;
-                }
-
-                //CR1 is default
-                mepsilon_cross[(j,l)]=(veps[compi]+veps[compk])*0.5;
-                mbeta_cross[(j,l)]=((vbeta[compi]*vbeta[compk])).sqrt();
-            }
-        }
-
-        ASCParameters{
-            nassoc,
-            nsolv,
-            alphamat:alpha_mat,
-            pmat,
-            asc_into_global:get_global_from_associative,
-            epsmat:mepsilon_cross,
-            betamat:mbeta_cross,
-            hmat,
-            f:sites,
-            tmat,
-            s,
-            vb,
-            rdf:rdf_model
-        }
-
-    }
-    //
-
-    pub fn change_sites_parameters(
-        &mut self,
-        sitej:usize,
-        sitel:usize,
-        eps:f64,
-        beta:f64,
-    ){
-        let me=&mut self.epsmat;
-        let mb=&mut self.betamat;
-        me[(sitej,sitel)] = eps;
-        mb[(sitej,sitel)] = beta;
-        me[(sitel,sitej)] = eps;
-        mb[(sitel,sitej)] = beta;
-
-
-    }
-    pub fn set_binary_interaction(
-        &mut self,
-        compi:usize,
-        compj:usize,
-        rule:AssociationRule,
-        eps:Option<f64>,
-        beta:Option<f64>,
-    ){
-        assert_ne!(compi,compj);
-        let me=&mut self.epsmat;
-        let mb=&mut self.betamat;
-        let alphamat=&mut self.alphamat;
-        let f=&self.f;
-        let nsolv=&self.nsolv;
-        // dbg!(f);
-
-        for (idx_alpha,site_alpha) in f.iter().enumerate(){
-            let compi_from_site_alpha=site_alpha.c();
-            if compi_from_site_alpha!=compi{continue;}
-
-            for (idx_beta,site_beta) in f.iter().enumerate(){
-                let compj_from_site_beta=site_beta.c();
-                if compj_from_site_beta!=compj{continue;}       
-
-                match rule {
-                    //Apenas altera a matriz eps e beta
-                    AssociationRule::MCR1=>{
-
-                        let mut solvent_site=idx_alpha;
-                        let mut solvate_site=idx_beta;
-
-                        if nsolv.contains(&compj_from_site_beta){}
-                        else if nsolv.contains(&compi_from_site_alpha){
-                            //change sites
-                            // println!("changing sites");
-                            solvate_site= idx_alpha;
-                            solvent_site= idx_beta;
-                            // solvent=compj_from_site_beta;
-                            // solvate=compi_from_site_alpha;
-                        }else {
-                            panic!("MCR1 implies 'i' is Self-Assoc., and 'j' is Solvate (v.v), but 
-                            was found from pure record that they aren't. Verify the pure records.")
-                        }
-                        
-                        me[(solvent_site,solvate_site)]=(me[(solvent_site,solvent_site)])*0.5;
-                        mb[(solvent_site,solvate_site)]=beta.expect("Alert! for solv. interaction betw.'i' and 'j',it's necessary BetaCross' value.");
-                        
-                        me[(solvate_site,solvent_site)]=me[(solvent_site,solvate_site)];
-                        mb[(solvate_site,solvent_site)]=mb[(solvent_site,solvate_site)];
-                    }
-                    //Apenas altera a matriz eps e beta
-                    AssociationRule::EXP=>{
-                        me[(idx_alpha,idx_beta)]=eps.expect("Alert! Missing  EpsCross from Experimental Data");
-                        mb[(idx_alpha,idx_beta)]=beta.expect("Alert! Missing BetaCross from Experimental Data");
-                        
-                        me[(idx_beta,idx_alpha)]=me[(idx_alpha,idx_beta)];
-                        mb[(idx_beta,idx_alpha)]=mb[(idx_alpha,idx_beta)];
-                        
-                    }
-                    AssociationRule::ECR=>{
-                        alphamat[(idx_alpha,idx_beta)]=1.0;
-                        alphamat[(idx_beta,idx_alpha)]=1.0;
-
-                    }
-                    _=>{
-                    }
+                    p[(j,l)]=1.0;
+                    p[(l,j)]=1.0;
                 }
             }
         }
+        let mut lambda:Array2<f64>=Array2::zeros((n,S));
+        let mut gamma:Array2<f64>=Array2::zeros((ncomp,n));
+        let mut sumj = 0;
+        for k in 0..n{
+            
+            let jk = total_sites_per_component[k];
+            gamma[(nassoc[k],k)] = 1.0;
 
-        // println!("alpha_ij=\n{}",&alphamat);
-        // println!("eps=\n{}",&self.epsmat);
-        // println!("beta=\n{}",&self.betamat);
+            for j in sumj..sumj+jk{
+                lambda[(k,j)] = 1.0
+            }
+            sumj+=jk
+
+        }
+        let lambda_t=lambda.t().to_owned();
+        let gamma_t=gamma.t().to_owned();
+
+        AssociativeParameters{
+            p,
+            lambda,
+            gamma,
+            lambda_t,
+            gamma_t,
+            multiplicity,
+            epsilon,
+            beta,
+            sites,
+        }
     }
-
-
-
 }
 
+// #[derive(Serialize)]
+// struct Mat {
+//     a: Vec<Vec<f64>>,
+// }
+
+fn array2_to_vec(a: &Array2<f64>) -> Vec<Vec<f64>> {
+    a.rows()
+     .into_iter()
+     .map(|r| r.to_vec())
+     .collect()
+}
+
+fn array2_to_string(a: &Array2<f64>) -> String {
+    let rows: Vec<String> = a
+        .rows()
+        .into_iter()
+        .map(|r| {
+            let elems: Vec<String> =
+                r.iter().map(|x| format!("{}", x)).collect();
+            format!("[{}]", elems.join(", "))
+        })
+        .collect();
+
+    format!("[{}]", rows.join(",\n"))
+}
+
+impl Serialize for AssociativeParameters {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+            
+        let fields = 7;
+        let mut state = serializer.serialize_struct("AssociativeParameters", fields)?;
+        
+        state.serialize_field("sites", &self.sites)?;
+
+        state.serialize_field("multiplicity", &self.multiplicity.to_vec())?;
+
+        state.serialize_field("P", &array2_to_vec(&self.p))?;
+        state.serialize_field("lambda", &array2_to_vec(&self.lambda))?;
+        state.serialize_field("gamma", &array2_to_vec(&self.gamma))?;
+        state.serialize_field("epsilon", &array2_to_vec(&self.epsilon))?;
+        state.serialize_field("beta", &array2_to_vec(&self.beta))?;
+
+        state.end()        
+    }
+}
+
+
+impl std::fmt::Display for AssociativeParameters {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+        write!(
+            f, 
+            "sites:{:?}\nmultiplicity:{:?}\nP:\n{}\nlambda:\n{}\ngamma:\n{}\nepsilon:\n{}\nbeta:\n{}" ,
+            &self.sites,
+            &self.multiplicity.to_vec(),
+            &array2_to_string(&self.p),
+            &array2_to_string(&self.lambda),
+            &array2_to_string(&self.gamma),
+            &array2_to_string(&self.epsilon),
+            &array2_to_string(&self.beta),)
+
+
+        // write!(f, "multiplicity:{:#?}",&self.multiplicity.to_vec());
+        // write!(f, "P:{:#?}",&array2_to_string(&self.p))
+
+
+        // match self{
+        //     SiteType::A => write!(f,"A"),
+        //     SiteType::B => write!(f,"B"),
+        //     SiteType::C => write!(f,"C"),
+        // }
+    }
+}
 #[derive(Serialize, Deserialize,Debug,Clone,PartialEq)]
 #[serde(rename_all = "lowercase")]
 
 pub enum AssociationType{
     Inert,
-    Solvate,
+    // Solvate,
     Associative
 }
 
@@ -365,9 +289,8 @@ impl Default for AssociationType {
         Self::Inert
     }
 }
+
 #[derive(Serialize, Deserialize,Debug,Clone,PartialEq)]
-
-
 pub struct AssociationPureRecord{
 
     #[serde(default)]
@@ -380,12 +303,13 @@ pub struct AssociationPureRecord{
     pub nb:usize,
     #[serde(default)]
     pub nc:usize,
-    #[serde(default)]
-    pub typ:AssociationType,
-    pub b:f64
+    // #[serde(default)]
+    // pub typ:AssociationType,
 
 }
-
+impl PureRecord for AssociationPureRecord {
+    
+}
 impl AssociationPureRecord {
     
     pub fn new(
@@ -394,8 +318,7 @@ impl AssociationPureRecord {
         na:usize,
         nb:usize,
         nc:usize,
-        typ:AssociationType,
-        b:f64,
+        // typ:AssociationType,
     )->Self{
         Self{
         epsilon,
@@ -403,134 +326,94 @@ impl AssociationPureRecord {
         na,
         nb,
         nc,
-        typ,
-        b
+        // typ,
         }
     }
-    pub fn inert(b:f64) -> Self {
+    pub fn inert() -> Self {
         AssociationPureRecord{
         epsilon:0.0,
         beta:0.0,
         na:0,
         nb:0,
         nc:0,
-        typ:AssociationType::Inert,
-        b
+        // typ:AssociationType::Inert,
         }
     }
 
-    pub fn solvate(sites:[usize;NS],b:f64)-> Self{
+    pub fn solvate(sites:[usize;NS])-> Self{
         AssociationPureRecord{
         epsilon:0.0,
         beta:0.0,
         na:sites[0],
         nb:sites[1],
         nc:sites[2],
-        typ:AssociationType::Solvate,
-        b
+        // typ:AssociationType::Associative,
         }
     }
 
-    pub fn associative(epsilon:f64,beta:f64,sites:[usize;NS],b:f64)->Self{
+    pub fn associative(epsilon:f64,beta:f64,sites:[usize;NS])->Self{
         AssociationPureRecord{
         epsilon,
         beta,
         na:sites[0],
         nb:sites[1],
         nc:sites[2],
-        typ:AssociationType::Associative,
-        b
+        // typ:AssociationType::Associative,
         }
     }
-}
-
-
-// impl Debug for ASCParameters {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         writeln!(f, "  Associative Components: {:?}", self.nassoc)?;
-//         writeln!(f, "  Hard-sphere Volumes (vb):")?;
-//         writeln!(f, "    {:?}", self.vb.to_vec())?;
-
-//         writeln!(f, "F:")?;
-//         writeln!(f,"{:?}", self.f.to_vec())?;
-
-//         writeln!(f, "S:")?;
-//         writeln!(f,"{:?}", self.s.to_vec())?;
-        
-//         writeln!(f, "T:")?;
-//         for row in self.tmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "H:")?;
-//         for row in self.hmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "P:")?;
-//         for row in self.pmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "E:")?;
-//         for row in self.epsmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "B:")?;
-//         for row in self.betamat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-
-
-
-//         Ok(())
-//     }
     
-// }
-// impl std::fmt::Display for ASCParameters {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         writeln!(f, "nassoc: {:?}", self.nassoc)?;
-//         writeln!(f, "nsolv : {:?}", self.nsolv)?;
-//         writeln!(f, "b     : {}",self.vb)?;
-
-//         writeln!(f, "F: dim=({:#?}) {}",self.f.dim(),self.f)?;
-
-//         writeln!(f, "S: dim=({}) {}",self.s.dim(),self.s)?;
+    pub fn get_type(&self)->AssociationType{
         
-//         writeln!(f, "T: dim=({}×{})",self.tmat.dim().0,self.tmat.dim().1)?;
-//         for row in self.tmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "H: dim=({}×{})",self.hmat.dim().0,self.hmat.dim().1)?;
-//         for row in self.hmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "P: dim=({}×{})",self.pmat.dim().0,self.pmat.dim().1)?;
-//         for row in self.pmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "E:")?;
-//         for row in self.epsmat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
-//         writeln!(f, "B:")?;
-//         for row in self.betamat.rows() {
-//             writeln!(f, "    {:?}", row.to_vec())?;
-//         }
+        if (self.na == 0) && (self.nb == 0) && (self.nc == 0){
+            AssociationType::Inert
+        } else {
+           AssociationType::Associative
+        }
 
-
-
-//         Ok(())
-//     }
-// }
-
-impl PureRecord for AssociationPureRecord {
-    
-}
-impl Parameters<AssociationPureRecord> for ASCParameters<ElliotRDF> {
-    fn from_records(records:Vec<AssociationPureRecord>)->Self {
-        Self::new(ElliotRDF, records)
     }
+
 }
-impl Parameters<AssociationPureRecord> for ASCParameters<CarnahanStarlingRDF> {
-    fn from_records(records:Vec<AssociationPureRecord>)->Self {
-        Self::new(CarnahanStarlingRDF, records)
+
+
+
+mod tests{
+
+    use serde_json::{from_str, to_string, to_string_pretty};
+    use super::*;
+
+
+    #[test]
+    fn test1(){
+
+        let data1 = r#"
+        {   
+            "epsilon": 166.55e2, 
+            "beta": 0.0692,
+            "na":   2,
+            "nb":   2
+        }
+        "#;
+        
+        let data2 = r#"
+        {
+            "nb":   1
+        }
+        "#;
+
+        let c1: AssociationPureRecord = from_str(data1).unwrap();
+        let c2: AssociationPureRecord = from_str(data2).unwrap();
+
+        // let c1_string = serde_json::to_string_pretty(&c1).unwrap();
+
+        // println!("{}",c1_string)
+
+        let p = AssociativeParameters::from_records(vec![c1,c2]);
+
+        // let string = to_string(&p).unwrap();
+        let string = p.to_string();
+
+
+        println!("{}",string)
+
     }
 }

@@ -1,71 +1,119 @@
-use ndarray::{Array1};
+use std::marker::PhantomData;
 
-pub trait RDF {
-    fn model()->Self where Self: Sized;
-    fn eta(&self,rho:f64,x:&Array1<f64>,vb:&Array1<f64>)->f64{
-        rho*vb.dot(x)/4.0
+use ndarray::{Array, Array1, Array2};
+
+#[derive(Clone)]
+pub struct Rdf<T>{
+  /// Co-volume of components of mixture
+  pub b:Array1<f64>,
+  /// Co-volume of site i and site j 
+  pub bij:Array2<f64>,
+  model: PhantomData<T>
+}
+
+impl<T:RdfModel> Rdf<T> {
+
+    pub fn new(b:Array1<f64>,bij:Array2<f64>)->Self{
+      Rdf { b, bij, model: PhantomData }
     }
-    fn detadrho(&self,x:&Array1<f64>,vb:&Array1<f64>)->f64{
-        vb.dot(x)/4.0
+    pub fn detadrho(&self,x:&Array1<f64>)->f64{
+        self.b.dot(x)/4.0
     }
-    fn detadni(&self,rho:f64,vb:&Array1<f64>)->Array1<f64>{
-        rho*vb/4.0
+    pub fn detadni(&self,rho:f64)->Array1<f64>{
+        rho * &self.b/4.0
     }
-    fn dlngdrho(&self,rho:f64,x:&Array1<f64>,vb:&Array1<f64>)->f64{
-      let dlngdeta = self.dlngdeta(rho, x, vb);
-      let detadrho = self.detadrho(x, vb);
+    pub fn dlngdrho(&self,rho:f64,x:&Array1<f64>)->f64{
+      let dlngdeta = T::dlngdeta(rho, x,&self.b);
+      let detadrho = self.detadrho(x);
       dlngdeta * detadrho
     }
-    fn ndlngdni(&self,rho:f64,x:&Array1<f64>,vb:&Array1<f64>)->Array1<f64>{
-      let dlngdeta = self.dlngdeta(rho, x, vb);
-      let detadni = self.detadni(rho, vb);
+    pub fn ndlngdni(&self,rho:f64,x:&Array1<f64>)->Array1<f64>{
+      let dlngdeta = T::dlngdeta(rho, x, &self.b);
+      let detadni = self.detadni(rho);
       dlngdeta * detadni
     }
+    pub fn g(&self,rho:f64,x:&Array1<f64>)->f64{
+      T::g(rho, x, &self.b)
+    }
 
-    fn dlngdeta(&self,rho:f64,x:&Array1<f64>,vb:&Array1<f64>)->f64;
-    fn rdf(&self,rho:f64,x:&Array1<f64>, vb:&Array1<f64>)->f64;
+}
+pub trait RdfModel {
+    
+    fn model()->Self where Self: Sized;
 
+    fn new<T:RdfModel>(b:Array1<f64>,bij:Array2<f64>)->Rdf<T>{
+      Rdf::new(b, bij)
+    }
+    fn eta(
+      rho:f64,
+      x:&Array1<f64>,
+      b:&Array1<f64>)->f64{
+        rho*b.dot(x)/4.0
+      }
+    fn dlngdeta(
+      rho:f64,
+      x:&Array1<f64>,
+      b:&Array1<f64>)->f64;
+    
+    fn g(
+      rho:f64,
+      x:&Array1<f64>, 
+      b:&Array1<f64>)->f64;
 
     fn which(&self)->String;
 
 }
 
 #[derive(Clone)]
-pub struct CarnahanStarlingRDF;
+pub struct CS;
 #[derive(Clone)]
-pub struct ElliotRDF;
+pub struct Kontogeorgis;
 
-impl RDF for ElliotRDF {
+impl RdfModel for Kontogeorgis {
+
 
   fn model()->Self where Self: Sized {
-    ElliotRDF
+      Self
   }
-  fn rdf(&self,rho:f64,x:&ndarray::Array1<f64>,vb:&ndarray::Array1<f64>)->f64 {
-    1.0 / (1.0 - 1.9 * self.eta(rho, x, vb))
+  fn g(
+    rho:f64,
+    x:&ndarray::Array1<f64>,
+    b:&ndarray::Array1<f64>)->f64 {
+    1.0 / (1.0 - 1.9 * Self::eta(rho, x, b))
   }
 
-  fn dlngdeta(&self,rho:f64,x:&ndarray::Array1<f64>,vb:&ndarray::Array1<f64>)->f64 {
-    let gmix = self.rdf(rho, x, vb);
+  fn dlngdeta(
+    rho:f64,
+    x:&Array1<f64>,
+    b:&Array1<f64>)->f64 {
+    let gmix = Self::g(rho, x, b);
     1.9 * gmix 
   }
 
   fn which(&self)->String{
-    "Elliot RDF (sCPA)".to_string()
+    "Kontogeorgis RDF (sCPA)".to_string()
   }
 }
 
-impl RDF for CarnahanStarlingRDF {
+impl RdfModel for CS {
 
   fn model()->Self where Self: Sized {
-    CarnahanStarlingRDF
+      Self
   }
-  fn rdf(&self,rho:f64,x:&ndarray::Array1<f64>,vb:&ndarray::Array1<f64>)->f64 {
-    let eta = self.eta(rho, x, vb);
+
+  fn g(
+    rho:f64,
+    x:&Array1<f64>,
+    b:&Array1<f64>)->f64 {
+    let eta = Self::eta(rho, x, b);
     (1. - 0.5*eta) / (1.0 - eta).powi(3)
   }
 
-  fn dlngdeta(&self,rho:f64,x:&ndarray::Array1<f64>,vb:&ndarray::Array1<f64>)->f64 {
-    let eta = self.eta(rho, x, vb);
+  fn dlngdeta(
+    rho:f64,
+    x:&Array1<f64>,
+    b:&Array1<f64>)->f64 {
+    let eta = Self::eta(rho, x, b);
     (5. - 2.*eta)/(2. - eta)/(1. - eta)
   }
 

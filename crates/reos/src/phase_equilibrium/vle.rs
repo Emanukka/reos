@@ -138,10 +138,12 @@ pub mod tests{
 
     use approx::assert_relative_eq;
     use ndarray::Array1;
-    #[allow(unused_imports)]
-    use crate::{models::{ cpa::{CPA,parameters::{octane_acoh,acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}}, cubic::Cubic}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
 
-    // #[test]
+    use crate::{models::cpa::tests::{acoh_octane, octane_acoh, water_acetic_acid}, phase_equilibrium::PhaseEquilibrium};
+    #[allow(unused_imports)]
+    // use crate::{models::{ cpa::{CPA,parameters::{octane_acoh,acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}}, cubic::Cubic}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
+
+    #[test]
     pub fn cmp_bbpy_water_acoh(){
 
         println!("bbpy-water-acoh");
@@ -167,7 +169,7 @@ pub mod tests{
 
     }
  
-    // #[test]
+    #[test]
     pub fn cmp_bbpy_acoh_octane(){
 
         println!("bbpy-acoh-octane");
@@ -191,7 +193,7 @@ pub mod tests{
 
 
     }
-    // #[test]
+    #[test]
     pub fn cmp_bbpy_octane_acoh(){
 
 
@@ -221,17 +223,17 @@ pub mod tests{
 
     }
 
-    #[test]
-    pub fn vle(){
+    // #[test]
+    // pub fn vle(){
 
         
-        cmp_bbpy_acoh_octane();
+    //     cmp_bbpy_acoh_octane();
 
-        cmp_bbpy_octane_acoh();
+    //     cmp_bbpy_octane_acoh();
         
-        cmp_bbpy_water_acoh();
+    //     cmp_bbpy_water_acoh();
 
-    }
+    // }
     // #[test]
     // pub fn time_calc(){
     //     let eos = water_acetic_acid();
