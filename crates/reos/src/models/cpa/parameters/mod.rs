@@ -1,10 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::models::associative::parameters::{ CombiningRule, AssociationPureRecord, AssociativeParameters};
-use crate::models::cpa::{CPA, SCPAsrkCR1, SCPAsrkECR};
-use crate::models::cpa::rdf::{CS, RdfModel, Kontogeorgis};
+use crate::models::associative::parameters::{ AssociationPureRecord, AssociativeParameters};
 
-use crate::models::cubic::{Cubic, CubicModel, SRK};
+use crate::models::cubic::{ CubicModel};
 use crate::models::cubic::parameters::{CubicParameters, CubicPureRecord};
 use crate::parameters::{Parameters, PureRecord};
 use crate::state::E;

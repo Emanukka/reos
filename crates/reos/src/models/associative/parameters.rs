@@ -1,80 +1,88 @@
 
 
-use std::fmt::write;
+use std::{collections::HashMap, fmt::write};
 
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize, ser::SerializeStruct};
 
-use crate::{models::{ associative::sites::{NS, Site, SiteType}}, parameters::{Parameters, PureRecord}, state::eos::EosError};
+use crate::{models::associative::sites::{ CombiningRule, NS, Site, SiteInteraction, SiteType}, parameters::{Parameters, PureRecord}, state::eos::EosError};
 
 pub const W:[[f64;3];3]=[[0.0,1.0,1.0],[1.0,0.0,1.0],[1.0,1.0,1.0]];
 
 
-
-pub trait CombiningRule{
-
-    fn which()->Self where  Self: Sized;
-
-    fn to_string()->String;
-
-    fn association_strength_jl(
-        t:f64,
-        g_contact:f64,
-        bij:&Array2<f64>,
-        epsilon:&Array2<f64>,
-        beta:&Array2<f64>,
-    )->Array2<f64>;
-
-}
 
 
 
 #[derive(Clone)]
 pub struct AssociativeParameters{
     pub multiplicity: Array1<f64>,
-    pub p:            Array2<f64>,
-    pub epsilon:      Array2<f64>,
-    pub beta:         Array2<f64>,
     pub sites:        Vec<Site>  ,
-    pub lambda:       Array2<f64>,
-    pub gamma:        Array2<f64>,
-    pub lambda_t:     Array2<f64>,
-    pub gamma_t:      Array2<f64>,
+    pub interactions: Vec<SiteInteraction>,
+    pub id:           Array2<f64>,
+    pub lambda_t:       Array2<f64>,
+    pub gamma_t:        Array2<f64>,
 }
 
 impl AssociativeParameters {
     
-    pub fn set_binary_from_owners(&mut self,i:usize,k:usize,epsilon:Option<f64>,beta:Option<f64>) {
-        
-        let mut hit = 0;
-        for (j,site_j) in self.sites.iter().enumerate(){
-            for (l,site_l) in self.sites.iter().enumerate(){
-                hit+=1;
-                if (site_j.has_owner(i)) && (site_l.has_owner(k)){
+    /// Change the all sites pair combining rule that belongs to 2 associative components in the mixture  
+    pub fn change_combining_rule(&mut self,i:usize,k:usize,combining_rule:super::sites::CombiningRule){
 
-                    match epsilon {
-                        Some(eps)=>{
-                            self.epsilon[(j,l)] = eps;
-                            self.epsilon[(l,j)] = eps
-                        }
-                        None => {}
-                    }
+        let interactions = &mut self.interactions;
 
-                    match beta {
-                        Some(bet)=>{
-                            self.beta[(j,l)] = bet;
-                            self.beta[(l,j)] = bet;
-                        }
-                        None => {}
-                    }
-                }
+        for inter in interactions{
+
+            if inter.belongs_to(i, k){
+
+                inter.change_combining_rule(combining_rule);
             }
         }
-
-        if hit == 0{
-            println!("no site-pair was match")
-        }
     }
+
+    pub fn set_solvation_interaction(&mut self,i:usize,k:usize,epsilon:Option<f64>,beta:f64){
+
+        let interactions = &mut self.interactions;
+        let sites = &self.sites;
+        let mut solvation = SiteInteraction::solvations_from_ik(i, k, sites, epsilon, beta);
+
+        interactions.append(&mut solvation);
+        
+        // for inter in interactions{
+
+            
+        // }
+    }
+    // pub fn set_binary_from_owners(&mut self,i:usize,k:usize,epsilon:Option<f64>,beta:Option<f64>) {
+        
+    //     let mut hit = 0;
+    //     for (j,site_j) in self.sites.iter().enumerate(){
+    //         for (l,site_l) in self.sites.iter().enumerate(){
+    //             hit+=1;
+    //             if (site_j.has_owner(i)) && (site_l.has_owner(k)){
+
+    //                 match epsilon {
+    //                     Some(eps)=>{
+    //                         self.epsilon[(j,l)] = eps;
+    //                         self.epsilon[(l,j)] = eps
+    //                     }
+    //                     None => {}
+    //                 }
+
+    //                 match beta {
+    //                     Some(bet)=>{
+    //                         self.beta[(j,l)] = bet;
+    //                         self.beta[(l,j)] = bet;
+    //                     }
+    //                     None => {}
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     if hit == 0{
+    //         println!("no site-pair was match")
+    //     }
+    // }
 }
 
 impl Parameters <AssociationPureRecord> for AssociativeParameters {
@@ -82,21 +90,17 @@ impl Parameters <AssociationPureRecord> for AssociativeParameters {
     fn from_records(records:Vec<AssociationPureRecord>)->Self{
 
         let ncomp = records.len();
-        // let mut nsolv:Vec<usize>=Vec::with_capacity(ncomp);
-        let mut nassoc:Vec<usize>=Vec::with_capacity(ncomp);
+        let mut mapping:Vec<usize>=Vec::with_capacity(ncomp);
+
         for (i,record) in records.iter().enumerate(){
-            // vb[i]=record.b.clone();
             match record.get_type() {
                 AssociationType::Inert=>{continue;}
-                AssociationType::Associative=>{nassoc.push(i)}
+                AssociationType::Associative=>{mapping.push(i)}
 
-                // AssociationType::Solvate=>{nassoc.push(i);}
             }
         }
-        let n = nassoc.len();
-        let mut veps= Vec::<f64>::new();
-        let mut vbeta= Vec::<f64>::new();
 
+        let n = mapping.len();
 
         let mut sites:Vec<Site> = Vec::with_capacity(NS*n); 
         let mut m:Vec<f64> = Vec::with_capacity(NS); 
@@ -105,7 +109,7 @@ impl Parameters <AssociationPureRecord> for AssociativeParameters {
         let mut total_sites_per_component = Vec::with_capacity(n);
         for k in 0..n{
 
-            let i = nassoc[k]; 
+            let i = mapping[k]; 
             let record=&records[i];
             
             let na=record.na as f64;
@@ -116,65 +120,44 @@ impl Parameters <AssociationPureRecord> for AssociativeParameters {
 
             if na!=0.0{
                 sites.push(Site::new(SiteType::A, i, S,record.epsilon,record.beta));
-                veps.push(record.epsilon);
-                vbeta.push(record.beta);
+
                 m.push(na);
                 S+=1;
                 total_sites_k+=1;
             }
             if nb!=0.0{
                 sites.push(Site::new(SiteType::B, i, S,record.epsilon,record.beta));
-                veps.push(record.epsilon);
-                vbeta.push(record.beta);
+
                 m.push(nb);
                 S+=1;
                 total_sites_k+=1;
             }
             if nc!=0.0{
                 sites.push(Site::new(SiteType::C, i, S,record.epsilon,record.beta));
-                veps.push(record.epsilon);
-                vbeta.push(record.beta);
+
 
                 m.push(nc);
                 S+=1;
                 total_sites_k+=1;
             }
-
             total_sites_per_component.push(total_sites_k);            
-
         }
-
-        let veps = Array2::from_shape_vec((S,1), veps).unwrap();
-        let vbeta = Array2::from_shape_vec((S,1), vbeta).unwrap();
 
         let multiplicity = Array1::from_vec(m);
         let ns=sites.len();
-        assert_eq!(ns,S);
 
-        let epsilon:Array2<f64> = 0.5*(&veps + &veps.t());
-        let beta:Array2<f64> = (&vbeta * &vbeta.t()).sqrt();
-
-        let mut p:Array2<f64>=Array2::zeros((S,S));
+        let interactions = SiteInteraction::interactions_from_sites(&sites,todo!()); 
 
 
-        for (j,site_j) in sites.iter().enumerate(){
-            for (l,site_l) in sites.iter().enumerate(){
-
-                if W[site_j.t()][site_l.t()] == 1.0{
-                    // && (epsilon[(l,l)] != 0.0){
-
-                    p[(j,l)]=1.0;
-                    p[(l,j)]=1.0;
-                }
-            }
-        }
         let mut lambda:Array2<f64>=Array2::zeros((n,S));
         let mut gamma:Array2<f64>=Array2::zeros((ncomp,n));
+        let id = Array2::eye(S);
+
         let mut sumj = 0;
         for k in 0..n{
             
             let jk = total_sites_per_component[k];
-            gamma[(nassoc[k],k)] = 1.0;
+            gamma[(mapping[k],k)] = 1.0;
 
             for j in sumj..sumj+jk{
                 lambda[(k,j)] = 1.0
@@ -182,18 +165,15 @@ impl Parameters <AssociationPureRecord> for AssociativeParameters {
             sumj+=jk
 
         }
-        let lambda_t=lambda.t().to_owned();
-        let gamma_t=gamma.t().to_owned();
+        let lambda_t = lambda.t().to_owned();
+        let gamma_t = gamma.t().to_owned();
 
         AssociativeParameters{
-            p,
-            lambda,
-            gamma,
+            interactions,
             lambda_t,
             gamma_t,
             multiplicity,
-            epsilon,
-            beta,
+            id,
             sites,
         }
     }
@@ -237,11 +217,11 @@ impl Serialize for AssociativeParameters {
 
         state.serialize_field("multiplicity", &self.multiplicity.to_vec())?;
 
-        state.serialize_field("P", &array2_to_vec(&self.p))?;
-        state.serialize_field("lambda", &array2_to_vec(&self.lambda))?;
-        state.serialize_field("gamma", &array2_to_vec(&self.gamma))?;
-        state.serialize_field("epsilon", &array2_to_vec(&self.epsilon))?;
-        state.serialize_field("beta", &array2_to_vec(&self.beta))?;
+        // state.serialize_field("P", &array2_to_vec(&self.p))?;
+        state.serialize_field("lambdat", &array2_to_vec(&self.lambda_t))?;
+        state.serialize_field("gammat", &array2_to_vec(&self.gamma_t))?;
+        // state.serialize_field("epsilon", &array2_to_vec(&self.epsilon))?;
+        // state.serialize_field("beta", &array2_to_vec(&self.beta))?;
 
         state.end()        
     }
@@ -253,14 +233,14 @@ impl std::fmt::Display for AssociativeParameters {
 
         write!(
             f, 
-            "sites:{:?}\nmultiplicity:{:?}\nP:\n{}\nlambda:\n{}\ngamma:\n{}\nepsilon:\n{}\nbeta:\n{}" ,
+            "sites:{:?}\nmultiplicity:{:?}\nlambdat:\n{}\ngammat:\n{}\n" ,
             &self.sites,
             &self.multiplicity.to_vec(),
-            &array2_to_string(&self.p),
-            &array2_to_string(&self.lambda),
-            &array2_to_string(&self.gamma),
-            &array2_to_string(&self.epsilon),
-            &array2_to_string(&self.beta),)
+            // &array2_to_string(&self.p),
+            &array2_to_string(&self.lambda_t),
+            &array2_to_string(&self.gamma_t))
+            // &array2_to_string(&self.epsilon),
+            // &array2_to_string(&self.beta),)
 
 
         // write!(f, "multiplicity:{:#?}",&self.multiplicity.to_vec());
@@ -307,8 +287,36 @@ pub struct AssociationPureRecord{
     // pub typ:AssociationType,
 
 }
-impl PureRecord for AssociationPureRecord {
+impl PureRecord for AssociationPureRecord {}
+
+#[derive(Clone)]
+pub struct AssociationBinaryRecord{
+    pub comp1:usize,
+    pub comp2:usize,
+    pub epsilon:Option<f64>,
+    pub kappa:Option<f64>,
+    pub combining_rule:Option<CombiningRule>
+}
+
+
+impl AssociationBinaryRecord {
     
+    pub fn new(comp1:usize,comp2:usize,epsilon:Option<f64>,kappa:Option<f64>,combining_rule:Option<CombiningRule>)->Self{
+
+        Self { comp1, comp2, epsilon, kappa, combining_rule }
+    }
+
+    pub fn map_from_vec(binary:Vec<Self>)->HashMap<(usize,usize),Self>{
+
+        let mut map:HashMap<(usize,usize), Self> = HashMap::new();
+
+        binary.iter().map(
+            |v| {
+                map.insert((v.comp1,v.comp2), v.clone());
+            }
+        );
+        map
+    }
 }
 impl AssociationPureRecord {
     
@@ -318,7 +326,6 @@ impl AssociationPureRecord {
         na:usize,
         nb:usize,
         nc:usize,
-        // typ:AssociationType,
     )->Self{
         Self{
         epsilon,
@@ -336,7 +343,6 @@ impl AssociationPureRecord {
         na:0,
         nb:0,
         nc:0,
-        // typ:AssociationType::Inert,
         }
     }
 
@@ -347,7 +353,6 @@ impl AssociationPureRecord {
         na:sites[0],
         nb:sites[1],
         nc:sites[2],
-        // typ:AssociationType::Associative,
         }
     }
 
@@ -358,7 +363,6 @@ impl AssociationPureRecord {
         na:sites[0],
         nb:sites[1],
         nc:sites[2],
-        // typ:AssociationType::Associative,
         }
     }
     
@@ -375,7 +379,235 @@ impl AssociationPureRecord {
 }
 
 
+pub mod readyto{
+    use crate::models::associative::parameters::{AssociationBinaryRecord, AssociationPureRecord, AssociativeParameters};
 
+    pub fn water4c_cpa()->AssociationPureRecord{
+
+        AssociationPureRecord::associative(
+            166.55e2, 
+            0.0692, 
+            [2,2,0])
+    }
+    pub fn acetic1a_cpa()->AssociationPureRecord{
+        AssociationPureRecord::associative(
+            403.23e2, 
+            4.5e-3, 
+            [0,0,1])
+    }
+
+    // pub fn binary_water_acetic()->AssociationBinaryRecord{
+
+    // }
+//     pub fn water_acetic_acid()->E<SCPA>{
+//                 //Records
+//             //1:Water, 2:Acetic Acid
+//             let c1=CubicPureRecord::new_set1(0.12277, 0.0145e-3, 0.6736, 647.14);
+//             let c2=CubicPureRecord::new_set1(0.91196, 0.0468e-3, 0.4644, 594.8);
+
+//             let a1=AssociationPureRecord::associative(
+//                 166.55e2, 
+//                 0.0692, 
+//                 [2,2,0],
+//             );
+//             let a2=AssociationPureRecord::associative(
+//                 403.23e2, 
+//                 4.5e-3, 
+//                 [0,0,1],
+//             );
+
+
+//             let records = vec![CPAPureRecord::new(c1, a1),CPAPureRecord::new(c2, a2)];
+//             let mut parameters = CPAParameters::from_records(records);
+//             parameters.assoc.change_combining_rule(0, 1, sites::CombiningRule::ECR);
+//             parameters.cubic.set_kij(0, 1, -0.222);
+//             let cpa = SCPA::from_parameters(parameters);
+//             E::from_residual(cpa)
+
+//     } 
+// // } 
+// pub fn acetic_acid_water()->E<SCPA>{
+//             //Records
+//         //1:Water, 2:Acetic Acid
+//         let c1=CubicPureRecord::new_set1(0.12277, 0.0145e-3, 0.6736, 647.14);
+//         let c2=CubicPureRecord::new_set1(0.91196, 0.0468e-3, 0.4644, 594.8);
+
+//         let a1=AssociationPureRecord::associative(
+//             166.55e2, 
+//             0.0692, 
+//             [2,2,0],
+//         );
+//         let a2=AssociationPureRecord::associative(
+//             403.23e2, 
+//             4.5e-3, 
+//             [0,0,1],
+//         );
+
+//         let records = vec![CPAPureRecord::new(c2, a2),CPAPureRecord::new(c1, a1)];
+//         let mut parameters = CPAParameters::from_records(records);
+//         parameters.assoc.change_combining_rule(0, 1, sites::CombiningRule::ECR);
+//         parameters.cubic.set_kij(0, 1, -0.222);
+//         let cpa = SCPA::from_parameters(parameters);
+//         E::from_residual(cpa)
+
+// } 
+
+// pub fn water_co2()->E<SCPA>{
+//             //Records
+//         let c1=CubicPureRecord::new_set1(0.12277, 0.0145e-3, 0.6736, 647.14);
+//         let c2=CubicPureRecord::new_set1(0.35079, 0.0272e-3, 0.7602, 304.12);
+
+//         let a1=AssociationPureRecord::associative(
+//             166.55e2, 
+//             0.0692, 
+//             [2,2,0],
+//         );
+//         let a2=AssociationPureRecord::solvate(
+//             [0,1,0]);
+
+//         let records = vec![CPAPureRecord::new(c1, a1),CPAPureRecord::new(c2, a2)];
+//         let mut parameters = CPAParameters::from_records(records);
+//         // parameters.cubic.set_kij(0, 1, -0.222);
+
+//         parameters.cubic.set_kij_temperature_dependent(0, 1, -0.15508, 0.000877);
+//         parameters.assoc.set_solvation_interaction(0, 1, None, 0.1836);
+
+//         let cpa = SCPA::from_parameters(parameters);
+//         //Create new State
+//         E::from_residual(cpa)
+// } 
+// pub fn co2_water()->E<SCPA>{
+//             //Records
+//         //1:Water, 2:Acetic Acid
+//         let c1=CubicPureRecord::new_set1(0.12277, 0.0145e-3, 0.6736, 647.14);
+//         let c2=CubicPureRecord::new_set1(0.35079, 0.0272e-3, 0.7602, 304.12);
+
+//         let a1=AssociationPureRecord::associative(
+//             166.55e2, 
+//             0.0692, 
+//             [2,2,0],
+//         );
+//         let a2=AssociationPureRecord::solvate(
+//             [0,1,0],
+//         );
+
+//         let records = vec![CPAPureRecord::new(c2, a2),CPAPureRecord::new(c1, a1)];
+//         let mut parameters = CPAParameters::from_records(records);
+
+//         parameters.cubic.set_kij_temperature_dependent(0, 1, -0.15508, 0.000877);
+//         // parameters.assoc.set_binary_from_owners(0, 1, None, Some(0.1836));
+
+//         parameters.assoc.set_solvation_interaction(0, 1, None, 0.1836);
+
+//         let cpa = SCPA::from_parameters(parameters);
+//         //Create new State
+//         E::from_residual(cpa)
+
+// } 
+
+
+// pub fn methanol_2b()->E<SCPA>{
+//             //Records
+//         //1:metoh, 2:oct
+//         let c1=CubicPureRecord::new_set1(0.40531, 0.0000309, 0.4310, 513.);
+
+//         let a1=AssociationPureRecord::associative(
+//             24591.0, 
+//             0.01610, 
+//             [1,1,0],
+//         );
+//         let records = vec![CPAPureRecord::new(c1, a1)];
+//         let parameters = CPAParameters::from_records(records);
+
+
+//         let cpa = SCPA::from_parameters(parameters);
+//         //Create new State
+//         E::from_residual(cpa)
+
+        
+// } 
+// pub fn methanol_3b()->E<SCPA>{
+//             //Records
+//         //1:metoh, 2:oct
+//         let c1=
+//         CubicPureRecord::new_set1(
+//             4.5897e-1, 
+//             0.0334e-3, 
+//             1.0068,
+//             513.);
+
+//         let a1=AssociationPureRecord::associative(
+//             160.70e2, 
+//             34.4e-3, 
+//             [2,1,0],
+//         );
+
+//         let records = vec![CPAPureRecord::new(c1, a1)];
+//         let parameters = CPAParameters::from_records(records);
+
+
+//         let cpa = SCPA::from_parameters(parameters);
+//         E::from_residual(cpa)
+// } 
+
+
+// pub fn acoh_octane()->E<SCPA>{
+//             //Records
+//         //1:Acetic Acid, 2:Octane
+//         let c1=CubicPureRecord::new_set1(0.91196, 0.0468e-3, 0.4644, 594.8);
+//         let c2=CubicPureRecord::new_set1(34.8750e-1, 0.1424e-3, 0.99415, 568.7);
+
+//         let a1=AssociationPureRecord::associative(
+//             403.23e2, 
+//             4.5e-3, 
+//             [0,0,1],
+//         );
+//         let a2=AssociationPureRecord::inert();
+
+
+//         let records = vec![CPAPureRecord::new(c1, a1),CPAPureRecord::new(c2, a2)];
+//         let parameters = CPAParameters::from_records(records);
+
+
+//         let mut cpa = SCPA::from_parameters(parameters);
+//         cpa.cubic.parameters.set_kij(0, 1, 0.064);
+
+//         E::from_residual(cpa)
+
+        
+// } 
+// pub fn octane_acoh()->E<SCPA>{
+//             //Records
+//         //1:Acetic Acid, 2:Octane
+//         let c1=CubicPureRecord::new_set1(0.91196, 0.0468e-3, 0.4644, 594.8);
+//         let c2=CubicPureRecord::new_set1(34.8750e-1, 0.1424e-3, 0.99415, 568.7);
+
+//         let a1=AssociationPureRecord::associative(
+//             403.23e2, 
+//             4.5e-3, 
+//             [0,0,1],
+//         );
+//         let a2=AssociationPureRecord::inert();
+
+
+//         let records = vec![CPAPureRecord::new(c2, a2),CPAPureRecord::new(c1, a1)];
+//         let parameters = CPAParameters::from_records(records);
+
+
+//         let mut cpa = SCPA::from_parameters(parameters);
+
+//         cpa.cubic.parameters.set_kij(0, 1, 0.064);
+
+//         E::from_residual(cpa)
+
+        
+// } 
+
+
+}
+
+
+#[cfg(test)]
 mod tests{
 
     use serde_json::{from_str, to_string, to_string_pretty};
