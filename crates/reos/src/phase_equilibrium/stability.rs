@@ -1,79 +1,101 @@
-use ndarray::{ Array1};
+use std::{iter::Zip, sync::Arc};
 
-use crate::{phase_equilibrium::PhaseEquilibrium, residual::Residual, state::{density_solver::DensityInitialization, eos::{EosError, EosResult}, State}, tools::newton};
+use ndarray::{ Array1};
+use serde::de;
+
+use crate::{phase_equilibrium::PhaseEquilibrium, residual::Residual, state::{E, State, density_solver::DensityInitialization, eos::{EosError, EosResult}}, tools::newton};
 
 
 impl <R:Residual> State<R> {
 
-    pub fn tpd(
-        &self,
-        x:Array1<f64>,
-        xphase:DensityInitialization)
-        ->EosResult<f64>{
+    pub fn tpd(&self, other: &State<R>) -> f64{
         
-        let hy = self.lnphi()?+self.x.ln();
-        let lnx=x.ln();
-        let daughter_phase = State::new_tpx(&self.eos, self.t, self.p, x, xphase )?;
-        let hx=daughter_phase.lnphi()?+&lnx;
-        Ok(
-        (lnx.exp()*(hx-hy)).sum()
-        )
-        
+        let hy = self.lnphi() + self.x.ln();
+        let lnx= other.x.clone().ln();
+        let hx = other.lnphi() + &lnx;
 
+        (lnx.exp()*(hx-hy)).sum()
     }
+
     pub fn min_tpd(
         &self,
         xphase:DensityInitialization,
-        xguess:Array1<f64>,
+        x:Array1<f64>,
         tol:Option<f64>,
-        it_max:Option<i32>)
-        ->EosResult<(f64,State<R>)>{
-        let tol =tol.unwrap_or(1e-8);
-        let it_max=it_max.unwrap_or(200);
-        let mut it=0;
-        let mut res=10.0;
+        it_max:Option<i32>) -> EosResult<(f64,State<R>)>{
 
-        // Cte
-        let p=self.p;
-        let z=&self.x;
-        let t=self.t;
-        let hy = self.lnphi()?+z.ln();
+        let tol = tol.unwrap_or(1e-10);
+        let max= it_max.unwrap_or(200);
 
-        //Var
-        let mut daughter_phase=State::new_tpx(&self.eos, t, p, xguess.clone(), xphase)?;
+        let ln_phiy = self.lnphi();
+        let z = &self.x;
+        let hy = Array1::from_shape_fn(z.len(), |i| ln_phiy[i] + z[i].ln() );
 
-        let mut old_dens=daughter_phase.rho;
-        let mut vw_old:Array1<f64>;
-        let mut vw =xguess.clone();
-        let mut x=xguess;
+        let guess = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), xphase)?;
+       
+        let mut x = x;
+        let mut dens = guess.d;
 
-        // xPhase guess
-        let mut lnphix:Array1<f64>=Array1::zeros(x.len());
+        for it in 0..max {
 
-        while (res>tol) & (it<it_max) {
+            if self.min_tpd_step(&mut dens, &mut x, &hy, tol)? {
+                
+                break;
+            } 
 
-            vw_old = vw;
-            // incipient state
-            daughter_phase = State::new_tpx(&self.eos, t, p, x, DensityInitialization::Guess(old_dens) )?;
-            old_dens=daughter_phase.rho;
-            lnphix=daughter_phase.lnphi()?;
+            if it == max - 1 {
 
-            vw = (&hy-&lnphix).exp();
-            
-            x = &vw/vw.sum();
-
-            res = (&vw - vw_old).pow2().sum().sqrt();
-            it+=1
+                return Err(EosError::NotConverged("TPD min".to_string()))
+            }
         }
-        let hx = x.ln()+ lnphix;
-        let dg = (vw*(hx-hy)).sum();
 
-        Ok((dg,daughter_phase))
+        let x_phase = State::new_trx(Arc::clone(&self.eos), self.t, dens, x.clone());
+        let ln_phix = x_phase.lnphi(); 
+        let mut dg = 0.0;
+
+        for i in 0..x.len() {
+            
+            let hx = ln_phix[i] + x[i].ln();
+            dg += x[i] * (hx - hy[i])
+        }
+
+        Ok((dg, x_phase))
 
     }
     
+    fn min_tpd_step(
+        &self,
+        dens: &mut f64,
+        x:    &mut Array1<f64>, 
+        hy:   &Array1<f64>, 
+        tol:  f64
+        )->Result<bool, EosError> {
 
+            let n = x.len();
+            let s = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), DensityInitialization::Guess(*dens) )?;
+
+            *dens = s.d;
+            
+            let ln_phi = s.lnphi();
+            let ww = Array1::from_shape_fn(n, |i| (hy[i] - ln_phi[i]).exp());
+            
+            let sum = ww.sum();
+
+            let mut err = 0.0;
+
+            x.iter_mut().zip(&ww).for_each(|(x,&w)| {
+
+                let new = w / sum;
+                err += (*x - new).powi(2);
+                *x = new;
+            });
+            
+            Ok( err.sqrt() < tol)
+
+    }
 }
+
+
 
 pub enum TemperatureOrPressure {
     Temperature(f64),
@@ -81,177 +103,59 @@ pub enum TemperatureOrPressure {
 }
 impl<R:Residual> PhaseEquilibrium<R>{
 
-    // pub fn root_min_tpd(
-    //     &self,
-    //     temperature_or_pressure:TemperatureOrPressure,
-    //     x0:f64,
-    //     zphase:DensityInitialization,
-    //     z:Array1<f64>,
-    //     xguess:Array1<f64>,
-    //     )->[State<R>;2]{
 
-    //     let mut p:f64;
-    //     let mut t: f64;
-    //     let xphase= zphase.inverse();
-    //     match temperature_or_pressure {
-            
-    //         TemperatureOrPressure::Temperature(t)=>{
-
-    //             let delta_g=|p|->f64{
-                
-    //             let state=State::new_tpx(&self.eos, t, p, z.clone(), zphase);
-
-    //             state.unwrap().min_tpd(xphase, xguess, None, None).unwrap().0
-            
-    //             };
-    //             match newton(delta_g, x0, Option(1e-6), Option(100)){
-            
-    //             Ok(x)=>{
-    //                 let result=x.x;
-    //                 let state=State::new_tpx(eos, t, result, z, zphase).unwrap();
-    //                 state.min_tpd(xphase, xguess, tol, it_max).unwrap()
-    //             }
-    //             Err(
-
-    //             )
-    //     }    
-    //         }
-    //         TemperatureOrPressure::Pressure(p)=>{
-    //             p=p;
-    //             t=x0
-    //         }
-    //     }
-
-        
-
-
-
-
-    // }
-
-    pub fn tpd(
-        &self,
-        t:f64,
-        p:f64,
-        z:Array1<f64>,
-        xphase:DensityInitialization,
-        xguess:Array1<f64>,
-        tol:Option<f64>,
-        it_max:Option<i32>
-        )->Result<(f64,Array1<f64>),EosError>{
-        let tol =tol.unwrap_or(1e-8);
-        let it_max=it_max.unwrap_or(200);
-        let mut it=0;
-        let mut res=10.0;
-
-        // Cte
-        let mother_phase=State::new_tpx(&self.eos, t, p, z.clone(), xphase.inverse())?;
-        let mut daughter_phase=State::new_tpx(&self.eos, t, p, xguess.clone(), xphase)?;
-
-        let mut old_dens=daughter_phase.rho;
-        let hy = mother_phase.lnphi()?+z.ln();
-        let mut vw_old:Array1<f64>;
-        let mut vw =xguess.clone();
-        let mut x=xguess;
-
-        // xPhase guess
-        let mut lnphix:Array1<f64>=Array1::zeros(x.len());
-
-        while (res>tol) & (it<it_max) {
-
-            vw_old = vw;
-            // incipient state
-            daughter_phase = State::new_tpx(&self.eos, t, p, x, DensityInitialization::Guess(old_dens) )?;
-            old_dens=daughter_phase.rho;
-            lnphix=daughter_phase.lnphi()?;
-
-            vw = (&hy-&lnphix).exp();
-            
-            x = &vw/vw.sum();
-
-            res = (&vw - vw_old).pow2().sum().sqrt();
-            it+=1
-        }
-        let hx = x.ln()+ lnphix;
-        let dg = (vw*(hx-hy)).sum();
-
-        //Retorna TPDresult (DG,StateMae,StateFilha)
-        
-        Ok((dg,x))
-
-    }
 
 }
 #[cfg(test)]
 pub mod tests{
     use std::sync::Arc;
 
+    use approx::assert_relative_eq;
     use ndarray::{array, Array1};
  
-    use crate::{models::cpa::tests::water_acetic_acid, phase_equilibrium::PhaseEquilibrium, state::{density_solver::DensityInitialization::{Vapor,Liquid}, State}};
+    use crate::{ models::cpa::{SCPA, parameters::readyto::{acetic1a, water4c, water4c_acetic1a}}, phase_equilibrium::PhaseEquilibrium, state::{E, State, density_solver::DensityInitialization::{Liquid, Vapor}}};
 
+    fn water_acetic_acid() -> E<SCPA>{
+        
+        let w = water4c();
+        let a = acetic1a();
+        let b = water4c_acetic1a();
+
+        let cpa = SCPA::from_records(vec![w, a], vec![b]);
+
+        E::from_residual(cpa)
+
+
+    }
     #[test]
     fn verify_tpd_close_to_bbpoint(){
 
-        let eos = water_acetic_acid();
-        let eos=Arc::new(eos);
-
-        let peq=PhaseEquilibrium::new(
-            &eos,
-            None);
-            // Some(antoine_water_acetic_acid()));
-        //State Variables
         let t=313.15;
         let x=Array1::from_vec(vec![0.5,0.5]);
+
+        let eos = water_acetic_acid();
+        let eos=Arc::new(eos);
+        let peq=PhaseEquilibrium::new(&eos, None);
+
         
-        let (pb,y)=peq.bbpy(t, x.clone(),Some(1e-10),Some(1e-10)).unwrap();
+        let (pb,_) = peq.bbpy(t, x.clone(),Some(1e-10),Some(1e-10)).unwrap();
         
-        println!("{}",&y);
-        let p_mais =pb*1.2;
-        let p_menos =pb*0.2;
 
-        println!("Pbolha= {} bar",pb/1e5);
-        println!("Pmais= {} bar",p_mais/1e5);
-        println!("Pmenos= {} bar",p_menos/1e5);
+        let zphase=State::new_tpx(eos.clone(), t, pb, x.clone(), Liquid).unwrap();
+        let (dg_zero, _) = zphase.min_tpd(Vapor, array![0.5,0.5], None, None).unwrap();
 
-        let zphase=State::new_tpx(&eos, t, pb, x.clone(), Liquid).unwrap();
+        assert_relative_eq!(dg_zero, 0.0, epsilon = 1e-10);
 
-        // let dg_zero= peq
-        // .tpd(
-        //     t, 
-        //     pb,
-        //     x.clone(),
-        //     Vapor, 
-        //     &y*1., 
-        //     Some(1e-10),
-        //     None).unwrap();
-        let dg_zero=zphase.min_tpd(Vapor, array![0.5,0.5], None, None).unwrap();
-        println!("ΔG em pBolha={}",dg_zero.0);
-        println!("y TPD={}",dg_zero.1.x);
-
-        let dg_mais= peq
-        .tpd(
-            t, 
-            p_mais,
-            x.clone(),
-            Vapor , 
-            &y*1., 
-            Some(1e-10),
-            None).unwrap();
+        let zphase = State::new_tpx(eos.clone(), t, pb * 1.2, x.clone(), Liquid).unwrap();
+        let (dg, _) = zphase.min_tpd(Vapor, array![0.5,0.5], None, None).unwrap();
         
-        println!("ΔG em P>Pbolha ={}",dg_mais.0);
+        assert!( dg > 0.0);
+       
+        let zphase = State::new_tpx(eos.clone(), t, pb * 0.8, x.clone(), Liquid).unwrap();
+        let (dg, _) = zphase.min_tpd(Vapor, array![0.5,0.5], None, None).unwrap();
+       
+        assert!( dg < 0.0);
 
-        let dg_menos= peq
-        .tpd(
-            t, 
-            p_menos,
-            x.clone(),
-            Vapor , 
-            &y*1., 
-            Some(1e-10),
-            None).unwrap();
-        
-        println!("ΔG em P<Pbolha ={}",dg_menos.0);
 
     }
 

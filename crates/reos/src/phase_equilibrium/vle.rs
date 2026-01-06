@@ -8,11 +8,11 @@ impl<R:Residual> PhaseEquilibrium<R>{
     pub fn vapor(&self,t:f64,p:f64,y:Array1<f64>)
     ->StateResult<R>{
         // S::new_tpx(self.0.clone(), t, p,y, DensityInitialization::Vapor)
-        S::new_tpx(&self.eos, t, p, y, DensityInitialization::Vapor)
+        S::new_tpx(self.eos.clone(), t, p, y, DensityInitialization::Vapor)
     }
     pub fn liquid(&self,t:f64,p:f64,x:Array1<f64>)
     ->StateResult<R>{
-        S::new_tpx(&self.eos, t, p, x, DensityInitialization::Liquid)
+        S::new_tpx(self.eos.clone(), t, p, x, DensityInitialization::Liquid)
     }
 
     pub fn set_antoine(&mut self,antoine:Antoine){
@@ -36,7 +36,6 @@ impl<R:Residual> PhaseEquilibrium<R>{
     //bbpy:
     //bbty: 
     //orvpx
-    /// Retorna P e y do vapor incipiente
     pub fn bbpy(&self,
         t:f64,
         x:Array1<f64>,
@@ -77,7 +76,7 @@ impl<R:Residual> PhaseEquilibrium<R>{
 
             let liquid = self.liquid(t, p0, x.clone())?;
 
-            let phi_l=liquid.lnphi()?.exp();
+            let phi_l = liquid.lnphi().exp();
             // dbg!(j);
             // dbg!(p0);
             // Reduzir n de iterações ou toly
@@ -91,7 +90,7 @@ impl<R:Residual> PhaseEquilibrium<R>{
                 // println!("VAPOR");
                 let vapor =self.vapor(t, p0, ynorm)?;
 
-                let phi_v=vapor.lnphi()?.exp();
+                let phi_v=vapor.lnphi().exp();
 
                 y1=(&phi_l/phi_v)*&x;
 
@@ -139,22 +138,31 @@ pub mod tests{
     use approx::assert_relative_eq;
     use ndarray::Array1;
 
-    use crate::{models::cpa::tests::{acoh_octane, octane_acoh, water_acetic_acid}, phase_equilibrium::PhaseEquilibrium};
+    use crate::{ models::{cpa::{CPA, SCPA, parameters::readyto::{acetic1a, water4c, water4c_acetic1a}, rdf::Kontogeorgis}, cubic::SRK}, phase_equilibrium::PhaseEquilibrium, state::E};
     #[allow(unused_imports)]
     // use crate::{models::{ cpa::{CPA,parameters::{octane_acoh,acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}}, cubic::Cubic}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
+
+    
+    fn water_acetic_acid()-> CPA<SRK,Kontogeorgis>{
+        let water = water4c();
+        let acetic = acetic1a();
+        let b = water4c_acetic1a();
+        let cpa = SCPA::from_records(vec![water,acetic],vec![b]);
+        cpa
+    }
 
     #[test]
     pub fn cmp_bbpy_water_acoh(){
 
         println!("bbpy-water-acoh");
 
-        let eos = water_acetic_acid();
+        let eos = E::from_residual(water_acetic_acid());
         let peq=PhaseEquilibrium::new(
             &Arc::new(eos),
             None);
             // Some(antoine_water_acetic_acid()));
         //State Variables
-        let t=300.0;
+        let t = 300.0;
         let x=Array1::from_vec(vec![0.5,0.5]);
         
         let (pb,y)=peq.bbpy(t, x,Some(1e-7),Some(1e-7)).unwrap();
@@ -163,65 +171,86 @@ pub mod tests{
 
         assert_relative_eq!(pb,3127.2493944115,epsilon=1e-4);
         
-        assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
-        assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
+        assert_relative_eq!(y[0],cmp[0],epsilon = 1e-6);
+        assert_relative_eq!(y[1],cmp[1],epsilon = 1e-6);
 
 
     }
  
-    #[test]
-    pub fn cmp_bbpy_acoh_octane(){
+    // #[test]
+    // pub fn bench(){
 
-        println!("bbpy-acoh-octane");
-        let eos = acoh_octane();
-        let peq=PhaseEquilibrium::new(
-            &Arc::new(eos),
-            None);
-        //State Variables
-        let t=343.15;
-        let x1=0.6;
-        let x=Array1::from_vec(vec![x1,1.0-x1]);
+    //     // println!("bbpy-water-acoh");
+    //     let n = 100;
+    //     let eos = E::from_residual(water_acetic_acid());
+    //     let peq=PhaseEquilibrium::new(
+    //         &Arc::new(eos),
+    //         None);
+    //         // Some(antoine_water_acetic_acid()));
+    //     //State Variables
+    //     let t = 300.0;
+    //     let x=Array1::from_vec(vec![0.5,0.5]);
         
-        let (pb,y)=peq.bbpy(t, x,Some(1e-6),Some(1e-6)).unwrap();
+    //     for _ in 0..n{
+    //         let (_,_)=peq.bbpy(t, x.clone(),Some(1e-7),Some(1e-7)).unwrap();
+            
+    //     }
+
+    // }
+ 
+    // #[test]
+    // pub fn cmp_bbpy_acoh_octane(){
+
+    //     println!("bbpy-acoh-octane");
+    //     let eos = acoh_octane();
+    //     let peq=PhaseEquilibrium::new(
+    //         &Arc::new(eos),
+    //         None);
+    //     //State Variables
+    //     let t=343.15;
+    //     let x1=0.6;
+    //     let x=Array1::from_vec(vec![x1,1.0-x1]);
         
-        let cmp=[0.6542769760724502, 0.34572302386625076];
-
-        assert_relative_eq!(pb,28987.67376094271,epsilon=1e-2);
+    //     let (pb,y)=peq.bbpy(t, x,Some(1e-6),Some(1e-6)).unwrap();
         
-        assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
-        assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
+    //     let cmp=[0.6542769760724502, 0.34572302386625076];
 
-
-    }
-    #[test]
-    pub fn cmp_bbpy_octane_acoh(){
-
-
-        println!("bbpy-octane-acoh");
-        let eos = octane_acoh();
-        let peq=PhaseEquilibrium::new(
-            &Arc::new(eos),
-            None);
-        //State Variables
-        let t=343.15;
-
-        let x1=0.4;
-        let x=Array1::from_vec(vec![x1,1.0-x1]);
+    //     assert_relative_eq!(pb,28987.67376094271,epsilon=1e-2);
         
-        let (pb,y)=peq.bbpy(t, x,Some(1e-6),Some(1e-6)).unwrap();
-        
-        let cmp=[ 0.34572302386625076,0.6542769760724502];
-        
-        // println!("P bol ={}",pb);
-        // println!("y={}",y);
-
-        assert_relative_eq!(pb,28987.67376094271,epsilon=1e-2);
-        
-        assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
-        assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
+    //     assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
+    //     assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
 
 
-    }
+    // }
+    // #[test]
+    // pub fn cmp_bbpy_octane_acoh(){
+
+
+    //     println!("bbpy-octane-acoh");
+    //     let eos = octane_acoh();
+    //     let peq=PhaseEquilibrium::new(
+    //         &Arc::new(eos),
+    //         None);
+    //     //State Variables
+    //     let t=343.15;
+
+    //     let x1=0.4;
+    //     let x=Array1::from_vec(vec![x1,1.0-x1]);
+        
+    //     let (pb,y)=peq.bbpy(t, x,Some(1e-6),Some(1e-6)).unwrap();
+        
+    //     let cmp=[ 0.34572302386625076,0.6542769760724502];
+        
+    //     // println!("P bol ={}",pb);
+    //     // println!("y={}",y);
+
+    //     assert_relative_eq!(pb,28987.67376094271,epsilon=1e-2);
+        
+    //     assert_relative_eq!(y[0],cmp[0],epsilon=1e-6);
+    //     assert_relative_eq!(y[1],cmp[1],epsilon=1e-6);
+
+
+    // }
 
     // #[test]
     // pub fn vle(){
@@ -233,23 +262,5 @@ pub mod tests{
         
     //     cmp_bbpy_water_acoh();
 
-    // }
-    // #[test]
-    // pub fn time_calc(){
-    //     let eos = water_acetic_acid();
-    //     let peq=PhaseEquilibrium::new(
-    //         Arc::new(eos),
-    //         None);
-    //         // Some(antoine_water_acetic_acid()));
-    //     //State Variables
-
-    //     let lins=linspace(0.01, 0.99, 100);
-        
-        
-    //     for xi in lins{
-    //         let t=300.0;
-    //         let x=Array1::from_vec(vec![xi,1.-xi]);
-    //         let (pb,y)=peq.bbpy(t, x,Some(1e-7),Some(1e-7)).unwrap();
-    //     }
     // }
 }

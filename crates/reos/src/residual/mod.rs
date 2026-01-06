@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 
-use crate::state::eos::EosResult;
+use crate::state::{State, eos::EosResult};
 
 #[derive(Default,Serialize,Deserialize)]
 pub struct ResidualDerivedProperties{
@@ -28,35 +28,42 @@ impl ResidualDerivedProperties {
 
 ///A trait that provides a interface for all types 
 ///that have a ```non-ideal``` contribution to the thermodynamic state. 
-///All properties are in the reduced form (less the pressure), and they
-/// are at the natural coordinates ```NVT```  
-/// Example:
+///All properties are in the reduced form and at the natural coordinates ```NVT```  
+/// 
 /// ```text
-///    s = S/R
 ///    a = A/R/T
+///    s = S/R
 ///    h = H/R/T
-///    P = d(A/RT)/dV
+///    p = da/dV
+/// 
 /// ```
 /// 
 /// 
 pub trait Residual{
 
-    fn r_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<Array1<f64>>;
-    fn r_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64>;
-    fn r_pressure(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64>;
-    fn bmix(&self,x:&Array1<f64>)->f64;
+
+    fn molar_weight(&self)->&Array1<f64>;
+    
+    fn r_entropy(&self,t:f64, d:f64, x:&Array1<f64>)->f64;
+    
+    fn r_chemical_potential(&self,t:f64,d: f64,x:&Array1<f64>)->Array1<f64>;
+
+    fn r_helmholtz(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
+
+    fn r_pressure(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
+
+    fn max_density(&self,x:&Array1<f64>)->f64;
 
     fn components(&self)->usize;
 
-    fn all_derived_properties(&self,t:f64,rho:f64,x:&Array1<f64>)->ResidualDerivedProperties{
+    fn all_derived_properties(&self,t:f64,d: f64,x:&Array1<f64>)->ResidualDerivedProperties{
 
         let mut r_properties = ResidualDerivedProperties::default();
-        r_properties.a = self.r_helmholtz(t, rho, x).unwrap();
-        r_properties.dadv = self.r_pressure(t, rho, x).unwrap();
-        r_properties.dadni = self.r_chemical_potential(t, rho, x).unwrap().to_vec();
+        r_properties.a = self.r_helmholtz(t, d, x);
+        r_properties.dadv = self.r_pressure(t, d, x);
+        r_properties.dadni = self.r_chemical_potential(t, d, x).to_vec();
 
         r_properties
-        // arr
 
     }
 }

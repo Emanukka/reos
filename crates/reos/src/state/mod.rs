@@ -9,10 +9,10 @@ use crate::models::IDEAL_GAS_CONST;
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EosResult, EquationOfState};
 use crate::state::density_solver::{DensityInitialization,density};
-pub type E<R>=EquationOfState<R>;
-pub type S<R>=State<R>;
+pub type E<R> = EquationOfState<R>;
+pub type S<R> = State<R>;
 
-pub type StateResult<R>=Result<S<R>,EosError>;
+pub type StateResult<R> = Result<S<R>,EosError>;
 
 
 #[derive(Clone)]
@@ -22,32 +22,29 @@ pub struct State<R:Residual>{
     // Kelvin
     pub t:f64,
     pub p:f64,
-    pub rho:f64,
+    pub d:f64,
     pub x:Array1<f64>,
-    // pub cache: Option<Cache>
 }
+
+
 
 impl<R:Residual> State<R> {
 
-    pub fn new_trx(eos:&Arc<E<R>>,t:f64,rho:f64,x:Array1<f64>)->StateResult<R>{
+    pub fn new_trx(eos:Arc<E<R>>,t:f64,d:f64,x:Array1<f64>)-> Self{
 
-        let p =eos.pressure(t, rho, &x);
+        let p = eos.pressure(t, d, &x);
 
-        match p {
-            Ok(pres)=>Ok(
-                Self{
-                    eos:Arc::clone(&eos),
-                    t,
-                    p:pres,
-                    rho,
-                    x,
-                }
-            ),
-            Err(e)=>Err(e)
+        Self{
+            eos:Arc::clone(&eos),
+            t,
+            p,
+            d,
+            x,
         }
 
+
     }
-    pub fn new_tpx(eos:&Arc<E<R>>,t:f64,p:f64,x:Array1<f64>,phase:DensityInitialization)->StateResult<R>{
+    pub fn new_tpx(eos:Arc<E<R>>,t:f64,p:f64,x:Array1<f64>,phase:DensityInitialization)->StateResult<R>{
 
         match phase {
             DensityInitialization::Liquid=>{
@@ -65,7 +62,7 @@ impl<R:Residual> State<R> {
 
             DensityInitialization::Vapor=>{
 
-                let bm=eos.residual.bmix(&x);
+                let bm = 1./eos.residual.max_density(&x);
                 let guess = bm/(bm + (IDEAL_GAS_CONST*t)/p);
 
                 density(eos, t, p, x, guess)
@@ -77,7 +74,8 @@ impl<R:Residual> State<R> {
             }
 
             DensityInitialization::Guess(old_density)=>{
-                let bm=eos.residual.bmix(&x);
+
+                let bm = 1./eos.residual.max_density(&x);
                 let guess=old_density*bm;
 
                 density(eos, t, p, x, guess)
@@ -98,22 +96,29 @@ impl<R:Residual> State<R> {
 }
 
 
+//properties methods
 impl<R:Residual> State<R> {
     
-    pub fn lnphi(&self)->EosResult<Array1<f64>>{
-        self.eos.lnphi(self.t, self.rho, &self.x)
+    pub fn lnphi(&self)->Array1<f64>{
+        
+        self.eos.lnphi(self.t, self.d, &self.x)
+        // self.eos.lnphi(self.t, self.rho, &self.x)
     }
-    pub fn pressure(&self)->EosResult<f64>{
-        self.eos.pressure(self.t, self.rho, &self.x)
+    pub fn pressure(&self)->f64{
+        // self.eos.pressure(self.t, self.rho, &self.x)
+        // self.eos.pressure(self.t, self.rho, &self.x)
+        self.p
     }
-    pub fn bmix(&self)->f64{
-        self.eos.residual.bmix(&self.x)
+
+    pub fn max_density(&self)->f64{
+
+        self.eos.residual.max_density(&self.x)
     }
-    pub fn composition(&self)->Array1<f64>{
-        self.x.clone()
+    pub fn composition(&self)->&[f64]{
+        self.x.as_slice().unwrap()
     }
     pub fn temperature(&self)->f64{
         self.t
     }
-
+    
 }

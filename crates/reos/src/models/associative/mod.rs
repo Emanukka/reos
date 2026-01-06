@@ -1,10 +1,11 @@
 pub mod sites;
 pub mod parameters;
+pub mod strength;
+use crate::models::IDEAL_GAS_CONST as R;
 use crate::models::associative::parameters::AssociativeParameters;
-use crate::state::eos::{EosError};
+use crate::state::eos::{EosError, EosResult};
 
 use ndarray::{Array1, Array2};
-
 
 #[derive(Clone)]
 pub struct Associative{
@@ -16,6 +17,7 @@ impl Associative {
     
   pub fn from_parameters(parameters:AssociativeParameters)->Self{
     Self{
+      
       parameters
     }
   }
@@ -23,76 +25,170 @@ impl Associative {
 
 impl Associative {
 
-    pub fn m(
-        &self,
-        x:&Array1<f64>
-        )->Array1<f64>{
-        
-        let l_t:&Array2<f64> = &self.parameters.lambda_t;
-        let g_t:&Array2<f64>=&self.parameters.gamma_t;
-        let x_asc:Array1<f64> = g_t.dot(x);
-        let m= l_t.dot(&x_asc);
-        m
+    pub fn r_pressure(&self, h:f64, d:f64, dlng_drho:f64)->f64 {
+
+        // let h = self.h(x,&unbonded);
+        - d * (1. + d * dlng_drho) * h / 2.
+
     }
 
-    pub fn h(
-        &self,
-        x:&Array1<f64>,
-        unbonded:&Array1<f64>
-        )->f64{
+    pub fn r_chemical_potential(&self, h:f64, ndlng_dni:&Array1<f64>, unbonded:&Array1<f64>, )->Array1<f64>{
         
+        
+        // let h = self.h(x, &unbonded);
+        let sites = &self.parameters.sites;
         let mult = &self.parameters.multiplicity;
-        let m= self.m(x);
-        m.dot(&( (1.0 - unbonded) * mult ) )
+
+        let mut mu = - 0.5 * h * ndlng_dni;
+
+        for site_j in sites{
+            let i = site_j.c;
+            let j = site_j.idx;
+
+            mu[i] += unbonded[j].ln() * mult[j] 
+        }   
+        mu
+   
+
+    }
+    
+    pub fn r_helmholtz(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
+
+        // let m = self.sites_mole_frac(x);
+        let p = &self.parameters;
+        let s = unbonded.len();
+        let mut a = 0.0;
+        
+        for j in 0..s {
+            
+            let i = p.map[j];
+
+            a += x[i] * (unbonded[j].ln() - 0.5 * unbonded[j] + 0.5) * p.multiplicity[j]
+        }
+
+        a
     }
 
-    pub fn association_strength(
-        &self,
-        t:f64,
-        volf:Array2<f64>)->Array2<f64>{
+    pub fn r_entropy(&self, t:f64, x:&Array1<f64>, k:&Array2<f64>)->f64{
 
-        let interactions = &self.parameters.interactions;
-        let s = self.parameters.sites.len();
-        let mut delta = Array2::zeros((s,s));
+        // let m = self.sites_mole_frac(x);
+        let p = &self.parameters;
+        let unbonded = &self.unbonded_sites_fraction(x, k);
+        let a = self.r_helmholtz(x, unbonded);
+        let mut s = 0.0;
 
-        for interaction in interactions{
-            let j = interaction.site_j.idx;
-            let l = interaction.site_l.idx;
-            let i = interaction.site_j.c;
-            let k = interaction.site_l.c;
-            let f_ii = volf[(i,i)];
-            let f_kk = volf[(k,k)];
+        for interaction in &p.interactions {
 
-            delta[(j,l)] = interaction.association_strength_jl(t, f_ii, f_kk);
-            delta[(l,j)] = delta[(j,l)]
+            let j = interaction.site_j;
+            let l = interaction.site_l;
+
+            let ke_jl = k[(j,l)] * interaction.epsilon;
+            let xmj = unbonded[j] * p.multiplicity[j];
+            let xml = unbonded[l] * p.multiplicity[l];
+            
+            if j == l {
+                s += ke_jl * xmj * xml
+
+            } else {
+                s += 2.0 * ke_jl * xmj * xml
+            }
             
         }
-        delta 
+        
+        s /= - 2.0 * R * t ;
+
+        s -= a;
+        
+        s
+
+    }
+
+    pub fn x_ab_analytic(m1:f64,m2:f64,mult1:f64,mult2:f64,k:f64)->Array1<f64>{
+
+        
+        let x2 = (2.0 * m1 * m2) / (
+                    m1 * m2
+                    + k * m1 * mult1
+                    + (4.0 * k * m2 * m1 * m1 * mult1
+                    + (k * m2 * mult2 - k * m1 * mult1 + m1 * m2).powi(2)
+                    ).sqrt()
+                    -k * m2 * mult2
+                );
+        let x1 = m1 / (m1 + k * mult2 * x2);
+
+        Array1::from_vec(vec![x1, x2])
+    }
+
+    pub fn x_cc_analytic(m:f64, mult:f64, k:f64)->Array1<f64>{
+        
+        let x1 = 2.0 * m / (m + (4. * k * mult * m + m.powi(2)).sqrt());
+        Array1::from_vec(vec![x1])
+    }   
+
+    pub fn unbonded_sites_fraction(&self,x:&Array1<f64>, k:&Array2<f64>)-> Array1<f64>{
+        
+        let p = &self.parameters;
+        let m = self.sites_mole_frac(x);
+        let s = p.sites.len();
+
+
+        match (p.na * p.nb, p.nc) {
+            
+            (1, 0) => Self::x_ab_analytic(m[0], m[1], p.multiplicity[0], p.multiplicity[1], k[(0,1)] ),
+
+            (0, 1) => Self::x_cc_analytic(m[0],p.multiplicity[0], k[(0,0)]), 
+            
+            (_, _) => self.x_tan(&m, &k).unwrap_or(Array1::ones(s) * f64::NAN),
+
+        }
+        
         
     }
 
-    /// $K_{jl} = \rho m_{j} m_{l} \Delta_{jl}$
-    pub fn association_constants(
-        &self,
-        t:f64,
-        rho:f64,
-        x:&Array1<f64>,
-        volf:Array2<f64>
-        )->Array2<f64>{
+    pub fn sites_mole_frac(&self, x:&Array1<f64> )->Array1<f64>{
+        
+        let map = &self.parameters.map;
+        let s = self.parameters.map.len();
+
+        Array1::from_shape_fn(s, |j|{ x[map[j]] })  
+
+    }
+
+    pub fn h(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
+        
+        let p = &self.parameters;
+        let s = unbonded.len();
+        let mut h = 0.0;
+
+        for j in 0..s {
+
+            let i = p.map[j];
+
+            h += x[i] * (1. - unbonded[j]) * p.multiplicity[j] 
+        }
+        h
+    }
+
+    pub fn association_constants(&self, t:f64, rho:f64, x:&Array1<f64>, volf:&Array2<f64>)->Array2<f64>{
         
         let interactions = &self.parameters.interactions;
         let s = self.parameters.sites.len();
         let mut kmat = Array2::zeros((s,s));
+        let map = &self.parameters.map;
+        let sites = &self.parameters.sites;
+
         for interaction in interactions{
-            let j = interaction.site_j.idx;
-            let l = interaction.site_l.idx;
-            let i = interaction.site_j.c;
-            let k = interaction.site_l.c;
+            
+            let j = interaction.site_j;
+            let l = interaction.site_l;
+
+            let i = map[j];
+            let k = map[l];
+
             let f_ii = volf[(i,i)];
             let f_kk = volf[(k,k)];
 
-            let delta_jl = interaction.association_strength_jl(t, f_ii, f_kk);
-            kmat[(j,l)] = delta_jl * x[i] * x[k] * rho;
+            kmat[(j,l)] = interaction.association_strength_jl(t, f_ii, f_kk, sites) * x[i] * x[k] * rho;
             kmat[(l,j)] = kmat[(j,l)]
             
         }
@@ -100,419 +196,453 @@ impl Associative {
 
     }
 
-    pub fn x_tan(
-      &self,
-      x:&Array1<f64>,
-      kmat:&Array2<f64>)-> Result<Array1<f64>,EosError>{
+    pub fn x_tan(&self, m:&Array1<f64>, k:&Array2<f64>) -> EosResult<Array1<f64>>{
+
+        let mult= &self.parameters.multiplicity;
+
+        let mut unbonded =  Array1::from_elem(mult.len(),0.2);
+
+        let tol = 1e-10;
+        let max_iter = 1000;  
+
+        for i in 0..max_iter {
+            if self.tan_step(
+                mult,
+                &mut unbonded,
+                &m,
+                k,
+                tol,
+            )? {
+                break;
+            }
+            if i == max_iter - 1 {
+                return Err(EosError::NotConverged("Unbonded fraction".into()));
+            }
+        }
         
-      let s = self.parameters.sites.len();
-      let mult= &self.parameters.multiplicity;
-      let m= self.m(x);
-      let mut x_new =  Array1::from_elem(s,0.2);
-      let omega= 0.25;
-      let mut x_old: Array1<f64>;
-      let mut res = 1.0;
-      let mut it:i32 = 0; 
-      let max = 500;
-      while ( res > 1e-12) && ( it < max) {
-          it+=1;
-          x_old = x_new.clone();
-          let z= kmat.dot(&(&x_old*mult));
-          let correc= &m/(&m+z);
-          x_new = (1.0 - omega) * &correc + omega * &x_old ;
-          let err = ((&x_new-&x_old)/&x_new).abs();
-          res = *err.iter().max_by(|a,b| a.total_cmp(b)).unwrap();
-      }
-      
-      if it == max{
-          return Err(
-              EosError::NotConverged("Unbonded Sites fraction".into()) )
-      } else {
-          return Ok(x_new) 
-      }
-    
-    }   
+        Ok(unbonded)
 
-    pub fn r_pressure(
-      &self,
-      rho:f64,
-      dlng_drho:f64,
-      x:&Array1<f64>,
-      unbonded:&Array1<f64>
-      )->f64 {
-
-      let h = self.h(x,&unbonded);
-      - rho * (1. + rho * dlng_drho) * h / 2.
 
     }
 
-    pub fn r_chemical_potential(
-      &self,
-      x:&Array1<f64>,
-      ndlng_dni:&Array1<f64>,
-      unbonded:&Array1<f64>,
-      )->Array1<f64>{
+    pub fn tan_step(
+        &self,
+        mult:&Array1<f64>,
+        unbonded:&mut Array1<f64>,
+        m:&Array1<f64>,
+        k:&Array2<f64>,
+        tol:f64)->EosResult<bool>{
 
-      let lnx= unbonded.ln() * &self.parameters.multiplicity;
-      let sites= &self.parameters.sites;
-      let h = self.h(x,&unbonded);
-      let mut mu = - 0.5 * h * ndlng_dni;
+        
+        let xm =  &(& * unbonded * mult);
+        let s = xm.len();
 
-      for site_j in sites{
-          let i = site_j.c;
-          let j = site_j.idx;
-          mu[i] += lnx[j] 
-      }
+        let mut g = Array1::zeros(s);
 
-      mu
-   
+        for j in 0..s {
+            
+            let dot = k.row(j).dot(xm);
 
-    }
-    
-    pub fn r_helmholtz(
-      &self,
-      x:&Array1<f64>,
-      unbonded:&Array1<f64>
-      )->f64{
+            let correc = m[j] / (m[j] + dot);
 
-      let m=self.m(x);
-      let v= (unbonded.ln() - 0.5 * unbonded + 0.5) * &self.parameters.multiplicity;
-      m.dot(&v)
+            unbonded[j] = 0.75 * correc + 0.25 * unbonded[j];
+            // xm[j] = unbonded[j] * mult[j];
+            g[j] = m[j] * (1. / unbonded[j] - 1.) - dot;
+        }
+
+        let err = g.iter().map(|&g| g.powi(2)).sum::<f64>().sqrt();
+
+        Ok( err < tol)
 
     }
+
+    // // pub fn x_michelsen(
+    // //     &self,
+    // //     m:&Array1<f64>,
+    // //     k:&Array2<f64>) -> EosResult<Array1<f64>>{
+
+    // //     let mult= &self.parameters.multiplicity;
+    // //     // let m= self.m(x);
+
+    // //     let mut unbonded =  Array1::from_elem(mult.len(),0.2);
+
+    // //     let tol = 1e-8;
+    // //     let max_iter = 100;  
+        
+        
+    // //     for _ in 0..5 {
+        
+    // //         let xm = & unbonded * mult;
+
+
+    // //         let correc = m / (
+    // //             m + k.dot(&xm)
+    // //         );
+
+    // //         unbonded.iter_mut().zip(&correc).for_each(|(x, &correc)| {
+
+    // //             *x = 0.75 * correc + 0.25 * *x
+
+    // //         });
+
+    // //     }
+
+    // //     for i in 0..max_iter {
+    // //         if self.newton_step(
+    // //             &mut unbonded,
+    // //             &m,
+    // //             k,
+    // //             tol,
+    // //         )? {
+    // //             // dbg!(i);
+    // //             break;
+    // //         }
+    // //         if i == max_iter - 1 {
+    // //             return Err(EosError::NotConverged("Unbonded fraction".into()));
+    // //         }
+    // //     }
+        
+    // //     Ok(unbonded)
+
+
+    // // }
+    // // pub fn newton_step(
+    // //     &self,
+    // //     unbonded:&mut Array1<f64>,
+    // //     m:&Array1<f64>,
+    // //     k:&Array2<f64>,
+    // //     tol:f64)->EosResult<bool>{
+        
+    // //     let s = unbonded.len();
+    // //     let mult = &self.parameters.multiplicity;
+    // //     // let q_old = Self::q_michelsen(mult,m, unbonded, k);
+        
+
+    // //     // let xm =  &(& * unbonded * mult);
+    // //     let xm =  Zip::from(&mut *unbonded).and(mult).map_collect(|x,y| *x * y);
+    // //     // let h = Self::hessian(&xm,m, unbonded,k);
+    // //     // let g = Self::grad(&xm,m, unbonded, k);
+    // //     let mut h= -k.clone();
+    // //     let mut g= Array1::zeros(s);
+            
+    // //     for j in 0..s {
+            
+    // //         // let xm = unbonded[j] * mult[j];
+
+    // //         let dot = k.row(j).dot(&xm);
+
+    // //         g[j] = m[j] * (1. / unbonded[j] - 1.) - dot;
+
+
+    // //         h[(j, j)] -=  ( m[j] + dot ) / unbonded[j];
+    // //         // h[(j, j)] -=  m[j]  / unbonded[j].powi(2);
+    // //     }
+    // //     let err = g.norm();
+    // //     // h
+    // //     // } 
+    // //     // let hinv = h.inv()?;
+    // //     // let mut dx = h.solve(&(-&g))?;
+
+    // //     // println!("{}",&h);
+    // //     // println!("{}",&g);
+    // //     let dx= - h.solve(&g)?;
+    // //     unbonded.iter_mut().zip(dx).for_each(|(x,dx)|{
+            
+    // //         *x += dx
+    // //     });
+
+    // //     // dbg!(&err);
+    // //     // dbg!(&unbonded);
+    // //     Ok( err < tol)
+
+    // // }
+
+    // pub fn x_michelsen(
+    //     &self,
+    //     mult:&DVector<f64>,
+    //     m:&DVector<f64>,
+    //     k:&DMatrix<f64>) -> EosResult<DVector<f64>>{
+
+    //     let s = m.len();
+
+    //     // let mult= self.parameters.multiplicity.as_slice().unwrap();
+    //     // let mult = DVector::from_row_slice(mult);
+    //     // let m= self.m(x);
+    //     // let m = m.as_slice().unwrap();
+    //     // let m = &DVector::from_row_slice(m);
+
+    //     let mut unbonded =  DVector::from_element(s,0.2);
+
+    //     let tol = 1e-8;
+    //     let max_iter = 100;  
+        
+    //     // let k_slice = k.as_slice().unwrap();
+    //     // let k = &DMatrix::from_row_slice(s,s,k_slice);
+        
+    //     for _ in 0..5 {
+        
+    //         let xm = & unbonded.component_mul(&mult);
+
+
+    //         let correc = m.component_div(
+    //             &(m + k * xm)
+    //         );
+
+    //         unbonded.iter_mut().zip(&correc).for_each(|(x, &correc)| {
+
+    //             *x = 0.75 * correc + 0.25 * *x
+
+    //         });
+
+    //     }
+
+    //     for i in 0..max_iter {
+    //         if self.newton_step(
+    //             &mult,
+    //             &mut unbonded,
+    //             m,
+    //             k,
+    //             tol,
+    //         )? {
+    //             // dbg!(i);
+    //             break;
+    //         }
+    //         if i == max_iter - 1 {
+    //             return Err(EosError::NotConverged("Unbonded fraction".into()));
+    //         }
+    //     }
+        
+    //     Ok(unbonded)
+
+
+    // }
+    // pub fn newton_step(
+    //     &self,
+    //     mult:&DVector<f64>,
+    //     unbonded:&mut DVector<f64>,
+    //     m:&DVector<f64>,
+    //     k:&DMatrix<f64>,
+    //     tol:f64)->EosResult<bool>{
+        
+    //     let s = unbonded.len();
+    //     // let q_old = Self::q_michelsen(mult,m, unbonded, k);
+        
+
+    //     // let xm =  &(& * unbonded * mult);
+    //     // let xm =  Zip::from(&mut *unbonded).and(mult).map_collect(|x,y| *x * y);
+    //     // let xm =  Zip::from(&mut *unbonded).and(mult).map_collect(|x,y| *x * y);
+    //     let xm = unbonded.component_mul(mult);
+
+    //     // let h = Self::hessian(&xm,m, unbonded,k);
+    //     // let g = Self::grad(&xm,m, unbonded, k);
+    //     let mut h= -k.clone();
+    //     let mut g= DVector::zeros(s);
+            
+    //     for j in 0..s {
+            
+    //         // let xm = unbonded[j] * mult[j];
+    //         // dbg!(k.row(j));
+    //         // dbg!(&xm);
+    //         let rowj = k.row(j).transpose();
+
+    //         // dbg!(&rowj);
+    //         let dot = rowj.dot(&xm);
+
+    //         g[j] = m[j] * (1. / unbonded[j] - 1.) - dot;
+
+
+    //         h[(j, j)] -=  ( m[j] + dot ) / unbonded[j];
+    //         // h[(j, j)] -=  m[j]  / unbonded[j].powi(2);
+    //     }
+        
+    //     let err = g.norm();
+
+    //     // h
+    //     // } 
+    //     // let hinv = h.inv()?;
+    //     // let mut dx = h.solve(&(-&g))?;
+
+    //     // println!("{}",&h);
+    //     // println!("{}",&g);
+
+    //     let lu = LU::new(h);
+    //     // let lu = h.lu();
+
+    //     let dx= - lu.solve(&g).unwrap();
+
+    //     *unbonded = &*unbonded + &dx;        
+    //     // unbonded.iter_mut().zip(&dx).for_each(|(x,dx)|{
+            
+    //     //     *x += dx
+
+    //     // });
+
+    //     // dbg!(&err);
+    //     // dbg!(&unbonded);
+    //     Ok( err < tol)
+
+    // }
 
 }
 
 
 #[cfg(test)]
-mod tests{
-  
+mod tests {
+    use std::iter::Zip;
+
+    use approx::assert_relative_eq;
+    use ndarray::array;
+
+    use crate::{models::associative::{Associative, parameters::{AssociationPureRecord, AssociativeParameters}}, parameters::{Parameters, records::PureRecord}};
+
+
+
+    fn watercpa_record() -> PureRecord<AssociationPureRecord> {
+
+        let m = AssociationPureRecord::associative(
+            166.55e2, 
+            0.0692, 
+            [2,2,0]);
+
+            
+        let pr = PureRecord::new(0.0, "water".to_string(), m);    
+        
+        pr
+    }
+
+    fn methanol()-> Associative{
+
+        let m=AssociationPureRecord::associative(
+            160.70e2, 
+            34.4e-3, 
+            [2,1,0],);
+
+
+        let pr = PureRecord::new(0.0, "methanol".to_string(), m);    
+        let p = AssociativeParameters::new(vec![pr], vec![]);
+        let asc = Associative::from_parameters(p);
+
+        asc    
+    } 
+    
+    fn water() -> Associative {
+        let pr = watercpa_record();
+        let p = AssociativeParameters::new(vec![pr], vec![]);
+        let asc = Associative::from_parameters(p);
+
+        asc
+    }
+
+    #[test]
+    fn test_unbonded_sites_fraction_3b(){
+
+        // t = 298.15 K , d = 1000.0
+        let asc = methanol();
+        let k = array![[0.           , 0.76195179893041],
+                                                     [0.76195179893041, 0.           ]];
+                                                     
+        let x = array![1.0];
+
+        let unb = asc.unbonded_sites_fraction(&x, &k);
+        let reff = array![0.73571946249752, 0.47143892500497];
+
+        unb.iter().zip(reff.iter()).for_each(|(x,y)| {
+            assert_relative_eq!(x, y, epsilon = 1e-10)
+        });
+        
+        let m = &asc.sites_mole_frac(&x);
+        let tan = asc.x_tan(m, &k).unwrap();
+        
+        unb.iter().zip(tan.iter()).for_each(|(x,y)| {
+            assert_relative_eq!(x, y, epsilon = 1e-10)
+        });
+
+    }
+
+    #[test]
+    fn test_unbonded_sites_fraction_4c(){
+
+
+        // t = 298.15 K , d = 1000.0
+        let asc = water();
+        let k = array![[0.           , 0.83518048731],
+                                                     [0.83518048731, 0.           ]];
+
+        let x = array![1.0];
+
+        let unb = asc.unbonded_sites_fraction(&x, &k);
+        let reff = array![0.530287110928 , 0.530287110928];
+
+        unb.iter().zip(reff.iter()).for_each(|(x,y)| {
+            assert_relative_eq!(x, y, epsilon = 1e-10)
+        });
+        
+        let m = &asc.sites_mole_frac(&x);
+        let tan = asc.x_tan(m, &k).unwrap();
+        
+        unb.iter().zip(tan.iter()).for_each(|(x,y)| {
+            assert_relative_eq!(x, y, epsilon = 1e-10)
+        });
+
+    }
+
+    #[test]
+    fn test_association_helmholtz() {
+
+        let asc = water();
+
+        let x = array![1.0];
+        let unbonded = array![0.530287110928 , 0.530287110928];
+        
+        let a = asc.r_helmholtz(&x, &unbonded);
+
+        assert_relative_eq!(a, -1.597921023379, epsilon = 1e-10)
+    }
+
+    #[test]
+    fn test_association_entropy() {
+
+        let t = 298.15;
+        let asc = water();
+        let x = array![1.0];
+        let k = array![[0.           , 0.83518048731],
+                                                     [0.83518048731, 0.           ]];
+
+        let s = asc.r_entropy(t, &x, &k);
+
+        assert_relative_eq!(s, -4.713659269705, epsilon = 1e-9)
+
+    }
+
+    #[test]
+    fn test_association_pressure() {
+
+        let d = 1000.0;
+
+        let asc = water();
+        let x = array![1.0];
+        let unbonded = array![0.530287110928 , 0.530287110928];
+        let h = asc.h(&x, &unbonded);
+        let p = asc.r_pressure(h, d, 6.9352666490453005 * 1e-6);
+
+        assert_relative_eq!(p, -945.9409464127781, epsilon = 1e-9)
+
+    }
+
+    #[test]
+    fn test_association_chem_pot() {
+
+        let asc = water();
+        let x = array![1.0];
+        let unbonded = array![0.530287110928 , 0.530287110928];
+        let h = asc.h(&x, &unbonded);
+        
+        let mu = asc.r_chemical_potential(h, &array![0.00693526664905], &unbonded);
+        let reff = array![-2.54386196979185, -2.54386196979185];
+
+        mu.iter().zip(reff.iter()).for_each(|(x,y)| {
+            assert_relative_eq!(x, y, epsilon = 1e-10)
+        });
+    }
+
 }
-//   def Q_michelsen(self,m,X,K):
-
-//     XM=X*self.M
-//     return np.sum(m*(np.log(X)-X+1)*self.M) - 0.5*XM.T@(K@XM)
-
-//     pub fn q_michelsen(
-//         &self,
-//         m:&Array1<f64>,
-//         unbonded:&Array1<f64>,
-//         k:&Array2<f64>) -> f64{
-            
-//         let mult = &self.parameters.multiplicity;
-//         let xm = & (unbonded * mult);
-//         (m * (unbonded.ln() - unbonded + 1.) * mult).sum() - 0.5 * xm.dot( &k.dot(xm) )
-
-//     }
-// // -self.Id*( 1/X*( m+K@(X*self.M) )) - K
-//     pub fn grad(&self,
-//         m:&Array1<f64>,
-//         unbonded:&Array1<f64>,
-//         k:&Array2<f64>) -> Array1<f64>{
-        
-//         let mult = &self.parameters.multiplicity;
-//         let xm = & (unbonded * mult);
-
-//         m * (1. / unbonded - 1.) - k.dot(xm)
-
-//     }
-//     pub fn hessian(
-//         &self,
-//         m:&Array1<f64>,
-//         unbonded:&Array1<f64>,
-//         k:&Array2<f64>) -> Array2<f64>{
-//         let mult = &self.parameters.multiplicity;
-        
-//         let s = mult.len();
-//         let h: DMatrix<f64> = DMatrix::zeros(s, s);
-        
-//         let aaaa= DVector::from(m);
-//         let id = &self.parameters.id;
-//         let xm = unbonded * mult;
-//         - id * (
-//             1. / unbonded * (
-//                 m + k.dot(&xm)
-//             )
-//         ) - k
-
-//     }
-
-    // pub fn x_michelsen(
-    //     &self,
-    //     rho:f64,
-    //     t:f64,
-    //     x:&Array1<f64>) -> Array1<f64>{
-
-    //     let s = self.parameters.sites.len();
-    //     let mult= &self.parameters.multiplicity;
-    //     let m= self.m(x).flatten();
-    //     let k= self.k(t, rho, x);
-
-    //     let mut x_new =  Array1::from_elem(s,0.2);
-
-    //     let w= 0.25;
-    //     let mut x_old: Array1<f64>;
-    //     let mut res = 1.0;
-    //     let mut it:i32 = 0; 
-    //     const TOL:f64 = 1e-7;
-    //     const MAX:i32 = 100;  
-
-    //     while nsb < 5 {
-            
-    //         let correc = m / (k.dot(& x_old * mult));
-    //         x_old = (1. - w) * correc + w * x_old;
-
-    //     }
-
-    //     while (res > TOL) && it < MAX {
-
-    //         let h = self.hessian(m, &x_old, &k);
-    //         let g = self.grad(m,&x_old,&k);
-
-    //         // let hinv = 
-    //         let new = LU::new(h);
-
-    //         // x_new = solve_;
-    //     } 
-
-    //     k
-
-
-    // }
-    // pub fn grad(&self,t:f64,rho:f64,x:&Array1<f64>,x_assoc:&Array1<f64>,)->Array1<f64>{
-
-    //     let m=self.m(x);
-    //     let ns=self.parameters.s.len();
-    //     let multplicity:&Array1<f64> = &self.parameters.s;
-    //     let mmat=m.to_shape((ns,1)).unwrap();
-    //     let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
-    //     let pmat=&self.parameters.pmat;
-
-    //     let gmix = self.parameters.rdf.rdf(rho, x, &self.parameters.vb);
-    //     let kmat=self.delta_mat(t, gmix)*mm_mat*pmat*rho;
-
-    //     m*(1.0/x_assoc-1.0) - kmat.dot(&(x_assoc*multplicity))
-    // }
-
-
-    // pub fn hessian(&self,m:&Array1<f64>,k:&Array2<f64>,x_assoc:&Array1<f64>)->Array2<f64>{
-
-    //     let ns=self.parameters.s.len();
-    //     let id=Array2::<f64>::eye(ns);
-    //     let div=m/x_assoc.pow2();
-    //     let d=div.to_shape((ns,1)).unwrap();
-
-    //     -(id.dot(&d)+k)
-
-    // }
-
-
-// impl<T:RDF> Associative<T> {
-
-//     pub fn cr1_mat(&self,t:f64,gmix:f64)->Array2<f64>{
-
-//         let p = &self.parameters;
-//         let ns= p.s.len();
-
-//         let eps_mat= &p.epsmat;
-//         let beta_mat= &p.betamat;
-
-//         let vb=&p.vb;
-
-        
-//         let b_asc=p.hmat.t().dot(vb);
-        
-//         let b_sites=p.tmat.t().dot(&b_asc);
-//         let b_mat=b_sites.to_shape((ns,1)).unwrap();
-
-//         let bij_mat=(&b_mat+&b_mat.t())*0.5;
-
-        
-//         bij_mat*beta_mat*gmix*((eps_mat/(IDEAL_GAS_CONST*t)).exp()-1.0)
-
-
-
-                
-//     }
-
-//     pub fn ecr_mat(&self,cr1:&Array2<f64>)->Array2<f64>{
-
-//         let ns=cr1.dim().0;
-//         let diag=cr1.diag();
-//         let diag=diag.to_shape((ns,1)).unwrap();
-//         let diag_mult=diag.dot(&diag.t());
-
-//         (diag_mult).sqrt()
-//     }
-
-
-
-//     pub fn delta_mat(&self,t:f64,gmix: f64)->Array2<f64>{
-        
-//         let alphamat=&self.parameters.alphamat;
-
-
-//         let cr1=self.cr1_mat(t, gmix);
-//         let ecr=self.ecr_mat(&cr1);
-
-//         let delta=cr1*(1.0-alphamat)+ecr*alphamat;
-//         delta
-//     }
-//     pub fn association_strength(&self,t:f64,rho:f64,x:&Array1<f64>)->Array2<f64>{
-//         let m=self.m(x);
-//         let ns=self.parameters.f.len();
-
-//         let mmat=m.to_shape((ns,1)).unwrap();
-//         let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
-//         let pmat=&self.parameters.pmat;
-
-//         // let gmix=self.g_func(rho, x);
-//         let gmix = self.parameters.rdf.rdf(rho, x, &self.parameters.vb);
-
-//         // let delta=self.delta(t, gmix);
-//         let delta=self.delta_mat(t, gmix);
-
-//         let kmat=delta*mm_mat*pmat*rho;
-//         kmat
-//     }
-//     #[allow(non_snake_case)]
-//     pub fn x_tan(&self,t:f64,rho:f64,x:&Array1<f64>)-> Result<Array1<f64>,EosError>{
-        
-//         let ns=self.parameters.f.len();
-//         let s:&Array1<f64> = &self.parameters.s;
-//         let m=self.m(x);
-//         let kmat=self.association_strength(t, rho, x);
-
-//         let mut x_new =  Array1::from_elem(ns,0.2);
-
-//         let omega=0.25;
-//         // let mut mat_error:Array2<f64> = Array2::zeros((NS,ncomp));
-//         let mut mat_error:Array1<f64> = Array1::zeros(ns);
-//         // let mut mat_error:Array2<f64> = Array2::zeros((ns,1));
-//         let mut x_old: Array1<f64>;
-//         let mut res = 1.0;
-//         let mut it:i32 = 0; 
-//         const TOL:f64 = 1e-12;
-//         const MAX:i32 = 10000;
-//         // let n=NS*n_assoc;
-
-//         while (res>TOL) & (it<MAX) {
-//             it+=1;
-//             x_old= x_new.clone();
-//             let z=kmat.dot(&(&x_old*s));
-
-//             let correc=&m/(&m+z);
-//             x_new = (1.0-omega)*&correc + omega*&x_old ;
-
-//             mat_error=((&x_new-&x_old)/&x_new).abs();
-//             res = *mat_error.iter().max_by(|a,b| a.total_cmp(b)).unwrap();
-//             //res = mat_error.sum();
-//             // println!("{}",res);
-//         }
-//     // dbg!(&x_assoc);
-//     // dbg!(res);
-//     // println!("materror={mat_error}");
-//     if it == MAX{
-//         return Err(EosError::NotConverged("x_tan".to_string()));
-//     }
-//     else {
-//         // x_grande.data=x_assoc.clone();
-
-//         // println!("it={}",it);
-//         // self.x=x_new.clone();
-//         return Ok(x_new);
-//     }
-    
-//     }   
-
-
-//     pub fn grad(&self,t:f64,rho:f64,x:&Array1<f64>,x_assoc:&Array1<f64>,)->Array1<f64>{
-
-//         let m=self.m(x);
-//         let ns=self.parameters.s.len();
-//         let multplicity:&Array1<f64> = &self.parameters.s;
-//         let mmat=m.to_shape((ns,1)).unwrap();
-//         let mm_mat:Array2<f64>=mmat.dot(&mmat.t());
-//         let pmat=&self.parameters.pmat;
-
-//         let gmix = self.parameters.rdf.rdf(rho, x, &self.parameters.vb);
-//         let kmat=self.delta_mat(t, gmix)*mm_mat*pmat*rho;
-
-//         m*(1.0/x_assoc-1.0) -kmat.dot(&(x_assoc*multplicity))
-//     }
-
-
-//     pub fn hessian(&self,m:&Array1<f64>,k:&Array2<f64>,x_assoc:&Array1<f64>)->Array2<f64>{
-
-//         let ns=self.parameters.s.len();
-//         let id=Array2::<f64>::eye(ns);
-//         let div=m/x_assoc.pow2();
-//         let d=div.to_shape((ns,1)).unwrap();
-
-//         -(id.dot(&d)+k)
-
-//     }
-// }
-
-
-
-// impl<R:RdfModel> Residual for Associative<R> {
-
-//     fn components(&self)->usize {
-//         self.parameters.gamma.nrows()
-//     }
-//     fn bmix(&self,_x:&Array1<f64>)->f64 {
-//         todo!()
-//     }
-//     fn r_pressure(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
-
-//         let unbonded= self.x_tan(t,rho, x)?;
-//         let h = self.h(x,&unbonded);
-//         let dlngdrho = self.rdf.dlngdrho(rho, x);
-
-//         Ok(
-//         - rho * (1. + rho * dlngdrho) * h / 2.
-//         )
-//     }
-
-//     fn r_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<Array1<f64>>{
-
-//         let unbonded=self.x_tan(t,rho, x).unwrap();
-//         let mult=&self.parameters.multiplicity;
-
-//         let lnx= unbonded.ln() * mult;
-//         let sites=&self.parameters.sites;
-//         // let lambda=&self.parameters.lambda;
-//         // let mu1=lambda.dot(&lnx); //nX1
-//         // let gamma=&self.parameters.gamma;
-//         let h = self.h(x,&unbonded);
-//         // let mu2 = -0.5 * h * self.rdf.ndlngdni(rho, x); 
-//         let mut mu = -0.5 * h * self.rdf.ndlngdni(rho, x); 
-
-//         for site_j in sites{
-//             let i = site_j.c;
-//             let j = site_j.j;
-
-//             mu[i] += lnx[j] 
-//         }
-//         // let mu = gamma.dot(&mu1) + mu2;
-//         Ok(
-//             mu
-//         )
-//     }
-    
-//     fn r_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>)->EosResult<f64> {
-//         let xassoc=self.x_tan(t,rho, x).unwrap();
-
-//         let m=self.m(x);
-
-//         let mult=&self.parameters.multiplicity;
-
-//         let v= (xassoc.ln() - 0.5*xassoc + 0.5)*mult;
-//         Ok(
-//         m.dot(&v)
-//         )
-//     }
-// }
-
-

@@ -1,9 +1,12 @@
-use std::{collections::HashMap, marker::PhantomData, path::Iter};
+use std::{collections::HashMap};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use crate::{parameters::records::BinaryParameter};
+use super::parameters::{AssociationBinaryRecord};
+use super::R;
+use super::strength;
 
-use crate::{models::{IDEAL_GAS_CONST as R, associative::parameters::{AssociationBinaryRecord, W}}, state::E};
-
+const W:[[f64;3];3]=[[0.0,1.0,1.0],[1.0,0.0,1.0],[1.0,1.0,1.0]];
 
 pub const A: usize = 0;
 pub const B: usize = 1;
@@ -18,7 +21,7 @@ pub enum SiteType{
     C,
 }
 
-#[derive(Debug, Clone, PartialEq,Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Site{
     pub t:SiteType,
     ///Owner
@@ -142,15 +145,15 @@ pub trait AssociationStrength: Default{
 
 
 }
-#[derive(Serialize,Clone)]
+#[derive(Serialize,Clone,Debug)]
 pub struct SiteInteraction{
-    pub site_j:Site,
-    pub site_l:Site,
-    epsilon:f64,
-    kappa: f64,
+    pub site_j:usize, //Site -> usize 
+    pub site_l:usize,
+    pub epsilon:f64,
+    pub kappa: f64,
     pub combining_rule:CombiningRule
 }
-#[derive(Serialize,Clone,Copy)]
+#[derive(Serialize,Clone,Copy,PartialEq,Debug,Deserialize)]
 pub enum CombiningRule{
     CR1,
     ECR
@@ -162,44 +165,96 @@ impl Default for CombiningRule {
     }
 }
 
-impl AssociationStrength for CombiningRule {
-    
+impl SiteInteraction {
 
-    fn association_strength_jl(
+    pub fn interactions_from_sites(sites:&Vec<Site>,binary:Vec<BinaryParameter<AssociationBinaryRecord>>)->Vec<Self>{
+
+        let binary:HashMap<(usize,usize),AssociationBinaryRecord> = binary
+        .into_iter()
+        .map(|b| ((b.id1,b.id2),b.model_record)).collect();
+
+        // distinguishable interactions between sites j and l
+        // N = Na * Nb + Na * Nc + Nb * Nc +  Nc² / 2 + Nsolv
+
+        let mut interactions = Vec::<SiteInteraction>::new();
+        let s = sites.len();
+        
+        for j in 0..s{
+            for l in j..s{
+                
+                let site_j = &sites[j];
+                let site_l = &sites[l];
+                let i = site_j.c();
+                let k = site_l.c();
+
+                let opt = binary.get(&(i,k));
+                
+                // only cross-association
+                if site_j.interacts_with(site_l){
+
+                    interactions.push(
+                        opt.map_or_else(
+                        || Self::default(site_j.clone(), site_l.clone()), 
+                        |b|{
+                            Self::from_sites(site_j.clone(), site_l.clone(), b.epsilon, b.kappa, b.combining_rule)
+                            }
+                        )
+                    )
+                    
+                // only induced-association
+                } else if site_j.solvated_by(site_l) || site_l.solvated_by(site_j) {
+                    
+                    match opt {
+                        
+                        Some(b) => {
+                            interactions.push(
+                            Self::from_sites(site_j.clone(), site_l.clone(), b.epsilon, b.kappa, b.combining_rule)
+                            )
+                        }
+                        None => continue
+                    }
+                }
+
+            }
+        }
+
+        interactions
+
+    }
+
+    pub fn association_strength_jl(
         &self,
         t:f64,
         f_ii:f64,
         f_kk:f64,
-        interaction:&SiteInteraction)->f64 {
-        match self {
-
+        sites:&[Site])->f64{
+        
+        match &self.combining_rule {
+            
             CombiningRule::CR1 => {
 
-                let epsilon = interaction.epsilon;
-                let kappa= interaction.kappa;
-                // (epsilon/R/t).exp_m1() * kappa
-                let d_jl = Self::dimensionless_delta_jl(t, epsilon, kappa);
-                let f_ik = Self::cr1_factor_ik(f_ii,f_kk) ;
-                
-                f_ik * d_jl
-
+                strength::cr1_association_strength_jl(t, f_ii, f_kk, self.epsilon, self.kappa)
             }
 
             CombiningRule::ECR => {
-                let epsilon_j = interaction.site_j.epsilon();
-                let kappa_j = interaction.site_j.kappa();
-                let epsilon_l = interaction.site_l.epsilon();
-                let kappa_l = interaction.site_l.kappa();
 
-                let d_jl = Self::elliot_dimensionless_delta_jl(t, epsilon_j, kappa_j, epsilon_l, kappa_l);
-                let f_ik= Self::elliot_factor_ik(f_ii, f_kk);
+                let j = self.site_j;
+                let l = self.site_l;
 
-                f_ik * d_jl
+                let sj = &sites[j];
+                let sl = &sites[l];
 
+                let epsilon_j = sj.epsilon;
+                let epsilon_l = sl.epsilon;
+                
+                let kappa_j = sj.kappa;
+                let kappa_l = sl.kappa;
+
+                strength::ecr_association_strength_jl(t, f_ii, f_kk, epsilon_j, epsilon_l, kappa_j, kappa_l)
             }
         }
-    }
 
+    }
 }
 
 impl SiteInteraction{
@@ -224,78 +279,11 @@ impl SiteInteraction{
         let kappa = kappa.unwrap_or(Self::geometric(site_j.kappa,site_l.kappa));
         let combining_rule = combining_rule.unwrap_or_default();
 
-        Self { site_j, site_l, epsilon, kappa, combining_rule }
+        Self { site_j: site_j.idx, site_l: site_l.idx, epsilon, kappa, combining_rule }
     }
 
-
-    pub fn interactions_from_sites(sites:&Vec<Site>,binary:HashMap<(usize,usize),AssociationBinaryRecord>)->Vec<Self>{
-
-        let mut interactions = Vec::<SiteInteraction>::new();
-        let s = sites.len();
-        for j in 0..s{
-            for l in j..s{
-                
-                let site_j = &sites[j];
-                let site_l = &sites[l];
-                
-                if site_j.interacts_with(site_l){
-                    
-                    let comp1 = site_j.c();
-                    let comp2 = site_l.c();
-                    let k1 = (comp1,comp2);
-                    let k2 = (comp2,comp1);
-                    let site_j = site_j.clone();
-                    let site_l = site_l.clone();
-
-                    if binary.contains_key(&k1){
-                        let bin = binary.get(&k1).unwrap();
-                        let interaction = Self::from_sites(site_j, site_l,bin.epsilon,bin.kappa,bin.combining_rule);
-                        interactions.push(interaction)
-
-                    } else if binary.contains_key(&k2)  {
-                        let bin = binary.get(&k2).unwrap();
-                        let interaction = Self::from_sites(site_j, site_l,bin.epsilon,bin.kappa,bin.combining_rule);
-                        interactions.push(interaction)
-                    }else {
-                        let interaction = Self::from_sites(site_j, site_l,None,None,None);
-                        interactions.push(interaction)
-                    }
-                }
-            }
-        }
-        interactions
-    }
-
-    pub fn solvations_from_ik(
-        i:usize,
-        k:usize,
-        sites:&Vec<Site>,
-        epsilon:Option<f64>,
-        kappa:f64)->Vec<Self>{
-        
-        let s = sites.len();
-        let mut interactions = Vec::new();
-        for j in 0..s{
-            for l in j..s{
-                
-                let site_j = sites[j].clone();
-                let site_l = sites[l].clone();
-                let mut interaction = SiteInteraction::from((site_j,site_l));
-
-                if interaction.belongs_to(i, k) && interaction.is_solvation(){
-
-                    interaction.change_cross_parameters(epsilon, Some(kappa));
-                    interactions.push(interaction);
-
-                } else {
-                  continue;  
-                }
-
-            }
-        }
-        interactions
-
-
+    fn default(site_j:Site,site_l:Site)->Self{
+        Self::from_sites(site_j, site_l, None, None, None)
     }
 
     pub fn change_combining_rule(&mut self,combining_rule:CombiningRule){
@@ -310,22 +298,15 @@ impl SiteInteraction{
         self.kappa = kappa.unwrap_or(self.kappa);
 
     } 
+    pub fn belongs_to(&self,i:usize,k:usize,map:&[usize])->bool{
 
 
-    pub fn association_strength_jl(
-        &self,
-        t:f64,
-        f_ii:f64,
-        f_kk:f64,)->f64{
-        
-        self.combining_rule.association_strength_jl(t, f_ii, f_kk, self)
-        
-    }
+        let j = self.site_j;
+        let l = self.site_l;
 
-    pub fn belongs_to(&self,i:usize,k:usize)->bool{
+        let owner_j = map[j];
+        let owner_l = map[l];
 
-        let owner_j = self.site_j.c();
-        let owner_l = self.site_l.c();
         let owners = (owner_j,owner_l);
 
         if owners == (i,k){
@@ -337,18 +318,6 @@ impl SiteInteraction{
         }
     }
     
-    pub fn is_solvation(&self)->bool{
-
-        let sj = &self.site_j;
-        let sl = &self.site_l;
-
-        if sj.solvated_by(sl) || sl.solvated_by(sj){
-            true
-        } else {
-          false  
-        }
-
-    }
        
 }
 
@@ -358,17 +327,6 @@ impl From<(Site,Site)> for SiteInteraction {
         Self::from_sites(value.0, value.1,None,None,None)
     }
 }
-// impl std::fmt::Display for SiteInteraction {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        
-//         write!(f,"")
-//         // match self{
-//             // SiteType::A => write!(f,"A"),
-//             // SiteType::B => write!(f,"B"),
-//             // SiteType::C => write!(f,"C"),
-//         // }
-//     }
-// }
 
 impl std::fmt::Display for SiteType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -403,75 +361,65 @@ pub mod tests{
     use ndarray::array;
     use serde_json::to_string_pretty;
 
+    use crate::{models::associative::parameters::AssociativeParameters, parameters::Parameters};
+
     use super::*;
 
 
+
     #[test]
-    fn test1(){
+    fn test_binary_solvation(){
+        
         let ew = 166.55e2;
         let bw = 0.0692;
+        let wco2 = 0.1836;
         let site1 = Site::new(SiteType::A, 0, 0, ew, bw);
         let site2 = Site::new(SiteType::B, 0, 1, ew, bw);
         let site3 = Site::new(SiteType::B, 1, 2, 0.0, 0.0);
         let sites = vec![site1,site2,site3];
-        let mut interactions = SiteInteraction::interactions_from_sites(&sites,HashMap::new());
+        let b = AssociationBinaryRecord::new(None, Some(wco2), None);
+        let interactions = SiteInteraction::interactions_from_sites(&sites,vec![BinaryParameter::new(b, 0, 1)]);
         
-        // println!("no-solv:");
-        // for inter in &interactions{
+        let i1 = &interactions[0];
+        let i2 = &interactions[1];
 
-        //     let json = to_string_pretty(inter).unwrap();
-        //     println!("{}",json)
-        // }
+        assert_eq!(i1.epsilon,ew);
+        assert_eq!(i2.epsilon,0.5 * ew);
+        assert_eq!(i2.kappa,wco2);
 
-        // dbg!(interactions[0].is_solvation());
-        //add co2 solvated site
-        let kwco2 = 0.1836;
-        let mut solvations = SiteInteraction::solvations_from_ik(0, 1, &sites, None, kwco2);
-
-        interactions.append(&mut solvations);
-        
-        // println!("solv:");
         for inter in &interactions{
 
             let json = to_string_pretty(inter).unwrap();
             println!("{}",json)
         }
-        let n = interactions.len();
-        assert_eq!(n,2);
 
 
     }
     
     #[test]
-    fn test2(){
+    fn test_ternary_with_solvation(){
         let ew = 166.55e2;
         let bw = 0.0692;
         let eacoh = 403.23e2;
         let bacoh = 4.5e-3;
+        let wco2 = 0.1836;
 
         let site1 = Site::new(SiteType::A, 0, 0, ew, bw);
         let site2 = Site::new(SiteType::B, 0, 1, ew, bw);
         let site3 = Site::new(SiteType::C, 1, 2, eacoh, bacoh);
         let site4 = Site::new(SiteType::B, 2, 3, 0.0, 0.0);
+        let b2 = AssociationBinaryRecord::new(None, Some(wco2), None);
+        let b1 = AssociationBinaryRecord::new(None, None, Some(CombiningRule::ECR));
         
         let sites = vec![site1,site2,site3,site4];
-        let mut interactions = SiteInteraction::interactions_from_sites(&sites,HashMap::new());
-        
-        println!("no-solv:");
-        for inter in &interactions{
+        let b = vec![BinaryParameter::new(b1, 0, 1) , BinaryParameter::new(b2, 0, 2)];
+        let interactions = SiteInteraction::interactions_from_sites(&sites,b);
 
-            let json = to_string_pretty(inter).unwrap();
-            println!("{}",json)
-        }
+        let i1 = &interactions[0];
+        let i2 = &interactions[1];
+        let i3 = &interactions[2];
+        let i4 = &interactions[3];
 
-        // dbg!(interactions[0].is_solvation());
-        //add co2 solvated site
-        let kwco2 = 0.1836;
-        let mut solvations = SiteInteraction::solvations_from_ik(0, 2, &sites, None, kwco2);
-
-        interactions.append(&mut solvations);
-        
-        println!("solv:");
         for inter in &interactions{
 
             let json = to_string_pretty(inter).unwrap();
@@ -479,8 +427,19 @@ pub mod tests{
 
         }
         let n = interactions.len();
-        // println!("N = {}",n)
         assert_eq!(n,5);
+
+        assert_eq!(i1.epsilon,ew);
+        assert_eq!(i1.kappa,bw);
+        assert_eq!(i2.epsilon,0.5 * (ew + eacoh));
+        assert_eq!(i2.kappa,(bw*bacoh).sqrt());
+        assert_eq!(i4.epsilon,0.5 * (ew + eacoh));
+        assert_eq!(i4.kappa,(bw * bacoh).sqrt());
+        assert_eq!(i3.epsilon,0.5 * ew);
+        assert_eq!(i3.kappa,wco2);
+        assert_eq!(i2.combining_rule,CombiningRule::ECR);
+        assert_eq!(i4.combining_rule,CombiningRule::ECR);
+
 
     }
 

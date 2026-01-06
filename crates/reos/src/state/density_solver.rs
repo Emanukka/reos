@@ -53,7 +53,7 @@ impl DensityInitialization {
 
 pub fn density<R:Residual>
     (
-    eos:&Arc<E<R>>,
+    eos:Arc<E<R>>,
     t:f64,
     p:f64,
     x:Array1<f64>,
@@ -62,13 +62,14 @@ pub fn density<R:Residual>
 {           
 
 
-        let rhomax = 1./eos.residual.bmix(&x);
+        // let rhomax = 1./eos.residual.bmix(&x);
+        let rhomax = eos.residual.max_density(&x);
         let eps = 1e-5;
 
         let f = |s:f64| { 
         // let f = |s:f64| { 
             let rho = s*rhomax;
-            let p_iter = eos.pressure(t,rho,&x).unwrap_or(NAN);
+            let p_iter = eos.pressure(t,rho,&x);
 
             (1.0-s)*(p_iter - p) 
 
@@ -82,8 +83,8 @@ pub fn density<R:Residual>
             let rho_mais = s_mais*rhomax;
             let rho_menos = s_menos*rhomax;
 
-            let pfwd=eos.pressure(t, rho_mais, &x).unwrap_or(NAN);
-            let pbwd=eos.pressure(t, rho_menos, &x).unwrap_or(NAN);
+            let pfwd= eos.pressure(t, rho_mais, &x);
+            let pbwd= eos.pressure(t, rho_menos, &x);
 
             let fwd = (1.0 - (s+eps) )*(pfwd - p) ;
             let bwd = (1.0 - (s-eps) )*(pbwd - p) ;
@@ -130,14 +131,14 @@ pub fn density<R:Residual>
                 Bissection::In=>{continue;}
 
                 Bissection::Out(x)=>{
-                    s1=x
+                    s1 = x
                 }
             }
 
         }
 
         // println!("it d={it}");
-        if it==it_max{
+        if it == it_max{
             return Err(EosError::NotConverged("density".to_string()))
         }
         
@@ -147,10 +148,10 @@ pub fn density<R:Residual>
         }
 
         else {
-            let density= rhomax*s1;
+            let density = rhomax*s1;
             // println!("iterações solver={}",it);
 
-            Ok(State::new_trx(eos, t, density, x).unwrap())
+            Ok(State::new_trx(eos, t, density, x))
         }
 
 }

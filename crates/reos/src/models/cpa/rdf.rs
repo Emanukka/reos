@@ -6,16 +6,17 @@ use ndarray::{Array, Array1, Array2};
 pub struct Rdf<T>{
   /// Co-volume of components of mixture
   pub b:Array1<f64>,
-  /// Co-volume of site i and site j 
+  /// 0.5 * (bi + bk) 
   pub bij:Array2<f64>,
   model: PhantomData<T>
 }
 
 impl<T:RdfModel> Rdf<T> {
 
-    pub fn new(b:Array1<f64>,bij:Array2<f64>)->Self{
-      Rdf { b, bij, model: PhantomData }
-    }
+    // pub fn new(b:Array1<f64>)->Self{
+
+    //   Rdf { b, bij, model: PhantomData }
+    // }
     pub fn detadrho(&self,x:&Array1<f64>)->f64{
         self.b.dot(x)/4.0
     }
@@ -41,9 +42,17 @@ pub trait RdfModel {
     
     fn model()->Self where Self: Sized;
 
-    fn new<T:RdfModel>(b:Array1<f64>,bij:Array2<f64>)->Rdf<T>{
-      Rdf::new(b, bij)
+    fn new<T:RdfModel>(b:Array1<f64>)->Rdf<T>{
+
+      let n = b.len();
+      let bij = Array2::from_shape_fn((n,n), |(i,j)| {
+        0.5 * (b[i] + b[j])
+      });    
+      
+      Rdf { b, bij, model: PhantomData }
+    
     }
+
     fn eta(
       rho:f64,
       x:&Array1<f64>,
