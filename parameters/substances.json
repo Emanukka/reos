@@ -1,0 +1,215 @@
+{
+    "methanol": {
+        "molar_weight": 32.0419
+    },
+    "ethanol": {
+        "molar_weight": 46.0684
+    },
+    "propanol": {
+        "molar_weight": 60.095
+    },
+    "iso-propanol": {
+        "molar_weight": 60.095
+    },
+    "1-butanol": {
+        "molar_weight": 74.1216
+    },
+    "1-pentanol": {
+        "molar_weight": 88.1482
+    },
+    "1-heptanol": {
+        "molar_weight": 116.2013
+    },
+    "1-octanol": {
+        "molar_weight": 130.2279
+    },
+    "1-dodecanol": {
+        "molar_weight": 186.3342
+    },
+    "2-butanol": {
+        "molar_weight": null
+    },
+    "isobutanol": {
+        "molar_weight": 74.1216
+    },
+    "formic acid": {
+        "molar_weight": 46.0254
+    },
+    "acetic acid": {
+        "molar_weight": 60.052
+    },
+    "propionic acid": {
+        "molar_weight": 74.0785
+    },
+    "propane": {
+        "molar_weight": 44.0956
+    },
+    "n-butane": {
+        "molar_weight": 58.1222
+    },
+    "iso-butane": {
+        "molar_weight": 58.1222
+    },
+    "n-pentane": {
+        "molar_weight": 72.1488
+    },
+    "n-hexane": {
+        "molar_weight": 86.1754
+    },
+    "cyclohexane": {
+        "molar_weight": 84.1595
+    },
+    "n-heptane": {
+        "molar_weight": 100.2019
+    },
+    "n-octane": {
+        "molar_weight": 114.2285
+    },
+    "iso-octane": {
+        "molar_weight": 114.2285
+    },
+    "n-nonane": {
+        "molar_weight": 128.2551
+    },
+    "n-decane": {
+        "molar_weight": 142.2817
+    },
+    "n-undecane": {
+        "molar_weight": 156.3083
+    },
+    "n-dodecane": {
+        "molar_weight": 170.3348
+    },
+    "n-tetradecane": {
+        "molar_weight": 198.388
+    },
+    "n-hexadecane": {
+        "molar_weight": 226.4412
+    },
+    "n-octadecane": {
+        "molar_weight": 254.4943
+    },
+    "n-nonadecane": {
+        "molar_weight": 268.5209
+    },
+    "n-eicosane": {
+        "molar_weight": 282.5475
+    },
+    "ethylbenzene": {
+        "molar_weight": 106.165
+    },
+    "propylbenzene": {
+        "molar_weight": 120.1916
+    },
+    "butylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "pentylbenzene": {
+        "molar_weight": 148.2447
+    },
+    "hexylbenzene": {
+        "molar_weight": 162.2713
+    },
+    "m-xylene": {
+        "molar_weight": 106.165
+    },
+    "p-xylene": {
+        "molar_weight": 106.165
+    },
+    "1-hexene": {
+        "molar_weight": 84.1595
+    },
+    "1-octene": {
+        "molar_weight": 112.2126
+    },
+    "1-decene": {
+        "molar_weight": 140.2658
+    },
+    "2-methylpentane": {
+        "molar_weight": 86.1754
+    },
+    "2-methylhexane": {
+        "molar_weight": 100.2019
+    },
+    "2-methylheptane": {
+        "molar_weight": 114.2285
+    },
+    "2,4-dimethylhexane": {
+        "molar_weight": 114.2285
+    },
+    "2,2,4-trimethylpentane": {
+        "molar_weight": 114.2285
+    },
+    "ethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "acetone": {
+        "molar_weight": 58.0791
+    },
+    "chloroform": {
+        "molar_weight": 119.378
+    },
+    "dimethyl ether": {
+        "molar_weight": 46.0684
+    },
+    "dipropyl ether": {
+        "molar_weight": 102.1748
+    },
+    "diisopropyl ether": {
+        "molar_weight": 102.1748
+    },
+    "ethyl propyl ether": {
+        "molar_weight": 88.1482
+    },
+    "methyl formate": {
+        "molar_weight": 60.052
+    },
+    "methyl acetate": {
+        "molar_weight": 74.0785
+    },
+    "ethyl acetate": {
+        "molar_weight": 88.1051
+    },
+    "isobutyl acetate": {
+        "molar_weight": 116.1583
+    },
+    "n-butyl acetate": {
+        "molar_weight": 116.1583
+    },
+    "acetic anhydride": {
+        "molar_weight": 102.0886
+    },
+    "water": {
+        "molar_weight": 18.0153
+    },
+    "carbon dioxide": {
+        "molar_weight": 44.009
+    },
+    "ethylene glycol": {
+        "molar_weight":  62.0678
+    },
+    "diethylene glycol": {
+        "molar_weight":  106.1204
+    },
+    "triethylene glycol": {
+        "molar_weight": 150.1730
+    },
+    "monoethanolamine": {
+        "molar_weight": 61.0831
+    },
+    "diethanolamine": {
+        "molar_weight":  105.1356
+    },
+    "triethanolamine": {
+        "molar_weight": 149.1882
+    },
+    "methyldiethanolamine": {
+        "molar_weight": 119.1622
+    },
+    "methane": {
+        "molar_weight": 16.04
+    },
+    "ethane": {
+        "molar_weight": 30.07
+    }
+}

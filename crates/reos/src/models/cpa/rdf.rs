@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use ndarray::{Array, Array1, Array2};
+use ndarray::{Array1, Array2};
 
 #[derive(Clone)]
 pub struct Rdf<T>{

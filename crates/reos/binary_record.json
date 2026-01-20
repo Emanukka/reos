@@ -1,0 +1,11 @@
+[
+  {
+    "epsilon": null,
+    "kappa": 0.1836,
+    "rule": "cr1",
+    "aij": -0.15508,
+    "bij": 0.000877,
+    "id1": "water",
+    "id2": "co2"
+  }
+]

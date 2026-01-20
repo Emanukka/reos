@@ -488,7 +488,7 @@ impl Associative {
 
 #[cfg(test)]
 mod tests {
-    use std::iter::Zip;
+    
 
     use approx::assert_relative_eq;
     use ndarray::array;
@@ -519,7 +519,7 @@ mod tests {
 
 
         let pr = PureRecord::new(0.0, "methanol".to_string(), m);    
-        let p = AssociativeParameters::new(vec![pr], vec![]);
+        let p = AssociativeParameters::new(vec![pr], vec![], ());
         let asc = Associative::from_parameters(p);
 
         asc    
@@ -527,7 +527,7 @@ mod tests {
     
     fn water() -> Associative {
         let pr = watercpa_record();
-        let p = AssociativeParameters::new(vec![pr], vec![]);
+        let p = AssociativeParameters::new(vec![pr], vec![], ());
         let asc = Associative::from_parameters(p);
 
         asc

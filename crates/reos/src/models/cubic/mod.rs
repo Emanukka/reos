@@ -3,6 +3,7 @@ use crate::models::cubic::parameters::CubicParameters;
 use crate::residual::Residual;
 use ndarray::Array1;
 use ndarray::Array2;
+use serde::Serialize;
 use crate::models::IDEAL_GAS_CONST as R;
 
 
@@ -10,141 +11,23 @@ pub const SRK_KAPPA_FACTORS:  [f64; 3] = [0.480000, 1.57400, -0.17600];
 pub const PR76_KAPPA_FACTORS: [f64; 3] = [0.374640, 1.54226, -0.26992];
 pub const PR78_KAPPA_FACTORS: [f64; 4] = [0.374642, 1.48503, -0.164423, 0.016666];
 
+pub mod models;
 pub mod parameters;
 
-pub trait CubicModel{
-    fn model() -> Self where Self: Sized;
-    fn eps(&self)->f64;
-    fn sig(&self)->f64;
-    fn omega(&self,)->f64;
-    fn psi(&self)->f64;
-    fn kappa_from_w(&self,w:f64)->f64;
-
-    fn acrit(&self,tc:f64,pc:f64)->f64{
-        self.psi()*(R*tc).powf(2.0)/pc
-    }
-    fn bcrit(&self,tc:f64,pc:f64)->f64{
-        self.omega()*R*tc/pc
-    }
-    fn which(&self)-> String;
-}
 // #[derive(Clone)]
-pub struct Cubic<T:CubicModel>{
-    pub parameters:CubicParameters<T>,
+pub struct Cubic{
+    pub parameters:CubicParameters,
 }
 
-impl<T:CubicModel> Cubic<T> {
+impl Cubic {
     
-    pub fn from_parameters(parameters:CubicParameters<T>)->Self{
+    pub fn from_parameters(parameters:CubicParameters)->Self{
         Self { parameters }
     }
 
 }
-pub struct SRK;
-#[derive(serde::Serialize)]
-pub struct PR76;
-#[derive(serde::Serialize)]
-pub struct PR78;
 
-
-impl CubicModel for SRK{
-    
-    fn model()->Self where Self: Sized {
-        SRK
-    }
-    fn omega(&self,)->f64 {
-        0.08664
-    }
-    fn psi(&self)->f64 {
-        0.42748
-    }
-    fn eps(&self)->f64 {
-        0.0
-    }
-    fn sig(&self)->f64 {
-        1.0
-    }
-    fn which(&self)-> String {
-        "SRK".to_string()
-    }
-
-    fn kappa_from_w(&self,w:f64)->f64 {
-        let factors = &SRK_KAPPA_FACTORS;
-        factors[0] + w*factors[1] + w.powi(2)*factors[2]
-
-    }
-
-}
-
-
-impl CubicModel for PR76 {
-    
-    fn model()->Self where Self: Sized {
-        PR76
-    }
-    fn omega(&self,)->f64 {
-        0.07780
-    }
-    fn psi(&self)->f64 {
-        0.45724
-    }
-    fn eps(&self)->f64 {
-        1.0 - SQRT_2
-    }
-
-    fn sig(&self)->f64 {
-        1.0 + SQRT_2
-    }
-
-    fn which(&self)-> String {
-        "PR76".to_string()    
-    }
-
-    fn kappa_from_w(&self,w:f64)->f64 {
-        let factors = &PR76_KAPPA_FACTORS;
-        factors[0] + w*factors[1] + w.powi(2)*factors[2]
-
-    }
-}
-
-impl CubicModel for PR78 {
-    
-    fn model()->Self where Self: Sized {
-        PR78
-    }
-    fn omega(&self,)->f64 {
-        PR76.omega()
-    }
-    fn psi(&self)->f64 {
-        PR76.psi()
-    }
-    fn eps(&self)->f64 {
-        PR76.eps()
-    }
-
-    fn sig(&self)->f64 {
-        PR76.sig()
-    }
-
-    fn which(&self)-> String {
-        "PR78".to_string()    
-    }
-
-    fn kappa_from_w(&self,w:f64)->f64 {
-        let factors76 = &PR76_KAPPA_FACTORS;
-        let factors78 = &PR78_KAPPA_FACTORS;
-
-        if w<0.491 {
-            factors76[0] + w*factors76[1] + w.powi(2)*factors76[2]
-
-        } else{
-            factors78[0] + w*factors78[1] + w.powi(2)*factors78[2] + w.powi(3)*factors78[3]
-        }
-        
-    }
-}
-
-impl <T:CubicModel> Cubic<T>{
+impl Cubic{
 
 
     fn alpha_i(&self, i:usize, t:f64) -> f64 {
@@ -245,16 +128,17 @@ impl <T:CubicModel> Cubic<T>{
 
     fn fi(&self, bmix:f64, vm:f64)->f64{
 
-        let sig = self.parameters.model.sig();
-        let eps = self.parameters.model.eps();
+        let sig = self.parameters.sigma;
+        let eps = self.parameters.epsilon;
 
         (1.0/(sig-eps))*f64::ln((vm + sig*bmix )/(vm + eps*bmix))
     }
 
     fn delta(&self,bmix:f64, vm:f64) -> f64 {
 
-        let sig = self.parameters.model.sig();
-        let eps = self.parameters.model.eps();
+
+        let sig = self.parameters.sigma;
+        let eps = self.parameters.epsilon;
 
         (vm + sig * bmix) * (vm + eps * bmix)
     }
@@ -266,8 +150,11 @@ impl <T:CubicModel> Cubic<T>{
     }
 }
 
-impl<T:CubicModel> Residual for Cubic<T> {
+impl Residual for Cubic  {
     
+    fn get_properties(&self)->&crate::parameters::Properties {
+        &self.parameters.properties
+    }
     fn molar_weight(&self)->&Array1<f64> {
         &self.parameters.properties.molar_weight
     }
@@ -372,13 +259,14 @@ impl<T:CubicModel> Residual for Cubic<T> {
     }
 }
 
-
+#[cfg(test)]
 mod tests{
+    
+    
+
+    use crate::{models::cubic::{Cubic, models::SRK, parameters::{CubicParameters, CubicPureRecord}}, parameters::{ Parameters, records::PureRecord}, residual::Residual};
     use approx::assert_relative_eq;
     use ndarray::array;
-
-    use crate::{models::cubic::{Cubic, SRK, parameters::{CubicParameters, CubicPureRecord}}, parameters::{Parameters, records::PureRecord}, residual::Residual};
-
 
     fn water()->PureRecord<CubicPureRecord>{
 
@@ -388,10 +276,10 @@ mod tests{
 
     }
 
-    fn cub()->Cubic<SRK>{
+    fn cub()->Cubic{
 
         let w = water();
-        let p = CubicParameters::new(vec![w], vec![]);
+        let p = CubicParameters::new(vec![w], vec![], SRK.into());
         Cubic::from_parameters(p)
     }
 
@@ -434,6 +322,7 @@ mod tests{
         let val = srk.r_chemical_potential(t, d, &x);
 
         assert_relative_eq!(val[0], -0.115660251059, epsilon = 1e-10)
+
 
     }
     

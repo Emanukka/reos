@@ -1,0 +1,15 @@
+[
+    {
+        "id1": "water",
+        "id2": "carbon dioxide",
+        "aij": -0.15508,
+        "bij": 0.000877,
+        "kappa": 0.1836
+    },
+
+    {
+        "id1": "carbon dioxide",
+        "id2": "methane",
+        "kij": 0.0882
+    }
+]

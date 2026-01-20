@@ -1,0 +1,14 @@
+[
+    {
+        "id1":"acetic acid",
+        "id2":"n-octane",
+        "kij": 0.064
+    },
+    
+    {
+        "id1":"propanoic acid",
+        "id2":"n-heptane",
+        "kij": 0.029
+    }
+
+]

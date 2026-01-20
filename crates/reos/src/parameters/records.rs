@@ -1,7 +1,13 @@
 
-use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, error::Error, fmt::Display, vec};
+
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use ndarray::{Array1, array};
+
+use crate::parameters::reader;
+
+
 
 #[derive(Serialize,Deserialize, Debug, Clone)]
 pub struct PureRecord<M>{
@@ -14,6 +20,15 @@ pub struct PureRecord<M>{
 
 }
 
+
+
+impl<M:Display> Display for PureRecord<M> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+        write!(f, "PureRecord(name={}, molar_weight={}, model_record={})", self.name, self.molar_weight, self.model_record)
+        
+    }
+}
 
 impl<M> PureRecord<M>{
     
@@ -28,7 +43,7 @@ impl<M> PureRecord<M>{
 
 }
 
-#[derive(Serialize,Deserialize,Debug)]
+#[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct BinaryRecord<M>{
     #[serde(flatten)]
     pub model_record: M,
@@ -47,6 +62,22 @@ impl<M> BinaryRecord<M>{
         (&self.id1, &self.id2)
     }
 }
+impl<M:Display> Display for BinaryRecord<M> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+        write!(f, "BinaryRecord(id1={}, id2={}, model_record={})", self.id1, self.id2, self.model_record)
+        
+    }
+}
+
+impl<B:Serialize> BinaryRecord<B> {
+
+    pub fn to_json(vec: Vec<Self>) -> Result<String, Box<dyn Error>> {
+        let json = serde_json::to_string_pretty(&vec)?;
+        Ok(json)
+    }
+}
+
 #[derive(Debug)]
 pub struct BinaryParameter<M>{
     pub model_record: M,
@@ -65,7 +96,7 @@ impl<M:Clone> BinaryParameter<M>{
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone, Serialize)]
 pub struct Properties{
     pub names: Vec<String>,
     pub molar_weight: Array1<f64>
@@ -78,4 +109,8 @@ impl Default for Properties{
         Properties { names: vec![], molar_weight: array![] }
     }
 }
+
+
+
+
 

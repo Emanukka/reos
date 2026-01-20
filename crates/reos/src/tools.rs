@@ -1,6 +1,5 @@
 use std::fmt;
 
-use ndarray::Array1;
 pub struct NewtonResult{
     pub x:f64,
     pub it:i32,

@@ -8,11 +8,11 @@ impl<R:Residual> PhaseEquilibrium<R>{
     pub fn vapor(&self,t:f64,p:f64,y:Array1<f64>)
     ->StateResult<R>{
         // S::new_tpx(self.0.clone(), t, p,y, DensityInitialization::Vapor)
-        S::new_tpx(self.eos.clone(), t, p, y, DensityInitialization::Vapor)
+        S::new_tpx(self.eos.clone(), t, p, y, Some(DensityInitialization::Vapor))
     }
     pub fn liquid(&self,t:f64,p:f64,x:Array1<f64>)
     ->StateResult<R>{
-        S::new_tpx(self.eos.clone(), t, p, x, DensityInitialization::Liquid)
+        S::new_tpx(self.eos.clone(), t, p, x, Some(DensityInitialization::Liquid))
     }
 
     pub fn set_antoine(&mut self,antoine:Antoine){
@@ -138,16 +138,16 @@ pub mod tests{
     use approx::assert_relative_eq;
     use ndarray::Array1;
 
-    use crate::{ models::{cpa::{CPA, SCPA, parameters::readyto::{acetic1a, water4c, water4c_acetic1a}, rdf::Kontogeorgis}, cubic::SRK}, phase_equilibrium::PhaseEquilibrium, state::E};
+    use crate::{ models::{cpa::{CPA, SCPA, parameters::readyto::{acetic1a, water4c, water4c_acetic1a}, rdf::Kontogeorgis}, cubic::models::SRK}, phase_equilibrium::PhaseEquilibrium, state::E};
     #[allow(unused_imports)]
     // use crate::{models::{ cpa::{CPA,parameters::{octane_acoh,acoh_octane, methanol_2b, methanol_3b, water_acetic_acid}}, cubic::Cubic}, phase_equilibrium::{vle::antoine_water_acetic_acid, Antoine, AntoineRecord, LogBase, PhaseEquilibrium}, state::E};
 
     
-    fn water_acetic_acid()-> CPA<SRK,Kontogeorgis>{
+    fn water_acetic_acid()-> CPA<Kontogeorgis>{
         let water = water4c();
         let acetic = acetic1a();
         let b = water4c_acetic1a();
-        let cpa = SCPA::from_records(vec![water,acetic],vec![b]);
+        let cpa = SCPA::from_records(vec![water,acetic],vec![b], SRK.into());
         cpa
     }
 

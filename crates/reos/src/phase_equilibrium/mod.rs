@@ -3,7 +3,7 @@ use std::{sync::Arc};
 use ndarray::{Array1};
 
 use crate::{residual::Residual, state::E};
-pub mod stability;
+pub mod tpd;
 pub mod vle;
 
 //Contém EOS

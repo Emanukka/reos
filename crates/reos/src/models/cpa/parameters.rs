@@ -1,14 +1,16 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 
 use crate::models::associative::parameters::{AssociationBinaryRecord, AssociationPureRecord, AssociativeParameters};
 
-use crate::models::cubic::{ CubicModel};
+use crate::models::cubic::models::CubicModels;
 use crate::models::cubic::parameters::{CubicBinaryRecord, CubicParameters, CubicPureRecord};
-use crate::parameters::records::{BinaryParameter, BinaryRecord, Properties, PureRecord};
 use crate::parameters::{Parameters};
+use crate::parameters::records::{BinaryParameter, BinaryRecord, PureRecord};
 
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize,Deserialize, Debug, Clone)]
 pub struct CPAPureRecord{
     #[serde(flatten)]
     pub c:CubicPureRecord,
@@ -25,8 +27,18 @@ impl CPAPureRecord{
 
 }
 
-pub struct CPAParameters<C:CubicModel>{
-    pub cubic: CubicParameters<C>, 
+impl std::fmt::Display for CPAPureRecord {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        write!(f, "CPAPureRecord(c={}, a={})", self.c, self.a)
+        
+    }
+}
+
+#[derive(Clone)]
+pub struct CPAParameters{
+    pub cubic: CubicParameters, 
     pub assoc: AssociativeParameters,
 }
 
@@ -40,6 +52,36 @@ pub struct CPABinaryRecord{
 
 }
 
+impl std::fmt::Display for CPABinaryRecord {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+        let mut data = String::from_str("CPABinaryRecord(\n").unwrap();
+
+
+        if let Some(c) = &self.c {
+            data.push_str(concat!("cubic="));
+            data.push_str(c.to_string().as_str());
+            // let _ = write!(f, "CPABinaryRecord(cubic={:#?}, assoc={:#?})", c);
+        } else {
+            data.push_str("cubic=None");
+        }
+        data.push_str("\n");
+
+        if let Some(a) = &self.a {
+            data.push_str(concat!(" assoc="));
+            data.push_str(a.to_string().as_str());            
+        }
+        
+        else {
+            data.push_str(" assoc=None");
+        }
+
+        data.push_str("\n)");
+
+        write!(f, "{}", data)
+
+    }
+}
 
 impl CPABinaryRecord{
 
@@ -64,14 +106,21 @@ impl CPABinaryRecord{
 
 }
 
-impl<C: CubicModel> Parameters<CPAPureRecord,CPABinaryRecord> for CPAParameters<C>{
 
-    fn raw(records:Vec<CPAPureRecord>, binary: Vec<BinaryParameter<CPABinaryRecord>>,properties: Option<Properties>)->Self {
-        let n = records.len();
+type Pure = CPAPureRecord;
+type Binary = CPABinaryRecord;
+
+
+
+impl Parameters<Pure, Binary, CubicModels> for CPAParameters {
+
+    fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<crate::parameters::Properties>, opt: CubicModels) -> Self {
+    
+        let n = pure.len();
 
         // CPAbinMap -> CPAmodelRecord -> C,A -> CParamets,AParamets
-        let mut c_records= Vec::with_capacity(n);
-        let mut a_records = Vec::with_capacity(n);
+        let mut c_pure= Vec::with_capacity(n);
+        let mut a_pure = Vec::with_capacity(n);
         let mut c_binary = vec![];
         let mut a_binary = vec![];
         
@@ -94,14 +143,13 @@ impl<C: CubicModel> Parameters<CPAPureRecord,CPABinaryRecord> for CPAParameters<
             }
                 
         }
-        for record in records{
-            c_records.push(record.c);
-            a_records.push(record.a);
+        for record in pure{
+            c_pure.push(record.c);
+            a_pure.push(record.a);
         }
 
-        let cubic = CubicParameters::<C>::raw(c_records, c_binary, properties);
-
-        let assoc = AssociativeParameters::raw(a_records, a_binary, None);
+        let cubic = CubicParameters::from_raw(c_pure, c_binary, properties, opt);
+        let assoc = AssociativeParameters::from_raw(a_pure, a_binary, None, ());
 
         CPAParameters{
             cubic,
@@ -109,9 +157,13 @@ impl<C: CubicModel> Parameters<CPAPureRecord,CPABinaryRecord> for CPAParameters<
         }
 
     }
+}
 
-    fn get_properties(&self)->&Properties {
-        &self.cubic.properties
+impl std::fmt::Display for CPAParameters {
+    
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        write!(f, "CPAParameters(\n  {},\n  {}\n)", self.cubic, self.assoc)
     }
 
 }
@@ -152,7 +204,6 @@ impl<C: CubicModel> Parameters<CPAPureRecord,CPABinaryRecord> for CPAParameters<
 pub mod readyto{
 
     pub use super::*;
-    pub use super::super::SCPA;
     use super::super::super::associative::sites::CombiningRule;
     
     pub type Pure = PureRecord<CPAPureRecord>; 
@@ -210,7 +261,7 @@ pub mod readyto{
 
         let c = CubicBinaryRecord::TemperatureIndependent { kij: -0.222 };
         
-        let a = AssociationBinaryRecord {  epsilon: None, kappa: None, combining_rule: Some(CombiningRule::ECR) };
+        let a = AssociationBinaryRecord {  epsilon: None, kappa: None, combining_rule: CombiningRule::ECR };
         
         let b = CPABinaryRecord::full(c, a);
 
@@ -235,7 +286,7 @@ pub mod readyto{
 
         let c = CubicBinaryRecord::TemperatureDependent { aij: -0.15508 , bij: 0.000877 };
         
-        let a = AssociationBinaryRecord {epsilon: None, kappa: Some(0.1836), combining_rule: None };
+        let a = AssociationBinaryRecord {epsilon: None, kappa: Some(0.1836), combining_rule: CombiningRule::default() };
         
         let b = CPABinaryRecord::full(c, a);
         
@@ -256,8 +307,7 @@ pub mod readyto{
 
 
         let c = CubicBinaryRecord::TemperatureIndependent { kij: 0.064 };
-        let a = AssociationBinaryRecord {epsilon: None, kappa: None, combining_rule: None };
-        
+        let a = AssociationBinaryRecord {epsilon: None, kappa: None, combining_rule: CombiningRule::default() };
         let b = CPABinaryRecord::full(c, a);
         
         BinaryRecord::new(b, "acetic_acid".into(), "octane".into())    

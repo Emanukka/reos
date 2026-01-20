@@ -1,7 +1,5 @@
-use crate::models::associative::sites::Site;
 
 use super::R;
-use super::sites::CombiningRule;
 
 pub fn dimensionless_delta_jl(t:f64,epsilon:f64,kappa:f64)->f64{
     (epsilon / R / t).exp_m1() * kappa

@@ -1,7 +1,7 @@
 #%%
 from reos.reos  import EquationOfState,State,CPAParameters,PhaseEquilibrium,CubicRecord,AssociationRecord
 import numpy as np
-from auxiliary_functions.parameters import *
+from phase_equilibrium.antoine import *
 from auxiliary_functions.association_functions import *
 
 import matplotlib.pyplot as plt

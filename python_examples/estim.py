@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 import scipy.optimize as opt
 
 from auxiliary_functions.parameters import *
-from auxiliary_functions.vle_functions import *
+from phase_equilibrium.vle_functions import *
 # from python_examples.auxiliary_functions.exp_data import *
-from auxiliary_functions.exp_data import *
+from phase_equilibrium.exp_data import *
 from auxiliary_functions.association_functions import get_non_bondend_sites_from_states
 #%%
 c_acoh=CubicRecord(

@@ -2,7 +2,8 @@ use approx::assert_relative_eq;
 use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 
-use crate::state::{State, eos::EosResult};
+use crate::{parameters::Properties, state::eos::EquationOfState};
+
 
 #[derive(Default,Serialize,Deserialize)]
 pub struct ResidualDerivedProperties{
@@ -26,31 +27,77 @@ impl ResidualDerivedProperties {
     }
 }
 
-///A trait that provides a interface for all types 
-///that have a ```non-ideal``` contribution to the thermodynamic state. 
-///All properties are in the reduced form and at the natural coordinates ```NVT```  
-/// 
-/// ```text
-///    a = A/R/T
-///    s = S/R
-///    h = H/R/T
-///    p = da/dV
-/// 
-/// ```
-/// 
-/// 
+// pub trait DynResidual {
+
+//     fn components(&self) -> usize;
+//     fn molar_weight(&self) -> Array1<f64>;
+//     fn r_pressure(&self,t:f64,d:f64,x:&Array1<f64>) -> f64;
+//     fn r_helmholtz(&self,t:f64,d:f64,x:&Array1<f64>) -> f64;
+//     fn r_chemical_potential(&self,t:f64,d:f64,x:&Array1<f64>) -> Array1<f64>;
+//     fn r_entropy(&self,t:f64,d:f64,x:&Array1<f64>) -> f64;
+//     fn max_density(&self,x:&Array1<f64>) -> f64;
+
+
+// }
+// use std::ops::Deref;
+// impl<C: Deref<Target = T>, T: DynResidual> Residual for C {
+    
+//     // fn molar_weight(&self) -> Array1<f64> {
+//     //     T::molar_weight(&self).clone()
+//     // }
+//     fn molar_weight(& self)->Array1<f64> {
+
+//         T::molar_weight(&self)
+
+//     }
+
+//     fn r_pressure(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
+//         T::r_pressure(&self,t,d,x)
+//     }
+
+//     fn r_helmholtz(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
+//         T::r_helmholtz(&self,t,d,x)
+//     }
+    
+//     fn r_chemical_potential(&self,t:f64,d:f64,x:&Array1<f64>) -> Array1<f64> {
+//         T::r_chemical_potential(&self,t,d,x)
+//     }
+
+//     fn r_entropy(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
+//         T::r_entropy(&self,t,d,x)
+//     }
+
+//     fn max_density(&self, x:&Array1<f64>) -> f64 {
+//         T::max_density(&self, x)
+//     }
+
+//     fn components(&self) -> usize {
+//         T::components(&self)
+//     }
+    
+// }
+
+/// API for computing dimensionless residual isovolumetric thermodynamic properties
 pub trait Residual{
 
-
+    
+    fn get_properties(&self)->&Properties;
+    
     fn molar_weight(&self)->&Array1<f64>;
     
     fn r_entropy(&self,t:f64, d:f64, x:&Array1<f64>)->f64;
-    
+
     fn r_chemical_potential(&self,t:f64,d: f64,x:&Array1<f64>)->Array1<f64>;
 
     fn r_helmholtz(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
 
     fn r_pressure(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
+
+    fn compressibility(&self,t:f64,d:f64,x:&Array1<f64>)->f64{
+        let r_pres = self.r_pressure(t, d, x);
+        r_pres / d
+    }
+
 
     fn max_density(&self,x:&Array1<f64>)->f64;
 
@@ -67,11 +114,5 @@ pub trait Residual{
 
     }
 }
-
-
-
-
-
-
 
 

@@ -1,0 +1,21 @@
+[package]
+name = "reos_py"
+version = "0.0.1"
+edition = "2021"
+repository="https://github.com/Emanukka/reos"
+readme = "README.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "reos"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+
+numpy = "0.24"
+reos= {path="../crates/reos"}
+serde = { version = "1.0.217", features = ["derive"] }
+pyo3 = { version = "0.24", features = ["multiple-pymethods"] }
+pythonize = "0.24"
+serde_json = "1.0"

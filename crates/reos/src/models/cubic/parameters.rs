@@ -1,82 +1,33 @@
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize, ser::SerializeStruct};
-use crate::{models::cubic::CubicModel, parameters::{Parameters, records::{BinaryParameter, BinaryRecord, Properties, PureRecord}}};
+use crate::{models::cubic::models::{ CubicModel, CubicModels},
+parameters::{ Parameters, records::{BinaryParameter, BinaryRecord, Properties, PureRecord}}};
 
 
-#[derive(Debug)]
-pub struct CubicParameters<T:CubicModel>{
-    pub ncomp:usize,
-    pub a0:   Array1<f64>,
-    pub b:    Array1<f64>,
-    pub tc:   Array1<f64>,
-    pub kappa:Array1<f64>,
-    pub aij:  Array2<f64>, //kij = Aij + Bij*T
-    pub bij:  Array2<f64>,
+type Pure = CubicPureRecord;
+type Binary = CubicBinaryRecord;
+    
+
+#[derive(Clone,Debug)]
+pub struct CubicParameters {
+    pub ncomp: usize,
+    pub a0: Array1<f64>,
+    pub b: Array1<f64>,
+    pub kappa: Array1<f64>,
+    pub tc: Array1<f64>,
+    pub aij: Array2<f64>,
+    pub bij: Array2<f64>,
+    pub epsilon: f64,
+    pub sigma: f64,
     pub properties: Properties,
-    pub model: T
-
 }
 
-#[derive(Clone,Debug,Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum CubicBinaryRecord{
+impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
 
-    TemperatureDependent{
-        aij:f64,
-        bij:f64
-    },
-    TemperatureIndependent{
-        kij:f64
-    }
-}
-#[derive(Clone,Debug,Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum CubicPureRecord{
-    Set1{a0:f64,b:f64,c1:f64,tc:f64},
-    Set2{tc:f64,pc:f64,w:f64},
+    fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<Properties>, opt: CubicModels) -> Self {
+        let model = opt;
 
-}
-
-
-
-
-impl CubicPureRecord {
-    
-    pub fn new_set1(a0:f64,b:f64,c1:f64,tc:f64)->Self{
-        Self::Set1{
-            a0,
-            b,
-            c1,
-            tc
-        }
-    }
-    pub fn new_set2(tc:f64,pc:f64,w:f64)->Self{
-        Self::Set2{
-            tc,
-            pc,
-            w,
-        }
-    }
-}
-
-// impl PureRecord for CubicPureRecord {
-    
-// // }
-// impl<T:CubicModel> Parameters<CubicPureRecord,CubicBinaryRecord,String> for CubicParameters<T> {
-    
-//     fn from_recordss(pure_records:Vec<PureRecord<CubicPureRecord>>,binary_records: Vec<crate::parameters::records::BinaryRecord<CubicBinaryRecord,String>>)->Self {
-
-//         todo!()
-//     }
-    
-// }
-
-impl<T:CubicModel> Parameters<CubicPureRecord,CubicBinaryRecord> for CubicParameters<T>{
-
-    fn raw(pure_records:Vec<CubicPureRecord>,binary: Vec<BinaryParameter<CubicBinaryRecord>>,properties: Option<Properties>)->Self {
-        
-        let n = pure_records.len();
-        let model = T::model();
+        let n = pure.len();
         let mut ma0    = Array1::<f64>::zeros(n);
         let mut mb     = Array1::<f64>::zeros(n);
         let mut mtc    = Array1::<f64>::zeros(n);
@@ -84,7 +35,7 @@ impl<T:CubicModel> Parameters<CubicPureRecord,CubicBinaryRecord> for CubicParame
         let mut maij   = Array2::<f64>::zeros((n,n));
         let mut mbij   = Array2::<f64>::zeros((n,n));
 
-        for (i,record) in pure_records.iter().enumerate(){
+        for (i,record) in pure.iter().enumerate(){
 
             match record {
                 
@@ -136,34 +87,160 @@ impl<T:CubicModel> Parameters<CubicPureRecord,CubicBinaryRecord> for CubicParame
             aij: maij,
             bij: mbij,
             properties: properties.unwrap_or_default(),
-            model
-        } 
+            epsilon: model.eps(),
+            sigma: model.sig(),
+        }
+
 
     }
+}
 
-    fn get_properties(&self)->&Properties {
-        &self.properties
+
+#[derive(Clone,Debug,Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CubicBinaryRecord{
+
+    TemperatureDependent{
+        aij:f64,
+        bij:f64
+    },
+    TemperatureIndependent{
+        kij:f64
     }
+}
+#[derive(Clone,Debug,Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum CubicPureRecord{
+    Set1{a0:f64,b:f64,c1:f64,tc:f64},
+    Set2{tc:f64,pc:f64,w:f64},
+
+}
+
+
+
+
+impl CubicPureRecord {
     
-}
-impl<T:CubicModel> CubicParameters<T>{
-
-
-    pub fn set_kij(&mut self,i:usize,j:usize,kij:f64){
-
-        self.aij[(i,j)] = kij;
-        self.aij[(j,i)] = kij;
+    pub fn new_set1(a0:f64,b:f64,c1:f64,tc:f64)->Self{
+        Self::Set1{
+            a0,
+            b,
+            c1,
+            tc
+        }
     }
-    pub fn set_kij_temperature_dependent(&mut self,i:usize,j:usize,aij:f64,bij:f64){
+    pub fn new_set2(tc:f64,pc:f64,w:f64)->Self{
+        Self::Set2{
+            tc,
+            pc,
+            w,
+        }
+    }
+}
 
-        self.aij[(i,j)] = aij;
-        self.aij[(j,i)] = aij; 
+impl std::fmt::Display for CubicParameters {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        let n = self.ncomp;
+
+        if n == 0 {
+            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\tc1={},\n\ttc={})",
+                self.a0.to_string(),
+                self.b.to_string(),
+                self.kappa.to_string(),
+                self.tc.to_string(),
+            )
+
+        } else {
+
+            let saij = self.aij
+            .rows()
+            .into_iter()
+            .map(|row| row.to_string())
+            .collect::<Vec<_>>()
+            .join("\n\t  ");
+            let sbij = self.bij
+            .rows()
+            .into_iter()
+            .map(|row| row.to_string())
+            .collect::<Vec<_>>()
+            .join("\n\t  ");
+
+            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\tc1={},\n\ttc={},\n\taij=\n\t  [{}],\n\tbij=\n\t  [{}])",
+                self.a0.to_string(),
+                self.b.to_string(),
+                self.kappa.to_string(),
+                self.tc.to_string(),
+                saij,
+                sbij
+            )
+        }
+
+    }
+}
+// impl PureRecord for CubicPureRecord {
+    
+// // }
+// impl<T:CubicModel> Parameters<CubicPureRecord,CubicBinaryRecord,String> for CubicParameters<T> {
+    
+//     fn from_recordss(pure_records:Vec<PureRecord<CubicPureRecord>>,binary_records: Vec<crate::parameters::records::BinaryRecord<CubicBinaryRecord,String>>)->Self {
+
+//         todo!()
+//     }
+    
+// }
+impl std::fmt::Display for CubicPureRecord {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        match self {
+            
+            Self::Set1 { a0, b, c1, tc } => {
+                write!(f, "CubicPureRecord(a0={}, b={}, c1={}, tc={})", a0, b, c1, tc)
+            }
+            Self::Set2 { tc, pc, w } => {
+                write!(f, "CubicPureRecord(tc={}, pc={}, w={})", tc, pc, w)
+            }
+        }
+    }
+}
+
+impl std::fmt::Display for CubicBinaryRecord {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        match self {
+            
+            Self::TemperatureDependent { aij, bij } => {
+                write!(f, "CubicBinaryRecord(aij={}, bij={})", aij, bij   )
+            }
+            Self::TemperatureIndependent { kij } => {
+                write!(f, "CubicBinaryRecord(kij={})", kij)
+            }
+        }
+    }
+}
+
+
+// impl<T:CubicModel > CubicParameters<T>{
+
+
+//     pub fn set_kij(&mut self,i:usize,j:usize,kij:f64){
+
+//         self.aij[(i,j)] = kij;
+//         self.aij[(j,i)] = kij;
+//     }
+//     pub fn set_kij_temperature_dependent(&mut self,i:usize,j:usize,aij:f64,bij:f64){
+
+//         self.aij[(i,j)] = aij;
+//         self.aij[(j,i)] = aij; 
  
-        self.bij[(i,j)] = bij;
-        self.bij[(j,i)] = bij;
-    }
+//         self.bij[(i,j)] = bij;
+//         self.bij[(j,i)] = bij;
+//     }
 
-}
+// }
 
 // impl<C:CubicModel> Parameters<CubicPureRecord> for CubicParameters<C> {
 //     fn from_records(records:Vec<CubicPureRecord>) -> Self {
@@ -172,48 +249,14 @@ impl<T:CubicModel> CubicParameters<T>{
 //     }
 // }
 
-impl<C:CubicModel> CubicParameters<C> {
-    pub fn from_records(pure_records:Vec<PureRecord<CubicPureRecord>>,binary_records:Vec<BinaryRecord<CubicBinaryRecord>>) -> Self {
+// impl<C:CubicModel > CubicParameters<C> {
+//     pub fn from_records(pure_records:Vec<PureRecord<CubicPureRecord>>,binary_records:Vec<BinaryRecord<CubicBinaryRecord>>) -> Self {
         
-        Self::new(pure_records, binary_records)
-    }
+//         Self::new(pure_records, binary_records)
+//     }
 
-}
-impl<T:CubicModel> Serialize for CubicParameters<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-        
-        let mut state = serializer.serialize_struct("CubicParameters", 5)?;
-        state.serialize_field("cubic_model", &self.model.which())?;
+// }
 
-        state.serialize_field("a0", &self.a0
-        .flatten()
-        .iter()
-        .map(|v| format!("{:.9e}", v))
-        .collect::<Vec<_>>())?;
-        
-        state.serialize_field("b", &self.b
-        .flatten()
-        .iter()
-        .map(|v| format!("{:.9e}", v))
-        .collect::<Vec<_>>())?;
-
-        state.serialize_field("kappa", &self.kappa
-        .flatten()
-        .iter()
-        .map(|v| format!("{:.9e}", v))
-        .collect::<Vec<_>>())?;
-        
-        state.serialize_field("tc", &self.tc
-        .flatten()
-        .iter()
-        .map(|v| format!("{:.9e}", v))
-        .collect::<Vec<_>>())?;
-
-        state.end()        
-    }
-}
 
 // impl <T:CubicModel> Deserialize for CubicParameters<T> {
 //     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -228,7 +271,13 @@ mod tests{
     use ndarray::array;
     use serde_json::from_str;
 
-    use crate::{models::cubic::{Cubic, PR76, PR78, parameters::{CubicBinaryRecord, CubicPureRecord}}, parameters::{Parameters, records::{BinaryRecord, PureRecord}}, residual::{Residual, ResidualDerivedProperties}};
+    // use crate::{models::cubic::{Cubic, models::CubicModels, parameters::{CubicBinaryRecord, CubicPureRecord}}, parameters::{Parameters, records::{BinaryRecord, PureRecord}}, residual::{Residual, ResidualDerivedProperties}};
+
+    use crate::residual::{Residual, ResidualDerivedProperties};
+
+    use super::*;
+    use super::super::Cubic;
+    use super::super::models::{PR76,PR78, SRK};
 
     #[test]
     fn test_pure_records_from_json(){
@@ -248,13 +297,16 @@ mod tests{
                 "w":  1.02200 
             }
         "#;
-        let c1: PureRecord<CubicPureRecord> = from_str(data1).unwrap();
-        let c2: PureRecord<CubicPureRecord> = from_str(data2).unwrap();
-        let json = serde_json::to_string_pretty(&c1).unwrap();
+        let pr1: PureRecord<CubicPureRecord> = from_str(data1).unwrap();
+        let pr2: PureRecord<CubicPureRecord> = from_str(data2).unwrap();
+        // let json = serde_json::to_string_pretty(&pr1).unwrap();
+        
+        // pr78
+        // let params = super::CubicParameters::<PR78>::new(vec![c1,c2],vec![]);
+        let model = PR78.into();
+        let params = CubicParameters::new(vec![pr1,pr2],vec![], model);
 
-        let params = super::CubicParameters::<PR78>::new(vec![c1,c2],vec![]);
-
-        let json = serde_json::to_string_pretty(&params).unwrap();
+        // let json = serde_json::to_string_pretty(&params).unwrap();
 
         
         // println!("{}", json);
@@ -294,7 +346,8 @@ mod tests{
         let pr1 = PureRecord::new(0.0, "".into(), c1);
         let pr2 = PureRecord::new(0.0, "".into(), c2);        
 
-        let params = super::CubicParameters::<PR78>::from_records(vec![pr1,pr2],vec![]);
+        let model = PR78.into();
+        let params = CubicParameters::new(vec![pr1,pr2],vec![], model);
         // println!("{}",params);
         // let json = serde_json::to_string_pretty(&params).unwrap();
 
@@ -350,12 +403,13 @@ mod tests{
         let pr1 = PureRecord::new(0.0, "".into(), c1);
         let pr2 = PureRecord::new(0.0, "".into(), c2);        
 
-        let params = super::CubicParameters::<PR78>::from_records(vec![pr1,pr2],vec![]);
+        let model = PR78.into();
+        let params = CubicParameters::new(vec![pr1,pr2],vec![], model);
         // println!("{}",params);
-        let json = serde_json::to_string_pretty(&params).unwrap();
+        let s = params.to_string();
 
         
-        println!("{}", json);
+        println!("{}", s);
 
         let cub = Cubic::from_parameters(params);
         let t = 298.15;
@@ -403,11 +457,12 @@ mod tests{
         let pr1 = PureRecord::new(0.0, "".into(), c1);
         let pr2 = PureRecord::new(0.0, "".into(), c2);        
 
-        let params = super::CubicParameters::<PR76>::from_records(vec![pr1,pr2],vec![]);
-        let json = serde_json::to_string_pretty(&params).unwrap();
+        let model = PR76.into();
+        let params = super::CubicParameters::new(vec![pr1,pr2],vec![], model);
+        let s = params.to_string();
 
         
-        println!("{}", json);
+        println!("{}", s);
 
         let cub = Cubic::from_parameters(params);
         let t = 298.15;
@@ -456,12 +511,12 @@ mod tests{
         let c2: CubicPureRecord = from_str(data2).unwrap();
         let pr1 = PureRecord::new(0.0, "".into(), c1);
         let pr2 = PureRecord::new(0.0, "".into(), c2);        
-
-        let params = super::CubicParameters::<PR76>::from_records(vec![pr1,pr2],vec![]);
-        let json = serde_json::to_string_pretty(&params).unwrap();
+        let model = PR76.into();
+        let params = CubicParameters::new(vec![pr1,pr2],vec![], model);
+        let s = params.to_string();
 
         
-        println!("{}", json);
+        println!("{}", s);
 
         let cub = Cubic::from_parameters(params);
         let t = 298.15;
@@ -531,15 +586,14 @@ mod tests{
         let pr2: PureRecord<CubicPureRecord> = from_str(data2).unwrap();
         let pr3: PureRecord<CubicPureRecord> = from_str(data3).unwrap();
         let bin: BinaryRecord<CubicBinaryRecord> = from_str(bin).unwrap();
-
-        let params = super::CubicParameters::<PR76>::from_records(vec![pr1,pr2,pr3],vec![bin]);
+        let model = PR76.into();
+        let params = CubicParameters::new(vec![pr1,pr2,pr3],vec![bin], model);
         assert_eq!(params.aij[(0,1)], 0.12);
         assert_eq!(params.aij[(0,1)], 0.12);
-        let json = serde_json::to_string_pretty(&params).unwrap();
-
+        let s = params.to_string();
 
         
-        println!("{}", json);
+        println!("{}", s);
 
     }
 

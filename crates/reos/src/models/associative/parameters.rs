@@ -1,11 +1,9 @@
 
-use ndarray::{Array1, Array2};
+use ndarray::{Array1};
 use serde::{Deserialize, Serialize, ser::SerializeStruct};
 
-use crate::{models::associative::sites::{ CombiningRule, NS, Site, SiteInteraction, SiteType}, parameters::{Parameters, records::{BinaryParameter, Properties}, }, state::eos::EosError};
-
-
-
+use super::sites::{CombiningRule, NS, Site, SiteInteraction, SiteType};
+use crate::parameters::{Parameters, Properties, records::{BinaryParameter, BinaryRecord, PureRecord}};
 
 
 
@@ -20,8 +18,94 @@ pub struct AssociativeParameters{
     pub map:          Array1<usize>
 }
 
+type Pure = AssociationPureRecord;
+type Binary = AssociationBinaryRecord;
+
+impl Parameters<Pure, Binary, ()> for AssociativeParameters {
+
+    fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, _: Option<Properties>, _: ()) -> Self {
+        
+        let ncomp = pure.len();
+        let mut mapping:Vec<usize>=Vec::with_capacity(ncomp);
+
+        for (i,record) in pure.iter().enumerate(){
+
+            match record.get_type() {
+
+                AssociationType::Associative=>{mapping.push(i)}
+                _ => continue
+
+            }
+        }
+
+        let n = mapping.len();
+
+        let mut n_a = 0;
+        let mut n_b = 0; 
+        let mut n_c = 0; 
+
+        let mut sites:Vec<Site> = Vec::with_capacity(NS * n); 
+        let mut m:Vec<f64> = Vec::with_capacity(NS); 
+        let mut s = 0;
+        let mut total_sites_per_component = Vec::with_capacity(n);
+        let mut map:Vec<usize> = Vec::with_capacity( NS * n);
+
+        for k in 0..n{
+
+            let i = mapping[k]; 
+            let record = &pure[i];
+            
+            let na= record.na as f64;
+            let nb= record.nb as f64;
+            let nc= record.nc as f64;
+            
+            let mut total_sites_k = 0;
+
+            if na!=0.0{
+                sites.push(Site::new(SiteType::A, i, s,record.epsilon,record.kappa));
+                map.push(i);
+                n_a += 1;
+                m.push(na);
+                s+=1;
+                total_sites_k+=1;
+            }
+            if nb!=0.0{
+                sites.push(Site::new(SiteType::B, i, s,record.epsilon,record.kappa));
+                map.push(i);
+                n_b += 1;
+                m.push(nb);
+                s+=1;
+                total_sites_k+=1;
+            }
+            if nc!=0.0{
+                sites.push(Site::new(SiteType::C, i, s,record.epsilon,record.kappa));
+                map.push(i);
+                n_c += 1;
+                m.push(nc);
+                s+=1;
+                total_sites_k+=1;
+            }
+            total_sites_per_component.push(total_sites_k);            
+        }
+
+        let multiplicity = Array1::from_vec(m);
+        let map = Array1::from_vec(map);
+        let interactions = SiteInteraction::interactions_from_sites(&sites, binary); 
+
+        AssociativeParameters{
+            na: n_a,
+            nb: n_b,
+            nc: n_c,
+            map,
+            interactions,
+            multiplicity,
+            sites,
+        }
+
+    }
+}
 impl AssociativeParameters {
-    
+
     /// Change the all sites pair combining rule that belongs to 2 associative components in the mixture  
     pub fn change_combining_rule(&mut self,i:usize,k:usize,combining_rule:super::sites::CombiningRule){
 
@@ -82,165 +166,35 @@ impl AssociativeParameters {
     // }
 }
 
-impl Parameters<AssociationPureRecord,AssociationBinaryRecord> for AssociativeParameters {
-
-    fn raw(records: Vec<AssociationPureRecord>, binary: Vec<BinaryParameter<AssociationBinaryRecord>>, _properties: Option<Properties>)->Self {
-        
-        let ncomp = records.len();
-        let mut mapping:Vec<usize>=Vec::with_capacity(ncomp);
-
-        for (i,record) in records.iter().enumerate(){
-
-            match record.get_type() {
-
-                AssociationType::Associative=>{mapping.push(i)}
-                _ => continue
-
-            }
-        }
-
-        let n = mapping.len();
-
-        let mut n_a = 0;
-        let mut n_b = 0; 
-        let mut n_c = 0; 
-
-        let mut sites:Vec<Site> = Vec::with_capacity(NS * n); 
-        let mut m:Vec<f64> = Vec::with_capacity(NS); 
-        let mut s = 0;
-        let mut total_sites_per_component = Vec::with_capacity(n);
-        let mut map:Vec<usize> = Vec::with_capacity( NS * n);
-
-        for k in 0..n{
-
-            let i = mapping[k]; 
-            let record=&records[i];
-            
-            let na= record.na as f64;
-            let nb= record.nb as f64;
-            let nc= record.nc as f64;
-            
-            let mut total_sites_k = 0;
-
-            if na!=0.0{
-                sites.push(Site::new(SiteType::A, i, s,record.epsilon,record.kappa));
-                map.push(i);
-                n_a += 1;
-                m.push(na);
-                s+=1;
-                total_sites_k+=1;
-            }
-            if nb!=0.0{
-                sites.push(Site::new(SiteType::B, i, s,record.epsilon,record.kappa));
-                map.push(i);
-                n_b += 1;
-                m.push(nb);
-                s+=1;
-                total_sites_k+=1;
-            }
-            if nc!=0.0{
-                sites.push(Site::new(SiteType::C, i, s,record.epsilon,record.kappa));
-                map.push(i);
-                n_c += 1;
-                m.push(nc);
-                s+=1;
-                total_sites_k+=1;
-            }
-            total_sites_per_component.push(total_sites_k);            
-        }
-
-        let multiplicity = Array1::from_vec(m);
-        let map = Array1::from_vec(map);
-        let interactions = SiteInteraction::interactions_from_sites(&sites, binary); 
-
-        AssociativeParameters{
-            na: n_a,
-            nb: n_b,
-            nc: n_c,
-            map,
-            interactions,
-            multiplicity,
-            sites,
-        }
-    }
-
-    fn get_properties(&self)->&Properties { panic!() }
-    
-
-}
-
-fn array2_to_vec(a: &Array2<f64>) -> Vec<Vec<f64>> {
-    a.rows()
-     .into_iter()
-     .map(|r| r.to_vec())
-     .collect()
-}
-
-fn array2_to_string(a: &Array2<f64>) -> String {
-    let rows: Vec<String> = a
-        .rows()
-        .into_iter()
-        .map(|r| {
-            let elems: Vec<String> =
-                r.iter().map(|x| format!("{}", x)).collect();
-            format!("[{}]", elems.join(", "))
-        })
-        .collect();
-
-    format!("[{}]", rows.join(",\n"))
-}
-
-impl Serialize for AssociativeParameters {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-            
-        let fields = 7;
-        let mut state = serializer.serialize_struct("AssociativeParameters", fields)?;
-        
-        state.serialize_field("sites", &self.sites)?;
-
-        state.serialize_field("multiplicity", &self.multiplicity.to_vec())?;
-
-        state.serialize_field("interactions", &self.interactions)?;
 
 
-        // state.serialize_field("P", &array2_to_vec(&self.p))?;
-        // state.serialize_field("lambdat", &array2_to_vec(&self.lambda_t))?;
-        // state.serialize_field("gammat", &array2_to_vec(&self.gamma_t))?;
-        // state.serialize_field("epsilon", &array2_to_vec(&self.epsilon))?;
-        // state.serialize_field("kappa", &array2_to_vec(&self.kappa))?;
-
-        state.end()        
-    }
-}
 
 
 impl std::fmt::Display for AssociativeParameters {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
-        write!(
-            f, 
-            "sites:{:?}\nmultiplicity:{:?}\ninteractions:{:?}" ,
-            &self.sites,
-            &self.multiplicity.to_vec(),
-            &self.interactions
-            // &array2_to_string(&self.p),
-            // &array2_to_string(&self.lambda_t),
-            // &array2_to_string(&self.gamma_t))
-            // &array2_to_string(&self.epsilon),
-            // &array2_to_string(&self.kappa),)
+        let ssites = self.sites.iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<String>>()
+        .join(",\n\t   ");
+        
+        let sinter = self.interactions.iter()
+        .map(|s| s.to_string())
+        .collect::<Vec<String>>()
+        .join(",\n\t   ");
+
+        write!(f, 
+            "AssociativeParameters(\n\tna={}, nb={}, nc={},\n\tsite_map={},\n\tmultiplicity={},\n\tsites=[\n\t   {}],\n\tinteractions=[\n\t   {}])",
+            self.na,
+            self.nb,
+            self.nc,
+            self.map.to_string(),
+            self.multiplicity.to_string(),
+            ssites,
+            sinter,
         )
 
-        // write!(f, "multiplicity:{:#?}",&self.multiplicity.to_vec());
-        // write!(f, "P:{:#?}",&array2_to_string(&self.p))
 
-
-        // match self{
-        //     SiteType::A => write!(f,"A"),
-        //     SiteType::B => write!(f,"B"),
-        //     SiteType::C => write!(f,"C"),
-        // }
     }
 }
 
@@ -274,26 +228,49 @@ pub struct AssociationPureRecord{
     // pub typ:AssociationType,
 
 }
+impl std::fmt::Display for AssociationPureRecord {
 
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        write!(f, "AssociationPureRecord(epsilon={}, kappa={}, na={}, nb={}, nc={})", self.epsilon, self.kappa, self.na, self.nb, self.nc)
+        
+    }
+}
 #[derive(Clone,Serialize,Deserialize,Debug)]
 pub struct AssociationBinaryRecord{
+    
     #[serde(default)]
     pub epsilon:Option<f64>,
     #[serde(default)]
     pub kappa:Option<f64>,
-    #[serde(default)]
-    pub combining_rule:Option<CombiningRule>
+    #[serde(default= "CombiningRule::default")]
+    #[serde(rename = "rule")]
+    pub combining_rule:CombiningRule
 }
 
 
 impl AssociationBinaryRecord {
     
-    pub fn new(epsilon:Option<f64>,kappa:Option<f64>,combining_rule:Option<CombiningRule>)->Self{
+    pub fn new(epsilon:Option<f64>,kappa:Option<f64>,combining_rule:CombiningRule)->Self{
 
         Self { epsilon, kappa, combining_rule }
     }
 
 }
+
+
+impl std::fmt::Display for AssociationBinaryRecord {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        write!(f, "AssociationBinaryRecord(epsilon={:?}, kappa={:?}, combining_rule={:?})", 
+        self.epsilon, 
+        self.kappa, 
+        self.combining_rule)
+        
+    }
+}
+
 impl AssociationPureRecord {
     
     pub fn new(
@@ -361,7 +338,7 @@ impl AssociationPureRecord {
 #[cfg(test)]
 mod tests{
 
-    use serde_json::{from_str, to_string, to_string_pretty};
+    use serde_json::{from_str, to_string};
     use crate::parameters::records::{BinaryRecord, PureRecord};
 
     use super::*;
@@ -406,9 +383,9 @@ mod tests{
         // let induced = AssociationBinaryRecord::new(None,Some(0.1836), None);
         // let br = BinaryRecord::new(induced, "water".into(), "co2".into());
 
-        let p = AssociativeParameters::new(vec![pr1,pr2], vec![br]);
+        let p = AssociativeParameters::new(vec![pr1,pr2], vec![br], ());
 
-        let string = to_string(&p).unwrap();
+        let string = p.to_string();
 
         println!("{}",string);
         // let string = p.to_string();

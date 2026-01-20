@@ -6,29 +6,30 @@ pub mod bench;
 
 use crate::models::cpa::association::AssociativeCPA;
 use crate::models::cpa::parameters::{CPABinaryRecord, CPAParameters, CPAPureRecord};
-use crate::models::cpa::rdf::{CS, Kontogeorgis, RdfModel};
-use crate::models::cubic::{Cubic, CubicModel, SRK};
-
+use crate::models::cpa::rdf::{Kontogeorgis, RdfModel};
+use crate::models::cubic::{Cubic};
+use crate::state::E;
 
 use crate::parameters::Parameters;
 use crate::parameters::records::{BinaryRecord, PureRecord};
 use crate::residual::Residual;
-use crate::state::State;
-use core::{f64, str};
-use ndarray::{Array1, Array2};
+use core::f64;
+use ndarray::Array1;
 
 
 
-// #[derive(Clone)]
-pub struct CPA <C:CubicModel,R:RdfModel>{
-    pub cubic: Cubic<C>,
+pub struct CPA <R:RdfModel>{
+    pub cubic: Cubic,
     pub assoc: AssociativeCPA<R>,
 }
 
-impl<C:CubicModel,R:RdfModel> CPA<C,R> {
+type Pure = CPAPureRecord;
+type Binary = CPABinaryRecord;
 
-    pub fn from_parameters(parameters:CPAParameters<C>)->Self{
-        let cubic=Cubic::from_parameters(parameters.cubic);
+impl<R:RdfModel> CPA<R> {
+
+    pub fn from_parameters(parameters:CPAParameters)->Self{
+        let cubic= Cubic::from_parameters(parameters.cubic);
 
         let b_components = &cubic.parameters.b;
 
@@ -42,22 +43,19 @@ impl<C:CubicModel,R:RdfModel> CPA<C,R> {
         }
     }
 
-    pub fn from_records(pure_records:Vec<PureRecord<CPAPureRecord>>,binary_records:Vec<BinaryRecord<CPABinaryRecord>>)->Self{
-
-        let parameters = CPAParameters::new(pure_records, binary_records);
+    pub fn from_records(pure_records: Vec<PureRecord<Pure>>, binary_records: Vec<BinaryRecord<Binary>>, cubic_model: crate::models::cubic::models::CubicModels)->Self{
+        
+        let parameters = CPAParameters::new(pure_records, binary_records, cubic_model);
         Self::from_parameters(parameters)
-
     }
-    // let l_t = &parameters.assoc.lambda_t;
-    // let g_t = &parameters.assoc.gamma_t;
-    // let b_sites = l_t.dot(&g_t.dot(b_components));
-    // let bij = 0.5 * (&b_sites + &b_sites.t());
-
 
 }
 
-impl<C:CubicModel,R:RdfModel> Residual for CPA<C,R> {
+impl<R:RdfModel> Residual for CPA<R> {
     
+    fn get_properties(&self)->&crate::parameters::Properties {
+        &self.cubic.parameters.properties
+    }
     fn molar_weight(&self)->&Array1<f64> {
         self.cubic.molar_weight()
     }
@@ -71,7 +69,7 @@ impl<C:CubicModel,R:RdfModel> Residual for CPA<C,R> {
     }
     fn r_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->Array1<f64> {
 
-            self.cubic.r_chemical_potential(t, rho, x) + self.assoc.r_chemical_potential(t, rho, x)
+        self.cubic.r_chemical_potential(t, rho, x) + self.assoc.r_chemical_potential(t, rho, x)
     }
     fn max_density(&self,x:&Array1<f64>)->f64 {
         self.cubic.max_density(x)
@@ -91,20 +89,99 @@ impl<C:CubicModel,R:RdfModel> Residual for CPA<C,R> {
 }
 
 
-impl<C:CubicModel,R:RdfModel> State<CPA<C,R>> {
+
+impl<R: RdfModel> CPA<R> {
     
-    pub fn non_bonded_sites(&self)->Array1<f64> {
-
-        // let (t,rho,x)=(self.t,self.d,&self.x);
-        // let kmat = 
-        // self.eos.residual.assoc.assoc.x_tan(x, kmat).unwrap_or_default()
-
-        unimplemented!()
+    pub fn unbonded_sites(&self,t:f64, d:f64, x:&Array1<f64>) -> Array1<f64> {
+        // self.model.assoc.unbonded_sites(&self.state)
+        let assoc = &self.assoc;
+        let volf = &assoc.rdf.bij * assoc.rdf.g(d, x);
+        let k = assoc.assoc.association_constants(t, d, x, &volf);
+        let u = assoc.assoc.unbonded_sites_fraction(x, &k);
+        u
     }
 
+    pub fn association_constants(&self,t:f64, d:f64, x:&Array1<f64>) -> ndarray::Array2<f64> {
+        let assoc = &self.assoc;
+        let volf = &assoc.rdf.bij * assoc.rdf.g(d, x);
+        let k = assoc.assoc.association_constants(t, d, x, &volf);
+        k
+    }
 }
+pub type SCPA = CPA<Kontogeorgis>;
+
+#[cfg(test)]
+mod tests {
+
+    use approx::assert_relative_eq;
+    use ndarray::array;
+    use crate::{models::cpa::{CPA, parameters::CPAParameters, rdf::Kontogeorgis}, parameters::Parameters, residual::Residual};
+    use super::parameters::readyto::water4c;
+    use crate::models::cubic::models::{SRK};
+    // use super::SCPA;
+
+    
+    fn water()->CPA<Kontogeorgis>{
+        let water = water4c();
+        let p = CPAParameters::new(vec![water], vec![], SRK.into());
+        let model = CPA::from_parameters(p);
+        model
+
+    }
+    
+    #[test]
+    fn test_scpa_helmholtz() {
+        
+        let model = water();
+        let t = 298.15;
+        let d= 1_000.;
+        let x = array![1.0];
+        let val = model.r_helmholtz(t, d, &x);
+
+        assert_relative_eq!(val, -0.058144295861 + -1.597921023379 , epsilon = 1e-9)
+
+    }
+
+    #[test]
+    fn test_scpa_entropy() {
+        
+        let model = water();
+        let t = 298.15;
+        let d= 1_000.;
+        let x = array![1.0];
+
+        let val = model.r_entropy(t, d, &x);
+
+        assert_relative_eq!(val, -0.041951593945 + -4.713659269705, epsilon = 1e-9)
+
+    }
+
+    #[test]
+    fn test_scpa_chem_pot() {
+        
+        let model = water();
+        let t = 298.15;
+        let d= 1_000.;
+        let x = array![1.0];
+
+        let val = model.r_chemical_potential(t, d, &x);
+
+        assert_relative_eq!(val[0], -0.115660251059 + -2.54386196979185 , epsilon = 1e-10)
 
 
-pub type SCPA = CPA<SRK,Kontogeorgis>;
+    }
+    
+    #[test]
+    fn test_scpa_pressure() {
+        
+        let model = water();
+        let t = 298.15;
+        let d= 1_000.;
+        let x = array![1.0];
 
+        let val = model.r_pressure(t, d, &x);
 
+        assert_relative_eq!(val, -57.5159551979349 + -945.9409464127781, epsilon = 1e-8)
+
+    }
+}

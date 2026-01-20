@@ -1,0 +1,28 @@
+[
+    {
+        "id1": "acetic acid",
+        "id2": "water",
+        "kij":  -0.222,
+        "rule": "ecr"
+    },
+    {
+        "id1": "acetic acid",
+        "id2": "methanol",
+        "kij":  -0.04,
+        "rule": "ecr"
+    },
+
+    {
+        "id1": "methanol",
+        "id2": "1-octanol",
+        "kij":  -0.025,
+        "rule": "ecr"
+    },
+
+    {
+        "id1": "ethanol",
+        "id2": "water",
+        "rule": "ecr"
+    }
+
+]

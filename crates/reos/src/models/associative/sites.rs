@@ -109,6 +109,7 @@ impl Site {
     }
 }
 
+
 pub trait AssociationStrength: Default{
 
     fn dimensionless_delta_jl(t:f64,epsilon:f64,kappa:f64)->f64{
@@ -154,14 +155,32 @@ pub struct SiteInteraction{
     pub combining_rule:CombiningRule
 }
 #[derive(Serialize,Clone,Copy,PartialEq,Debug,Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum CombiningRule{
+
     CR1,
     ECR
 }
 
+impl std::fmt::Display for CombiningRule {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self{
+            CombiningRule::CR1 => write!(f,"cr1"),
+            CombiningRule::ECR => write!(f,"ecr"),
+        }
+    }
+}
 impl Default for CombiningRule {
     fn default() -> Self {
         CombiningRule::CR1
+    }
+}
+
+impl Into<CombiningRule> for Option<CombiningRule> {
+
+    fn into(self) -> CombiningRule {
+
+        self.unwrap_or_default()
     }
 }
 
@@ -272,18 +291,18 @@ impl SiteInteraction{
         site_l:Site,
         epsilon:Option<f64>,
         kappa:Option<f64>,
-        combining_rule:Option<CombiningRule>)->Self{
+        combining_rule:CombiningRule)->Self{
 
 
         let epsilon = epsilon.unwrap_or(Self::arithmetic(site_j.epsilon,site_l.epsilon));
         let kappa = kappa.unwrap_or(Self::geometric(site_j.kappa,site_l.kappa));
-        let combining_rule = combining_rule.unwrap_or_default();
+        let combining_rule = combining_rule;
 
         Self { site_j: site_j.idx, site_l: site_l.idx, epsilon, kappa, combining_rule }
     }
 
     fn default(site_j:Site,site_l:Site)->Self{
-        Self::from_sites(site_j, site_l, None, None, None)
+        Self::from_sites(site_j, site_l, None, None, CombiningRule::default())
     }
 
     pub fn change_combining_rule(&mut self,combining_rule:CombiningRule){
@@ -324,9 +343,21 @@ impl SiteInteraction{
 impl From<(Site,Site)> for SiteInteraction {
     fn from(value: (Site,Site)) -> Self {
 
-        Self::from_sites(value.0, value.1,None,None,None)
+        Self::from_sites(value.0, value.1,None,None,CombiningRule::default())
     }
 }
+
+impl std::fmt::Display for Site {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Site(type={},owner={},idx={})",self.t,self.c,self.idx)
+    }
+}
+impl std::fmt::Display for SiteInteraction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SiteInteraction(j={},l={},epsilon={},kappa={}, rule='{}')",self.site_j,self.site_l,self.epsilon,self.kappa,self.combining_rule)
+    }
+}
+
 
 impl std::fmt::Display for SiteType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -338,11 +369,8 @@ impl std::fmt::Display for SiteType {
     }
 }
 
-impl std::fmt::Display for Site {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Site(type={},owner={},idx={})",self.t,self.c,self.idx)
-    }
-}
+
+
 
 impl From<Site> for (usize,usize) {
 
@@ -356,12 +384,11 @@ impl From<Site> for (usize,usize) {
 
 #[cfg(test)]
 pub mod tests{
-    use std::hash::Hash;
+    
 
-    use ndarray::array;
+    
     use serde_json::to_string_pretty;
 
-    use crate::{models::associative::parameters::AssociativeParameters, parameters::Parameters};
 
     use super::*;
 
@@ -377,7 +404,7 @@ pub mod tests{
         let site2 = Site::new(SiteType::B, 0, 1, ew, bw);
         let site3 = Site::new(SiteType::B, 1, 2, 0.0, 0.0);
         let sites = vec![site1,site2,site3];
-        let b = AssociationBinaryRecord::new(None, Some(wco2), None);
+        let b = AssociationBinaryRecord::new(None, Some(wco2), CombiningRule::default());
         let interactions = SiteInteraction::interactions_from_sites(&sites,vec![BinaryParameter::new(b, 0, 1)]);
         
         let i1 = &interactions[0];
@@ -408,8 +435,8 @@ pub mod tests{
         let site2 = Site::new(SiteType::B, 0, 1, ew, bw);
         let site3 = Site::new(SiteType::C, 1, 2, eacoh, bacoh);
         let site4 = Site::new(SiteType::B, 2, 3, 0.0, 0.0);
-        let b2 = AssociationBinaryRecord::new(None, Some(wco2), None);
-        let b1 = AssociationBinaryRecord::new(None, None, Some(CombiningRule::ECR));
+        let b2 = AssociationBinaryRecord::new(None, Some(wco2), CombiningRule::default());
+        let b1 = AssociationBinaryRecord::new(None, None, CombiningRule::ECR);
         
         let sites = vec![site1,site2,site3,site4];
         let b = vec![BinaryParameter::new(b1, 0, 1) , BinaryParameter::new(b2, 0, 2)];

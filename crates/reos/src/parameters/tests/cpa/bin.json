@@ -1,0 +1,16 @@
+[
+
+    {
+        "id1": "water",
+        "id2": "co2",
+        "aij": -0.15508,
+        "bij": 0.000877,
+        "kappa": 0.1836
+    },
+    {
+        "id1": "water",
+        "id2": "acetic acid",
+        "kij": 1,
+        "rule": "ecr"
+    }
+]
