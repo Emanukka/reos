@@ -1,4 +1,4 @@
-# REOS 
+<!-- # REOS 
 ```python
 import numpy as np
 from reos.reos import EquationOfState,State,CPAParameters,CubicRecord,AssociationRecord
@@ -90,4 +90,4 @@ This folder contains the usage of principal functionalities of the reos crate in
 
 - Phase Diagram of VLE for mixtures with binary mixtures with associative + inert mixtures and cross-associating mixtures
 - Water solubility in CO2 vapor phase
-
+ -->

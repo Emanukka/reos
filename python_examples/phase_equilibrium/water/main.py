@@ -1,20 +1,23 @@
 #%%
-from reos.state import State
-from reos.consts import *
+
 import numpy as np
-from phase_diagram.antoine import *
-from reos.cpa import CPAParameters
-from reos.eos import EquationOfState
 import pandas as pd
 import matplotlib.pyplot as plt
+
+from reos.state import State
+from reos.consts import *
+from reos.cpa import CPAParameters
+from reos.eos import EquationOfState
+
+
 xsize=3.15 * 1.2
 ysize=3.15 * 1.2
 
 plt.rcParams.update({
     "font.serif": ["Computer Modern"], 
-    "axes.labelsize": 12,
+    "axes.labelsize": 14,
     "font.size": 16,
-    "legend.fontsize": 12,
+    "legend.fontsize": 14,
     "xtick.labelsize": 14,
     "ytick.labelsize": 14,
     "figure.figsize": (xsize, ysize),  
@@ -207,7 +210,7 @@ psat=np.array([
 ])
 
 #%%Initializing
-p = CPAParameters.from_json(["water"], ppath="../../parameters/cpa/kontogeorgis2006.json",)
+p = CPAParameters.from_json(["water"], ppath="../../../parameters/cpa/kontogeorgis2006.json",)
 eos = EquationOfState.scpa(p)
 
 # antoine = np.array([water_antoine])
@@ -413,10 +416,10 @@ ax.scatter(
 )
 
 #%%
-fig.savefig("plots/water/pdes.png", bbox_inches='tight')
+fig.savefig("plots/pdes.png", bbox_inches='tight')
 
 # %%
-
+plt.figure(figsize=(xsize,ysize))
 plt.ylabel(r"$X_{A,B}$")
 plt.xlabel(r"$\mathrm{T/K}$")
 plt.scatter(Tliq, Xliq2005,marker='o',facecolors='none',edgecolors='black')
@@ -428,6 +431,6 @@ plt.scatter(Tvap, Xvap2005,label="Dufal 2015",marker='o',facecolors='none',edgec
 
 plt.legend()
 
-plt.savefig("plots/water/xsat.png", bbox_inches='tight', dpi = 300)
+plt.savefig("plots/xsat.png", bbox_inches='tight', dpi = 300)
 
 # %%

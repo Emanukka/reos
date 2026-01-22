@@ -16,27 +16,14 @@ def tpd_root_given_tp(eos, eos_water, T, P, y_dry_gas):
     z = y_dry_gas / y_dry_gas.sum() * (1.0 - yw)
     z[0] = yw
     
-    s1 = State.tpx(eos, T, P, z) 
-    # VAPOR=State.tpx(eos,T,P,z,"vapor")
-    # LIQUID=State.tpx(eos,T,P,z,"liquid")
+    s1 = State.tpx(eos, T, P, z,"stable") 
 
-    # muL=LIQUID.ln_phi()+np.log(z)
-    # muV=VAPOR.ln_phi()+np.log(z)
-    # GL=np.sum(muL*z)
-    # GV=np.sum(muV*z)
+    s2 = State.tpx(eos_water, T, P, np.array([1.0]), "liquid")
 
-    s2 = State.tpx(eos_water, T, P, np.array([1.0]),"liquid")
-    
-    return np.log(yw) + s1.ln_phi()[0] - s2.ln_phi()[0]
-    # if GL < GV:
+    lnphi1 = s1.lnphi()[0]
+    lnphi2 = s2.lnphi()[0]
 
-    #     s1=LIQUID
-    #     return ( np.log(yw) + s1.ln_phi()[0] - s2.ln_phi()[0] )
-
-    # else:
-
-    #     s1=VAPOR
-    #     return ( np.log(yw) + s1.ln_phi()[0] - s2.ln_phi()[0] )
+    return np.log(yw) + lnphi1  - lnphi2
 
   xw = 0.9999
   N = len(y_dry_gas)
@@ -47,59 +34,37 @@ def tpd_root_given_tp(eos, eos_water, T, P, y_dry_gas):
   fRES = lambda X: RES(T,P,X)
 
   yguess_log = np.log(2000*1e-6)
-  yw_guess_log = opt.root(fRES,yguess_log).x[0]
-
-  # zguess=np.array([yw_guess,1-yw_guess])
-
-  # print("guess=",yw_guess)
-#   print(np.exp(yw_guess_log))
+  res = opt.root(fRES,yguess_log).x
+  yw_guess_log = res[0]
 
   def F(v):
 
-    # print(v)
     yw = np.exp(v[0])
     z = (y_dry_gas/y_dry_gas.sum())*(1.-yw)
     z[0] = yw
-    # print("Z=",Z)
 
-    developed = State.tpx(eos, T, P, z)
-    # LIQUID = State.tpx(eos,T,P,Z,"liquid")
-    # VAPOR = State.tpx(eos,T,P,Z,"vapor")
+    liq = State.tpx(eos, T, P, z, "liquid")
+    vap = State.tpx(eos, T, P, z, "vapor")
 
-    # muL=LIQUID.ln_phi()+np.log(Z)
-    # muV=VAPOR.ln_phi()+np.log(Z)
+    if liq.gibbs() > vap.gibbs():
 
-    # GL=np.sum(muL*Z)
-    # GV=np.sum(muV*Z)
+      min_tpd = vap.min_tpd("liquid", xguess, 1e-9, 200)
+      dg = min_tpd.dg
+      incipient = min_tpd.state
 
-    dg = min_tpd.dg
-    incipient = min_tpd.state
+      return dg, np.array([vap, incipient])
     
-    return dg, np.array([developed, incipient])
-  
-    # if GL<GV: 
+    else:
 
-    #     return LIQUID.min_tpd("vapor",xguess,tol=tol_tpd),LIQUID
-    # else:
-       
-    #     return VAPOR.min_tpd("liquid",xguess,tol=tol_tpd),VAPOR
-    
+      min_tpd = liq.min_tpd("vapor", xguess, 1e-9, 200)
+      dg = min_tpd.dg
+      incipient = min_tpd.state
       
-    # dg,states=state_z2.min_tpd("liquid",xguess)
-    # dg,states=state_z.min_tpd("liquid",xguess,)
-
-
-
-  # print(zguess)
+      return dg, np.array([liq, incipient])
+    
   fun = lambda X: F(X)[0]
-
-  yw_log_root = opt.root(fun,[yw_guess_log] ).x
-
-  # print(pbol)
-  dg, states = F([yw_log_root])
-
-  # xstate = states[1]
-  # xstate = tpd_res[1]
+  yw_log_root = opt.root(fun,[yw_guess_log] ).x[0]
+  _, states = F([yw_log_root])
   yw = np.exp(yw_log_root)
 
   return yw, states
@@ -110,12 +75,12 @@ def linspace_wsat(
     eos_water,
     t,
     y_dry_gas, 
-    pi = 1, 
-    pf = 600, 
-    N = 100):
+    p0, 
+    pf, 
+    N):
    
-  vpressure = np.linspace(pi, pf, N)
-  yw_ppm = np.zeros(N)
+  vpressure = np.linspace(p0, pf, N)
+  yw = np.zeros(N)
   vdeveloped = np.zeros(N, dtype = object)
   vincipient = np.zeros(N, dtype = object)
 
@@ -125,19 +90,16 @@ def linspace_wsat(
       # xw=xw*1e-6
       # z=np.array([xw,1-xw])
 
-      p = p * 1e5
-
-      result, states = tpd_root_given_tp(eos, eos_water, t, p, y_dry_gas)
+      yw_frac, states = tpd_root_given_tp(eos, eos_water, t, p, y_dry_gas)
 
       vdeveloped[i] = states[0]
       vincipient[i] = states[1]
 
-      yw_ppm[i] = result[0] * 1e6
+      yw[i] = yw_frac 
 
     except Exception as e:
       print(e)
       pass
       continue
   
-  return vpressure, yw_ppm, vdeveloped, vincipient
-# %%
+  return vpressure, yw, vdeveloped, vincipient

@@ -54,26 +54,6 @@ def run_bubble_t(name1, name2, P,
     
     return T, LIQUID, VAPOR
 
-def run_bubble_p(name1, name2, T,
-                 ppath = "../../../parameters/cpa/kontogeorgis2010.json", 
-                 bpath = "../../../parameters/cpa/kontogeorgis2010_binary.json"):
-
-    p = CPAParameters.from_json(
-        [name1, name2],
-        ppath,
-        bpath)
-
-    eos = EquationOfState.scpa(p)
-
-    antoine1 = df_antoine[name1].to_numpy()
-    antoine2 = df_antoine[name2].to_numpy()
-    antoine = np.array([antoine1, antoine2])
-
-
-    P, LIQUID, VAPOR = linspace_bubble_p(eos, T, antoine, N = 100)
-    
-    return P, LIQUID, VAPOR
-
 
 def timing(f):
     
