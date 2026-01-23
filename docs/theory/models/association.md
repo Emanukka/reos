@@ -22,7 +22,7 @@ $$
 \delta^{jl} = \kappa^{jl} \left[ \exp\left( \frac{\epsilon^{jl}}{RT} \right) - 1 \right]
 $$
 where $\kappa^{jl}$ is the association volume and $\epsilon^{jl}$ is the association energy between sites $j$ and $l$.
-Then, 
+Then,
 
 $$
 \Delta^{jl} = f_v ^{ik} \delta^{jl}
@@ -53,7 +53,8 @@ where $f_v^{ik}$ is a volumectric factor that depends on the specific model and 
 </div>
 
 ## Association sites
-Each site $s_j$ has a host $i$, a type $\alpha$, an index $j$, a multiplicity $M_j$ and the parameters $\epsilon^{j}$ and $\kappa^{j}$.
+
+Each site $s_j$ has a owner $i$, a type $\alpha$, an index $j$, a multiplicity $M_j$ and the parameters $\epsilon^{j}$ and $\kappa^{j}$.
 The type of each site defines the allowed interactions with other sites.
 
 Then, to satisfy all association schemes proposed by [Huang and Radosz 1990](https://pubs.acs.org/doi/10.1021/ie00107a014), we propose 3 types of sites:
@@ -67,16 +68,13 @@ $A, B$ and $C$. $A$ and $B$ sites can interact with all types except with sites 
 
 ``` py title="Example: Association parameters with pure water 4C in Reos"
 AssociativeParameters(
-na=1, nb=1, nc=0, # number of distinguishable sites of types A,B,C
-site_map=[0, 0], 
-multiplicity=[2, 2], # multiplicity of each site in mixture
-sites=[  
-   Site(type=A,owner=0,idx=0),
-   Site(type=B,owner=0,idx=1)],
-interactions=[ # distinguishable interactions between all sites
+na=1, nb=1, nc=0,
+sites=[
+   Site(type=A,owner=0,idx=0,mul=2,eps=16655,kappa=0.0692),
+   Site(type=B,owner=0,idx=1,mul=2,eps=16655,kappa=0.0692)],
+interactions=[
    SiteInteraction(j=0,l=1,epsilon=16655,kappa=0.0692, rule='cr1')
-  ]
-)
+   ])
 ```
 
 ## Calculation of unbonded site fractions

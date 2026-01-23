@@ -157,7 +157,7 @@ impl PyEquationOfState {
     }
     /// Calculate the logarithm of fugacity coefficient of each component in the mixture:
     /// 
-    /// `ln_phi[i] = mu_res[i]/RT - ln_Z`
+    /// `lnphi[i] = mu_res[i]/RT - ln_Z`
     /// 
     /// Parameters
     /// ----------

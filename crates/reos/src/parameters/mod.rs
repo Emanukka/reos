@@ -3,7 +3,7 @@ pub mod chemical;
 pub mod reader;
 pub mod writer;
 
-use std::{collections::HashMap, error::Error, fmt::Display, iter::Zip, vec};
+use std::{collections::HashMap, error::Error, fmt::Display, vec};
 
 
 use serde::de::DeserializeOwned;

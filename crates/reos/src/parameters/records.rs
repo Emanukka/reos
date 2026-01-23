@@ -1,11 +1,10 @@
 
-use std::{collections::HashMap, error::Error, fmt::Display, vec};
+use std::{error::Error, fmt::Display, vec};
 
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{Deserialize, Serialize};
 
 use ndarray::{Array1, array};
 
-use crate::parameters::reader;
 
 
 

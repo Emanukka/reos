@@ -8,7 +8,7 @@ use crate::{contribution::PyContribution, state::PyState};
 
 
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 
 // use crate::py_parameters::PyParameters;
@@ -28,15 +28,19 @@ impl PyState {
         let state = &self.0;
         let xphase = DensityInitialization::from_str(xphase);
         let xguess=xguess.to_owned_array();
+
         if xphase.is_err(){
             return Err(PyErr::new::<PyValueError, _>(
                                 "`density_initialization` must be 'vapor' or 'liquid'.".to_string(),
                             ))
         }
 
-        let tpd = state.min_tpd(xphase.unwrap(), xguess, tol, it_max).unwrap();
+        match state.min_tpd(xphase.unwrap(), xguess, tol, it_max) {
+            Ok(tpd) => Ok(PyMinTPD(tpd)),
+            Err(err) => Err(PyErr::new::<PyRuntimeError, _>(err.to_string()))
+        }
 
-        Ok(PyMinTPD(tpd))
+
     }
 
 }

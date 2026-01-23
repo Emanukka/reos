@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use ndarray::{ Array1};
 
-use crate::{phase_equilibrium::PhaseEquilibrium, residual::Residual, state::{State, density_solver::{DensityInitialization, Phase}, eos::{EosError, EosResult}}};
+use crate::{residual::Residual, state::{State, density_solver::{DensityInitialization, Phase}, eos::{EosError, EosResult}}};
 
 
 impl <R:Residual> State<R> {

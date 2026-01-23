@@ -1,9 +1,7 @@
-use std::f64::consts::SQRT_2;
 use crate::models::cubic::parameters::CubicParameters;
 use crate::residual::Residual;
 use ndarray::Array1;
 use ndarray::Array2;
-use serde::Serialize;
 use crate::models::IDEAL_GAS_CONST as R;
 
 

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::sites::{CombiningRule, NS, Site, SiteInteraction, SiteType};
-use crate::parameters::{Parameters, Properties, records::{BinaryParameter, BinaryRecord, PureRecord}};
+use crate::parameters::{Parameters, Properties, records::BinaryParameter};
 
 
 
@@ -236,7 +236,7 @@ impl AssociationPureRecord {
 #[cfg(test)]
 mod tests{
 
-    use serde_json::{from_str, to_string};
+    use serde_json::from_str;
     use crate::parameters::records::{BinaryRecord, PureRecord};
 
     use super::*;

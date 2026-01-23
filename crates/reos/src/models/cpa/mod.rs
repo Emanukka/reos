@@ -8,7 +8,6 @@ use crate::models::cpa::association::AssociativeCPA;
 use crate::models::cpa::parameters::{CPABinaryRecord, CPAParameters, CPAPureRecord};
 use crate::models::cpa::rdf::{Kontogeorgis, RdfModel};
 use crate::models::cubic::{Cubic};
-use crate::state::E;
 
 use crate::parameters::Parameters;
 use crate::parameters::records::{BinaryRecord, PureRecord};

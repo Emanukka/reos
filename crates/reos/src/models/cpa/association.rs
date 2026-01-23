@@ -94,7 +94,7 @@ mod tests{
     use approx::assert_relative_eq;
     use ndarray::{Array1, array};
 
-    use crate::{arr_eq, models::{cpa::{SCPA, parameters::readyto::{acetic1a, acoh_octane, co2, methanol3b, octane, water4c, water4c_acetic1a, water4c_co2}}, cubic::models::SRK}, residual::Residual, state::{E, S, density_solver::DensityInitialization}};
+    use crate::{arr_eq, models::{cpa::{SCPA, parameters::readyto::{acetic1a, acoh_octane, co2, methanol3b, octane, water4c, water4c_acetic1a, water4c_co2}}, cubic::models::SRK}, state::{E, S, density_solver::DensityInitialization}};
 
 
     #[test]

@@ -5,7 +5,7 @@ use crate::models::IDEAL_GAS_CONST as R;
 use crate::models::associative::parameters::AssociativeParameters;
 use crate::state::eos::{EosError, EosResult};
 
-use ndarray::{Array, Array1, Array2};
+use ndarray::{Array1, Array2};
 
 #[derive(Clone)]
 pub struct Associative{

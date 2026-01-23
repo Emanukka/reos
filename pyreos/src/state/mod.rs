@@ -8,9 +8,7 @@ use std::sync::Arc;
 use pyo3::exceptions::{PyRuntimeError};
 use pyo3::prelude::*;
 use numpy::{IntoPyArray, PyArray1, PyArrayMethods };
-use pyo3::types::PyDict;
-use reos::{residual::Residual, state::{S, State, density_solver::DensityInitialization}};
-use serde::{Deserialize, Serialize};
+use reos::{state::{S, State, density_solver::DensityInitialization}};
 
 use crate::eos::{PyEquationOfState, PyProperties};
 use crate::contribution::PyContribution;
@@ -189,7 +187,7 @@ impl PyState {
     #[getter]
     pub fn molar_weight<'py>(&self,py:Python<'py>) -> Bound<'py, PyArray1<f64>> {
 
-        self.0.get_properties().molar_weight.clone().into_pyarray(py)
+        self.0.molar_weight().clone().into_pyarray(py)
     }
     /// Compressibility factor Z.
     ///

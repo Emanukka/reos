@@ -1,7 +1,5 @@
-use std::{f64::consts::SQRT_2, fmt::Error, str::FromStr};
+use std::f64::consts::SQRT_2;
 
-use ndarray::{Array1, Array2};
-use serde::Serialize;
 
 use crate::models::IDEAL_GAS_CONST as R;
 

@@ -1,7 +1,7 @@
 use ndarray::{Array1, Array2};
-use serde::{Deserialize, Serialize, ser::SerializeStruct};
+use serde::{Deserialize, Serialize};
 use crate::{models::cubic::models::{ CubicModel, CubicModels},
-parameters::{ Parameters, records::{BinaryParameter, BinaryRecord, Properties, PureRecord}}};
+parameters::{ Parameters, records::{BinaryParameter, Properties}}};
 
 
 type Pure = CubicPureRecord;
@@ -275,8 +275,8 @@ mod tests{
 
     use super::*;
     use super::super::Cubic;
-    use super::super::models::{PR76,PR78, SRK};
-
+    use super::super::models::{PR76,PR78};
+    use crate::parameters::{PureRecord,BinaryRecord};
     #[test]
     fn test_pure_records_from_json(){
         let data1 = r#"

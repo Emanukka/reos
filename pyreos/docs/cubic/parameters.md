@@ -1,4 +1,5 @@
 # CubicParameters Initializer
+
 Initializer for **Cubic EoS parameters**.
 The `opt` argument enables to choose the cubic model to be used.
 This method must receive 3 arguments:

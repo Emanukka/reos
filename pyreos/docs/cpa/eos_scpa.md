@@ -1,6 +1,5 @@
 # SCPA Initializer
 
-
 Initializer for **SCPA EoS**.
 **SCPA** combines the cubic EoS and the association term, which has a simplification at the Radial Distribution Function `g` (see [Kontogeorgis et al, 1999](https://doi.org/10.1016/S0378-3812(99)00060-6)).
 
@@ -8,8 +7,8 @@ The cubic model is selected when initializing the **CPAParameters** (see [CPAPar
 
 $$ g(\rho) = \frac{1}{1-0.475b \rho}$$
 
-
 Example:
+
 ```py
 name = "water"
 molar_weight = 18.01528 
@@ -37,6 +36,5 @@ assert(isclose(Pres_reduced, -57.5159551979349 + -945.9409464127781, rel_tol=1e-
 assert(isclose(chem_pot_res_reduced, -0.115660251059 + -2.54386196979185, rel_tol=1e-9))
 assert(isclose(helmholtz_res_reduced, -0.058144295861 + -1.597921023379, rel_tol=1e-9))
 assert(isclose(entropy_res_reduced, -0.041951593945 + -4.713659269705, rel_tol=1e-9))
-
 
 ```

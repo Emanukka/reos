@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 
-use crate::{parameters::Properties, state::eos::EquationOfState};
+use crate::parameters::Properties;
 
 
 #[derive(Default,Serialize,Deserialize)]

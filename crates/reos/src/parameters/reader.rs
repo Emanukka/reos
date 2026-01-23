@@ -1,5 +1,4 @@
 
-use crate::models::cubic::models::CubicModels;
 
 use super::records::*;
 use serde::de::{DeserializeOwned};
@@ -216,14 +215,14 @@ pub fn b_from_files<B: DeserializeOwned + Clone, A: AsRef<str> + Clone>(sets: &[
 #[cfg(test)]
 mod tests{
 
-    use std::{collections::HashMap, fmt::format};
+    use std::collections::HashMap;
 
     use serde::{Deserialize, Serialize};
-    use serde_json::json;
+    
 
     use super::*;   
     // use super::super::Parameters;
-    use crate::{models::{associative::sites::{C, CombiningRule}, cpa::parameters::readyto::*, cubic::models::CubicModels}, parameters::{Parameters, writer::to_json_vec}};
+    use crate::{models::{associative::sites::CombiningRule, cpa::parameters::readyto::*, cubic::models::CubicModels}, parameters::Parameters};
 
     #[derive(Serialize,Deserialize, Clone)]
     pub struct PureModelTest {
@@ -237,9 +236,6 @@ mod tests{
         pub kij: f64,
         pub lij: f64,
     }
-
-    type PRT = PureRecord<PureModelTest>;
-    type BRT = BinaryRecord<BinaryModelTest>;
 
     pub struct ParametersTest {
         pub pure: Vec<PureModelTest>,

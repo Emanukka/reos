@@ -155,13 +155,17 @@ impl<R:Residual> State<R> {
     }
 
 
-
     pub fn compressibility(&self)->f64{
 
         self.eos.compressibility(self.t, self.d, &self.x)
 
     }
 
+    pub fn molar_weight(&self) -> &Array1<f64> {
+
+        self.eos.molar_weight()
+
+    }
     pub fn get_properties(&self)-> &Properties{
 
         self.eos.get_properties()
@@ -184,7 +188,7 @@ impl<R:Residual> State<R> {
 #[cfg(test)]
 mod tests {
 
-    use approx::{assert_relative_eq, assert_relative_ne};
+    use approx::assert_relative_eq;
     use ndarray::array;
 
     use crate::{models::{cpa::{CPA, parameters::readyto::*, rdf::Kontogeorgis}, cubic::models::SRK}, parameters::Parameters};
