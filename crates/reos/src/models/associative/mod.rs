@@ -5,7 +5,7 @@ use crate::models::IDEAL_GAS_CONST as R;
 use crate::models::associative::parameters::AssociativeParameters;
 use crate::state::eos::{EosError, EosResult};
 
-use ndarray::{Array1, Array2};
+use ndarray::{Array, Array1, Array2};
 
 #[derive(Clone)]
 pub struct Associative{
@@ -34,57 +34,56 @@ impl Associative {
 
     pub fn r_chemical_potential(&self, h:f64, ndlng_dni:&Array1<f64>, unbonded:&Array1<f64>, )->Array1<f64>{
         
-        
-        // let h = self.h(x, &unbonded);
         let sites = &self.parameters.sites;
-        let mult = &self.parameters.multiplicity;
-
         let mut mu = - 0.5 * h * ndlng_dni;
 
-        for site_j in sites{
-            let i = site_j.c;
-            let j = site_j.idx;
+        for sj in sites{
 
-            mu[i] += unbonded[j].ln() * mult[j] 
+            let i = sj.owner;
+            let j = sj.idx;
+            let m = sj.mul;
+
+            mu[i] += unbonded[j].ln() * m 
         }   
         mu
-   
+        
+
 
     }
     
     pub fn r_helmholtz(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
 
-        // let m = self.sites_mole_frac(x);
-        let p = &self.parameters;
-        let s = unbonded.len();
-        let mut a = 0.0;
+        let sites = &self.parameters.sites;
         
-        for j in 0..s {
-            
-            let i = p.map[j];
+        sites.iter().fold(0.0, |acc, sj| {
 
-            a += x[i] * (unbonded[j].ln() - 0.5 * unbonded[j] + 0.5) * p.multiplicity[j]
-        }
+            let i = sj.owner;
+            let j = sj.idx;
+            let m = sj.mul;
 
-        a
+            acc + x[i] * (unbonded[j].ln() - 0.5 * unbonded[j] + 0.5) * m
+        })
+
     }
 
     pub fn r_entropy(&self, t:f64, x:&Array1<f64>, k:&Array2<f64>)->f64{
 
         // let m = self.sites_mole_frac(x);
-        let p = &self.parameters;
+        let sites = &self.parameters.sites;
+        let interactions = &self.parameters.interactions;
         let unbonded = &self.unbonded_sites_fraction(x, k);
         let a = self.r_helmholtz(x, unbonded);
         let mut s = 0.0;
 
-        for interaction in &p.interactions {
+        for interaction in interactions {
 
             let j = interaction.site_j;
             let l = interaction.site_l;
 
+
             let ke_jl = k[(j,l)] * interaction.epsilon;
-            let xmj = unbonded[j] * p.multiplicity[j];
-            let xml = unbonded[l] * p.multiplicity[l];
+            let xmj = unbonded[j] * sites[j].mul;
+            let xml = unbonded[l] * sites[l].mul;
             
             if j == l {
                 s += ke_jl * xmj * xml
@@ -129,16 +128,16 @@ impl Associative {
         
         let p = &self.parameters;
         let m = self.sites_mole_frac(x);
-        let s = p.sites.len();
+        let sites = &p.sites;
 
-
+        
         match (p.na * p.nb, p.nc) {
             
-            (1, 0) => Self::x_ab_analytic(m[0], m[1], p.multiplicity[0], p.multiplicity[1], k[(0,1)] ),
+            (1, 0) => Self::x_ab_analytic(m[0], m[1], sites[0].mul, sites[1].mul, k[(0,1)] ),
 
-            (0, 1) => Self::x_cc_analytic(m[0],p.multiplicity[0], k[(0,0)]), 
+            (0, 1) => Self::x_cc_analytic(m[0],sites[0].mul, k[(0,0)]), 
             
-            (_, _) => self.x_tan(&m, &k).unwrap_or(Array1::ones(s) * f64::NAN),
+            (_, _) => self.x_tan(&m, &k).unwrap_or(Array1::ones(sites.len()) * f64::NAN),
 
         }
         
@@ -147,43 +146,42 @@ impl Associative {
 
     pub fn sites_mole_frac(&self, x:&Array1<f64> )->Array1<f64>{
         
-        let map = &self.parameters.map;
-        let s = self.parameters.map.len();
-
-        Array1::from_shape_fn(s, |j|{ x[map[j]] })  
+        let sites = &self.parameters.sites;
+        Array1::from_shape_fn(sites.len(), |j| x[sites[j].owner])  
 
     }
 
     pub fn h(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
         
-        let p = &self.parameters;
-        let s = unbonded.len();
         let mut h = 0.0;
+        let sites = &self.parameters.sites;
+        
+        for sj in sites {
+            
+            let i = sj.owner;
+            let j = sj.idx;
+            let m = sj.mul;
 
-        for j in 0..s {
 
-            let i = p.map[j];
-
-            h += x[i] * (1. - unbonded[j]) * p.multiplicity[j] 
+            h += x[i] * (1. - unbonded[j]) * m
         }
         h
     }
 
     pub fn association_constants(&self, t:f64, rho:f64, x:&Array1<f64>, volf:&Array2<f64>)->Array2<f64>{
-        
-        let interactions = &self.parameters.interactions;
-        let s = self.parameters.sites.len();
-        let mut kmat = Array2::zeros((s,s));
-        let map = &self.parameters.map;
+
         let sites = &self.parameters.sites;
+        let interactions = &self.parameters.interactions;
+        let s = sites.len();
+        let mut kmat = Array2::zeros((s,s));
 
         for interaction in interactions{
             
             let j = interaction.site_j;
             let l = interaction.site_l;
 
-            let i = map[j];
-            let k = map[l];
+            let i = sites[j].owner;
+            let k = sites[l].owner;
 
             let f_ii = volf[(i,i)];
             let f_kk = volf[(k,k)];
@@ -198,16 +196,19 @@ impl Associative {
 
     pub fn x_tan(&self, m:&Array1<f64>, k:&Array2<f64>) -> EosResult<Array1<f64>>{
 
-        let mult= &self.parameters.multiplicity;
+        let s = m.len();
+        let sites = &self.parameters.sites;
+        let mult = Array1::from_shape_fn(s, |j| sites[j].mul);
+        // let mult= &self.parameters.multiplicity;
 
-        let mut unbonded =  Array1::from_elem(mult.len(),0.2);
+        let mut unbonded =  Array1::from_elem(s,0.2);
 
         let tol = 1e-10;
         let max_iter = 1000;  
 
         for i in 0..max_iter {
             if self.tan_step(
-                mult,
+                &mult,
                 &mut unbonded,
                 &m,
                 k,

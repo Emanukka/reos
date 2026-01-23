@@ -1,4 +1,3 @@
-
 use super::R;
 
 pub fn dimensionless_delta_jl(t:f64,epsilon:f64,kappa:f64)->f64{

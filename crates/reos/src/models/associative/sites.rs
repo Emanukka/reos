@@ -21,13 +21,17 @@ pub enum SiteType{
     C,
 }
 
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Site{
-    pub t:SiteType,
-    ///Owner
-    pub c:usize,
-    ///Index
+    /// Type
+    pub typ:SiteType,
+    /// Owner
+    pub owner:usize,
+    /// Index
     pub idx:usize,
+    /// Multiplicity
+    pub mul:f64,
 
     pub epsilon:f64,
     pub kappa:f64,
@@ -35,13 +39,12 @@ pub struct Site{
 
 impl Site {
     
-    ///Get component of site alpha
-    pub fn c(&self)->usize{
-        self.c
+    pub fn owner(&self)->usize{
+        self.owner
     }
-    ///Get type index site alpha
-    pub fn t(&self)->usize{
-        match self.t{
+
+    pub fn typ_idx(&self)->usize{
+        match self.typ{
             SiteType::A => A,
             SiteType::B => B,
             SiteType::C => C,
@@ -56,7 +59,7 @@ impl Site {
     }
 
     pub fn has_owner(&self,i:usize)->bool{
-        i==self.c()
+        i == self.owner
     }
     
     pub fn is_self_associative(&self)->bool{
@@ -75,7 +78,7 @@ impl Site {
     pub fn interacts_with(&self,other:&Self)->bool{
 
         
-        if (W[self.t()][other.t()] == 1.0) 
+        if (W[self.typ_idx()][other.typ_idx()] == 1.0) 
         && (self.is_self_associative()) 
         && (other.is_self_associative()) { true }
         else { false }
@@ -83,7 +86,7 @@ impl Site {
 
     pub fn solvated_by(&self,other:&Self)->bool{
 
-        if (W[self.t()][other.t()] == 1.0) 
+        if (W[self.typ_idx()][other.typ_idx()] == 1.0) 
         && (self.is_solvate() && other.is_self_associative())
         { true }
         else { false }
@@ -98,11 +101,12 @@ impl Site {
     //     else { false }
     // }
 
-    pub fn new(t:SiteType,c:usize,j:usize,epsilon:f64,kappa:f64)->Self{
+    pub fn new(typ:SiteType, owner:usize, idx:usize, mul:f64, epsilon:f64, kappa:f64)->Self{
         Self{
-            t,
-            c,
-            idx:j,
+            typ,
+            owner,
+            idx,
+            mul,
             epsilon,
             kappa
         }
@@ -192,9 +196,6 @@ impl SiteInteraction {
         .into_iter()
         .map(|b| ((b.id1,b.id2),b.model_record)).collect();
 
-        // distinguishable interactions between sites j and l
-        // N = Na * Nb + Na * Nc + Nb * Nc +  Nc² / 2 + Nsolv
-
         let mut interactions = Vec::<SiteInteraction>::new();
         let s = sites.len();
         
@@ -203,8 +204,8 @@ impl SiteInteraction {
                 
                 let site_j = &sites[j];
                 let site_l = &sites[l];
-                let i = site_j.c();
-                let k = site_l.c();
+                let i = site_j.owner;
+                let k = site_l.owner;
 
                 let opt = binary.get(&(i,k));
                 
@@ -349,7 +350,7 @@ impl From<(Site,Site)> for SiteInteraction {
 
 impl std::fmt::Display for Site {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Site(type={},owner={},idx={})",self.t,self.c,self.idx)
+        write!(f, "Site(type={},owner={},idx={},mul={},eps={},kappa={})",self.typ,self.owner,self.idx,self.mul,self.epsilon,self.kappa)
     }
 }
 impl std::fmt::Display for SiteInteraction {
@@ -372,13 +373,13 @@ impl std::fmt::Display for SiteType {
 
 
 
-impl From<Site> for (usize,usize) {
+// impl From<Site> for (usize,usize) {
 
-    fn from(value: Site) -> Self {
+//     fn from(value: Site) -> Self {
         
-        (value.t(),value.c())
-    }
-}
+//         (value.t(),value.c())
+//     }
+// }
 
 
 
@@ -400,9 +401,9 @@ pub mod tests{
         let ew = 166.55e2;
         let bw = 0.0692;
         let wco2 = 0.1836;
-        let site1 = Site::new(SiteType::A, 0, 0, ew, bw);
-        let site2 = Site::new(SiteType::B, 0, 1, ew, bw);
-        let site3 = Site::new(SiteType::B, 1, 2, 0.0, 0.0);
+        let site1 = Site::new(SiteType::A, 0, 0, 2.,ew, bw);
+        let site2 = Site::new(SiteType::B, 0, 1, 2.,ew, bw);
+        let site3 = Site::new(SiteType::B, 1, 2, 1.,0.0, 0.0);
         let sites = vec![site1,site2,site3];
         let b = AssociationBinaryRecord::new(None, Some(wco2), CombiningRule::default());
         let interactions = SiteInteraction::interactions_from_sites(&sites,vec![BinaryParameter::new(b, 0, 1)]);
@@ -431,10 +432,10 @@ pub mod tests{
         let bacoh = 4.5e-3;
         let wco2 = 0.1836;
 
-        let site1 = Site::new(SiteType::A, 0, 0, ew, bw);
-        let site2 = Site::new(SiteType::B, 0, 1, ew, bw);
-        let site3 = Site::new(SiteType::C, 1, 2, eacoh, bacoh);
-        let site4 = Site::new(SiteType::B, 2, 3, 0.0, 0.0);
+        let site1 = Site::new(SiteType::A, 0, 0,2., ew, bw);
+        let site2 = Site::new(SiteType::B, 0, 1,2., ew, bw);
+        let site3 = Site::new(SiteType::C, 1, 2,1., eacoh, bacoh);
+        let site4 = Site::new(SiteType::B, 2, 3,1., 0.0, 0.0);
         let b2 = AssociationBinaryRecord::new(None, Some(wco2), CombiningRule::default());
         let b1 = AssociationBinaryRecord::new(None, None, CombiningRule::ECR);
         

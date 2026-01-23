@@ -22,6 +22,7 @@ see parameters object later
 ```
 
 ## Liquid-vapor equilibrium
+
 ```python
 def calc_psat(t,p0):
     
@@ -43,7 +44,9 @@ def calc_psat(t,p0):
 
     return p0, s1, s2
 ```
+
 ## Computing properties
+
 ```python
 N = 100
 T=np.linspace(250.0, 650, N)
@@ -76,7 +79,7 @@ for (i,t) in enumerate(T):
 ```
 
 <figure markdown="span">
-  ![ ](pdes.png){ width="800" }
+  ![ ](pdee.png){ width="800" }
   <figcaption></figcaption>
 </figure>
 

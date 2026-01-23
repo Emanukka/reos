@@ -142,9 +142,7 @@ impl std::fmt::Display for CubicParameters {
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         
-        let n = self.ncomp;
-
-        if n == 0 {
+        if self.ncomp == 1 {
             write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\tc1={},\n\ttc={})",
                 self.a0.to_string(),
                 self.b.to_string(),

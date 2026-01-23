@@ -26,7 +26,7 @@ theme:
   features:
     - content.code.copy
     - navigation.tabs
-    
+    - content.code.annotate
 
 repo_url: https://github.com/Emanukka/reos
 
@@ -43,6 +43,7 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.blocks.caption
 
 extra_javascript:
   - javascripts/mathjax.js
