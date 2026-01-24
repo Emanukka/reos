@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 description = "ℜeos: A Rust Library for Equations Of State and Thermodynamics"
 license = "Apache-2.0"
-repository="https://github.com/Emanukka/reos"
-readme = "README.md"
+repository = "https://github.com/Emanukka/reos"
+readme = "../../README.md"
 
 [lib]
 name = "reos"

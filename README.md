@@ -90,14 +90,10 @@ maturin build --release
 
 ```bash
 ├── crates
-├── docs
-├── mkdocs.yml
 ├── parameters
 ├── pyreos
 ├── pyreos-dev
-├── pyreos-examples
-├── README.md
-└── site
+└── pyreos-examples
 ```
 
 - `crates`: Contains `reos`, which is the Rust package that implement all the core functionalites
