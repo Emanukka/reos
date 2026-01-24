@@ -8,5 +8,5 @@ Cargo.lock
 **/__pycache__/
 **/venv
 **/markdown_examples
-
+/site
 

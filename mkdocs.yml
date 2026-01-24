@@ -1,7 +1,6 @@
 site_name: Reos
 nav: 
  - Getting started: index.md
- - About: about.md
  - Theory: 
    - Models:
      - Association: theory/models/association.md
