@@ -1,7 +1,11 @@
 [package]
 name = "reos"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+description = "ℜeos: A Rust Library for Equations Of State and Thermodynamics"
+license = "Apache-2.0"
+repository="https://github.com/Emanukka/reos"
+readme = "README.md"
 
 [lib]
 name = "reos"
@@ -15,7 +19,3 @@ thiserror = "2"
 approx = "0.5"
 enum_dispatch =  "0.3.13"
 
-[profile.release-lto]
-inherits = "release"
-lto = true
-codegen-units = 1

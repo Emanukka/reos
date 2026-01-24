@@ -1,14 +1,35 @@
+---
+hide:
+  - navigation
+---
+
 # Welcome to ℜ*eos*
 
 ℜ*eos* is a thermodynamic library written in **Rust** with a **Python interface**. It provides tools for calculating thermodynamic properties and phase equilibria.
 
 ```python
 import numpy as np
-from reos.cpa import CPAParameters
+from reos.cpa import CPAParameters, CPAPureRecord
 from reos.eos import EquationOfState
 from reos.state import State
 
-parameters = CPAParameters.from_json(["water"], "../../parameters/cpa/kontogeorgis2006.json")
+parameters = CPAParameters.from_records([ 
+    CPAPureRecord.new(
+        name = "water",
+        molar_weight = 18.01528,
+        a0 = 0.12277,
+        b = 0.014515e-3,
+        c1 = 0.67359,
+        tc = 647.29,
+        epsilon = 166.55e2,
+        kappa = 0.0692,
+        na = 2,
+        nb = 2
+    )
+])
+
+# or  CPAParameters.from_json(["water"], "./parameters/cpa/kontogeorgis2006.json")
+
 eos = EquationOfState.scpa(parameters)
 
 t = 298.15
@@ -43,11 +64,11 @@ Unbonded sites fraction = [0.07825138 0.07825138]
   <tbody>
     <tr>
       <td align="center">CPA</td>
-      <td align="center">Cubic Plus Association (srk, pr76 or pr78)</td>
+      <td align="center">Cubic Plus Association (srk, pr76, pr78)</td>
     </tr>
     <tr>
       <td align="center">cubic</td>
-      <td align="center">Soave-Redlich-Kwong, Peng-Robinson 1976 or Peng-Robinson 1978</td>
+      <td align="center">Soave-Redlich-Kwong, Peng-Robinson 1976, Peng-Robinson 1978</td>
     </tr>
   </tbody>
 </table>

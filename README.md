@@ -1,14 +1,30 @@
-# REOS
+# Welcome to ℜ*eos*
 
 ℜ*eos* is a thermodynamic library written in **Rust** with a **Python interface**. It provides tools for calculating thermodynamic properties and phase equilibria.
 
 ```python
 import numpy as np
-from reos.cpa import CPAParameters
+from reos.cpa import CPAParameters, CPAPureRecord
 from reos.eos import EquationOfState
 from reos.state import State
 
-parameters = CPAParameters.from_json(["water"], "../../parameters/cpa/kontogeorgis2006.json")
+parameters = CPAParameters.from_records([ 
+    CPAPureRecord.new(
+        name = "water",
+        molar_weight = 18.01528,
+        a0 = 0.12277,
+        b = 0.014515e-3,
+        c1 = 0.67359,
+        tc = 647.29,
+        epsilon = 166.55e2,
+        kappa = 0.0692,
+        na = 2,
+        nb = 2
+    )
+])
+
+# or  CPAParameters.from_json(["water"], "./parameters/cpa/kontogeorgis2006.json")
+
 eos = EquationOfState.scpa(parameters)
 
 t = 298.15
@@ -32,10 +48,10 @@ Unbonded sites fraction = [0.07825138 0.07825138]
 
 ## Models
 
-|name|description|
-|:-:|:-:|
-|`cpa`|Cubic Plus Association (srk, pr76 or pr78)|
-|`cubic`|Soave-Redlich-Kwong, Peng-Robinson 1976 or Peng-Robinson 1978|
+| Model | Description |
+|:-----:|:-----------:|
+| CPA   | Cubic Plus Association (srk, pr76, pr78)|
+| cubic | Soave-Redlich-Kwong, Peng-Robinson 1976, Peng-Robinson 1978|
 
 Each model implement its analytical expressions of derived properties of Helmholtz potential.
 
@@ -92,5 +108,3 @@ maturin build --release
 - `reos.eos`: Enables the creation and manipulation of equations of state with different models.
 - `reos.state`: Provides tools for working with thermodynamic states, including property calculations and phase equilibria.
 - `reos.{model_name}`: Each current model has its own submodule with its name, which contains the **pure model record**, the **binary model record** and the **parameters objects** .
-
-## About

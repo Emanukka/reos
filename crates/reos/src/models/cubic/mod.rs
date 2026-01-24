@@ -1,3 +1,6 @@
+use core::f64;
+use std::ops::Div;
+
 use crate::models::cubic::parameters::CubicParameters;
 use crate::residual::Residual;
 use ndarray::Array1;

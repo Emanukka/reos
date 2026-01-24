@@ -9,7 +9,8 @@ nav:
  - Examples:
    - CPA:
      - Water: examples/cpa/water.md
-       
+
+
 theme:
   
   logo: logo.png
@@ -50,5 +51,4 @@ extra_javascript:
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 plugins:
-  - offline
   - search  

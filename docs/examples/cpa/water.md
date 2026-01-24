@@ -1,4 +1,9 @@
-# Water 
+---
+hide:
+  - toc
+---
+
+# Water
 
 <!-- The correspondent python code can be found at [pure_water.py](../../../python_examples/phase_equilibrium/pure_water.py). -->
 
@@ -13,8 +18,7 @@ from reos.cpa import CPAParameters
 from reos.eos import EquationOfState
 
 
-p = CPAParameters.from_json(["water"], 
-ppath = "/parameters/cpa/kontogeorgis2006.json")
+p = CPAParameters.from_json(["water"], "/parameters/cpa/kontogeorgis2006.json")
 eos = EquationOfState.scpa(p)
 
 see parameters object later

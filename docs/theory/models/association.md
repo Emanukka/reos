@@ -1,3 +1,8 @@
+---
+hide:
+  - toc
+---
+
 # Association
 
 The implementation of association model in ℜ*eos* is based on the work of [Michelsen 2001](https://doi.org/10.1016/S0378-3812(01)00344-2) and [Michelsen 2006](https://doi.org/10.1021/ie060029x). The dimensionless association contribution to the Helmholtz free energy is given by:

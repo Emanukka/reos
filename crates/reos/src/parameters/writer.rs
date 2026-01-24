@@ -32,7 +32,7 @@ mod tests {
 
         let r1 = water4c();
 
-        let json = super::to_json_vec("water_record", vec![r1], true).unwrap();
+        let json = super::to_json_vec("water_record", vec![r1], false).unwrap();
 
         println!("{}",json);
     }
@@ -42,7 +42,7 @@ mod tests {
 
         let r1: crate::parameters::BinaryRecord<crate::models::cpa::parameters::CPABinaryRecord> = water4c_co2();
 
-        let json = super::to_json_vec("binary_record", vec![r1], true).unwrap();
+        let json = super::to_json_vec("binary_record", vec![r1], false).unwrap();
 
         println!("{}",json);
     }
