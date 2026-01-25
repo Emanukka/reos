@@ -1,9 +1,9 @@
 #%%
-
 import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from os import listdir
 
 from reos.eos import EquationOfState
 from reos.state import State
@@ -16,45 +16,25 @@ ysize = 3.15
 
 SAVE = True
 PLOT = True
-PLTDIR = "plots"
-DATAPATH = "data/data.xlsx"
+PLTDIR = "./plots/"
+DATAPATH = "./data/"
 HEAD = f"{'case':<{20}}, {'t (ms)':<10}, {'v (points/s)':<15}"
 
 plt.rcParams.update({
     "text.usetex": True,
     "font.serif": ["Computer Modern"], 
-    "axes.labelsize": 10,
-    "font.size": 10,
-    "legend.fontsize": 10,
-    "xtick.labelsize": 10,
-    "ytick.labelsize": 10,
+    "axes.labelsize": 14,
+    "font.size": 14,
+    "legend.fontsize": 14,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
     "figure.figsize": (xsize, ysize),  
 
 })
 
-df_antoine = pd.read_excel(DATAPATH,sheet_name="antoine")
+antoine_parameters = pd.read_csv("./antoine.csv")
 
-def run_bubble_t(name1, name2, P,
-                 ppath = "../../../parameters/cpa/kontogeorgis2010.json", 
-                 bpath = "../../../parameters/cpa/kontogeorgis2010_binary.json"):
-    
-    p = CPAParameters.from_json(
-        [name1, name2],
-        ppath,
-        bpath)
-
-    eos = EquationOfState.scpa(p)
-
-    antoine1 = df_antoine[name1].to_numpy()
-    antoine2 = df_antoine[name2].to_numpy()
-    antoine = np.array([antoine1, antoine2])
-
-
-    T, LIQUID, VAPOR = linspace_bubble_t(eos, P, antoine, N = 100)
-    
-    return T, LIQUID, VAPOR
-
-
+#%%
 def timing(f):
     
     def wrap(*args, **kwargs):
@@ -63,13 +43,10 @@ def timing(f):
         ret = f(*args, **kwargs)
         time2 = time.time()
         dt = (time2-time1)
-        v = 100 / dt
-        case_name = ret[-1]
-        info = f"{case_name:<20}, {dt*1000:<10.4f}, {v:<15.4f}"
 
-        # print(HEAD)
+        # info = f"{case_name:<20}, {dt*1000:<10.4f}, {v:<15.4f}"
         # print(info)
-        return ret, info
+        return ret, dt
     
     return wrap
 
@@ -82,185 +59,189 @@ def compute(case:dict):
     name1 = case["id1"]
     name2 = case["id2"]
     
-    p = CPAParameters.from_json(
-        [name1, name2],
-        ppath,
-        bpath)
+    parameters = CPAParameters.from_json([name1, name2], ppath, bpath)
 
-    eos = EquationOfState.scpa(p)
+    eos = EquationOfState.scpa(parameters)
 
-    var = case.get("var")
+    fix = case["fix"]
     
-    if var is None : raise ValueError("suply 'var' ")
-
-    antoine1 = df_antoine[name1].to_numpy()
-    antoine2 = df_antoine[name2].to_numpy()
+    antoine1 = antoine_parameters[name1].to_numpy()
+    antoine2 = antoine_parameters[name2].to_numpy()
     antoine = np.array([antoine1, antoine2])
 
     try:
-        if var.has_unit(PASCAL):
+        if fix.has_unit(PASCAL):
             
-            p = var / PASCAL
-            vtarget, vliq, vvap = linspace_bubble_t(eos, p, antoine, N=100)
+            p = fix / PASCAL
+            vvar, vliq, vvap = linspace_bubble_t(eos, p, antoine, N=100)
         
-        elif var.has_unit(KELVIN):
-            t = var / KELVIN
-            # print(t)
-            vtarget, vliq, vvap = linspace_bubble_p(eos, t, antoine, N=100)
-        
-        case_name = "/".join([name1,name2])
+        elif fix.has_unit(KELVIN):
 
-        return vtarget, vliq, vvap, case_name 
+            t = fix / KELVIN
+            vvar, vliq, vvap = linspace_bubble_p(eos, t, antoine, N=100)
+        
+        return vvar, vliq, vvap
     
     except Exception as e:
         print(e)
         return e
 
+#%%
 
-def unit_from_str(s:str):
+alias = {
+    "k": KELVIN,
+    "pa": PASCAL,
+    "kpa": KILO * PASCAL,
+    "bar": BAR,
+}
 
-    s = s.lower()
-
-    if s == str(BAR).lower(): # '100 kpa'
-        return BAR
-    elif s == str(KILO * PASCAL).lower(): # '1 kpa'
-        return KILO * PASCAL
+def parse(s:str):
     
-    elif s == str(KELVIN).lower(): # '1 k'
-        return KELVIN
-    else:
-        raise ValueError("unit didnt match")
+    rvalue, runit = s.split(" ")
+    value = float(rvalue)
+    unit = runit.lower()
+    si_unit = alias[unit]
 
-def plot(
-        case:dict, 
-        vtarget,
-        vliq,
-        vvap, 
-        save = False, 
-        pltdir = "plots",
-        xsize = 3.15,
-        ysize = 3.15):
+    return value * si_unit
+
+assert(parse("298.15 k") == 298.15 * KELVIN)
+assert(parse("298.15 K") == 298.15 * KELVIN)
+assert(parse("101.32 kPa") == 101.32* KILO * PASCAL)
+assert(parse("15 bar") == 15 * BAR)
+assert(parse("1 " + "bar") == BAR)
+
+
+#%%
+# name1@name2@fixed var + unit@target's unit
+# acetic acid@n-octane@343.15 K@kPa
+
+def deserialize(sheetname):
+
+    names, rfixed, rtunit = sheetname.split("@")
+    names = names.split("#")
+    rfixed = rfixed.split("#")
     
+    rfixed = " ".join([".".join(rfixed[0].split("_")), rfixed[1]])
+    name1 = " ".join(names[0].split("_"))
+    name2 = " ".join(names[1].split("_"))
 
-    var = case["var"]
-    name1 = case["id1"]
-    name2 = case["id2"]
+    fix = parse(rfixed)
+    var = parse("1 " + rtunit)
 
-    if var.has_unit(PASCAL):
-        target_str = "t"
-        unit_str = "K"
-        cf = 1.0
+    case = {"id1": name1, "id2": name2, "fix": fix, "var": var}
 
-    elif var.has_unit(KELVIN):
-        target_str = "p"    
-        unit_str = "bar"
-        cf = 1e-5
+    return case
 
-    n = len(vtarget)
-    vz = np.zeros(n)
-    vy = np.zeros(n)
 
-    for i,vapor in enumerate(vvap):
+assert(
+    {"id1": "acetic acid", "id2": "n-octane", "fix": 343.15 * KELVIN, "var": KILO * PASCAL }
+    ==
+    deserialize("acetic_acid#n-octane@343_15#K@kPa")
+)
+assert(
+    {"id1": "acetic acid", "id2": "n-octane", "fix": 101.32 * KILO * PASCAL , "var": KELVIN }
+    ==
+    deserialize("acetic_acid#n-octane@101_32#kPa@K")
+)
+
+#%%
+
+files = listdir("cases")
+cases = []
+
+for file in files:
+    file = file.split(".")[0]
+    case = deserialize(file)
+    cases.append(case) 
+
+# optpaths = 
+        # "ppath": "../../../parameters/cpa/kontogeorgis2006.json",
+        # "bpath": "../../../parameters/cpa/kontogeorgis2006_binary.json"}
+#%%
+
+vdt = []
+var_list = []
+vap_frac = []
+liq_frac = []
+
+for i, case in enumerate(cases):
+    
+    ret, dt = compute(case)
+    var, liq, vap = ret
+    
+    vap_frac.append([state.composition[0] for state in vap])
+    liq_frac.append([state.composition[0] for state in liq])
+    var_list.append(var)
+    vdt.append(dt)
+
+
+#%%
+
+if PLOT:
+
+    for i, case in enumerate(cases):
         
-        y1 = vapor.composition[0]
-        vy[i] = y1
+        plt.figure()
 
-    for i,liquid in enumerate(vliq):
+        if case["var"].has_unit(PASCAL): 
+            s = "p"
+            cf = PASCAL / case["var"]
 
-        z1 = liquid.composition[0]
-        vz[i] = z1
-
-    plt.figure(figsize = (xsize, ysize))
-
-    try:
-
-        df = pd.read_excel(DATAPATH,sheet_name=",".join([name1,name2]))
-
-        target_unit = unit_from_str(df["unit"][0])
-
-        if target_unit.has_unit(PASCAL): 
-
-            target_str = "p"
-            cf = PASCAL / target_unit 
-
-        elif target_unit.has_unit(KELVIN): 
-
-            target_str = "t"
+        elif case["var"].has_unit(KELVIN): 
+            s = "t"
             cf = 1.0
-
-        unit_str = str(target_unit)
-
-        if unit_str.split()[0] == "1":
-            unit_str = unit_str.split()[1]
-        else:
-            unit_str = unit_str
-
-        exp_data = [df["x"],df[target_str + "x"],df["y"],df[target_str + "y"]]
-        x, target_x, y, target_y = exp_data
-
-        plt.scatter(x, target_x, marker='o', facecolors = 'none', edgecolors = 'black')
-        plt.scatter(y, target_y, marker='o', facecolors = 'none', edgecolors = 'black')
+        
+        print(case["id1"],case["id2"])
+        exp = pd.read_csv("./cases/" + files[i])
+        x, targetx, y, targety =  exp["x"], exp[s + "x"], exp["y"], exp[s + "y"]
+        plt.scatter(x, targetx, marker='o', facecolors = 'none', edgecolors = 'black')
+        plt.scatter(y, targety, marker='o', facecolors = 'none', edgecolors = 'black')
     
-    except Exception as e:
-        print(e)
+        plt.plot(vap_frac[i], var_list[i] * cf, color = 'black')
+        plt.plot(liq_frac[i], var_list[i] * cf, color = 'black')
 
-    plt.xlim(-0.01,1.01)
-
-    vtarget *= cf
-
-    plt.plot(vy, vtarget, color = 'black')
-    plt.plot(vz, vtarget, color = 'black')
-
-    plt.xlabel(r"$x_1,y_1$")
-
-
-    plt.ylabel(fr"${target_str.upper()}/{unit_str}$")
-    plt.grid(True)
+        plt.xlabel(r"$x_1,y_1$")
+        plt.ylabel(fr"${s.upper()}/{"".join(files[i].split(".")[0]).split("@")[-1]}$")
+        plt.grid(True)
     
-    if save:
-        name1 = "_".join(name1.split())
-        name2 = "_".join(name2.split())
-        prefx = name1 + "@" + name2 + "@" + "".join(str(var).split())
-        os.makedirs(pltdir, exist_ok = True)
-        filename = f"{prefx}.png"
-        filepath = os.path.join(pltdir, filename)
-        plt.savefig(filepath, bbox_inches='tight', dpi=300)
+#     if save:
+#         name1 = "_".join(name1.split())
+#         name2 = "_".join(name2.split())
+#         prefx = name1 + "@" + name2 + "@" + "".join(str(var).split())
+#         os.makedirs(pltdir, exist_ok = True)
+#         filename = f"{prefx}.png"
+#         filepath = os.path.join(pltdir, filename)
+#         plt.savefig(filepath, bbox_inches='tight', dpi=300)
 
-    # plt.show()
-    return True
+    # vdt[dt] = 
+#%%
+idx = sorted(range(len(vdt)), key=lambda k: vdt[k])
 
+# d = {key: val  for key, val in zip() }
+info = {}
+for i in idx:
+    case = cases[i]
+    case_name = "/".join([case["id1"], case["id2"]])
+    info[case_name] = vdt[i] * 1000
 
-#%%Cases
+#%%
 
-cases = [
-    {"id1":"propionic acid", "id2":"n-heptane", "var":101.33e3 * PASCAL,},
+info
+#%%
+#%%
 
-    {"id1":"water",          "id2":"acetic acid","var":313.15 * KELVIN,
-        "ppath": "../../../parameters/cpa/kontogeorgis2006.json",
-        "bpath": "../../../parameters/cpa/kontogeorgis2006_binary.json"},
+    # names, fracs, casename = nf(filename)
 
-    {"id1":"methanol", "id2":"1-octanol", "var":101.32e3 * PASCAL},
+    # for j, t in enumerate(sheet_names):
 
-    {"id1":"acetic acid",    "id2":"n-octane",   "var":343.2 * KELVIN},
+    #     casenames.append(casename + '@' + '_'.join(t.split('.') ) )      
 
-    {"id1":"ethanol",    "id2":"water",   "var":298.14 * KELVIN,
-        "ppath": "../../../parameters/cpa/kontogeorgis2006.json",
-        "bpath": "../../../parameters/cpa/kontogeorgis2006_binary.json"},
-    
-    ]
+    #     t = float(t) * KELVIN
+    #     case = {"names": names, "y_dry_gas": fracs, "t": t}
+    #     vpressure, yw, vdeveloped, vincipient, _ = compute(case, N = 100)
 
-infos = [HEAD]
-for case in cases:
-
-    result, info = compute(case)
-    vtarget, vliq, vvap, _ = result
-    infos.append(info)
-    plot(case, vtarget, vliq, vvap, save = False)
-
-data = '\n'.join(infos)
-
-print(data)
-
+    #     pressure.append(vpressure * PASCAL / BAR)
+        # water_content.append(yw * 1e6)
 # #%%Test
 # test_case =   {"id1":"methane",    "id2":"carbon dioxide",   "var": 240 * KELVIN,
 #         "ppath": "../../../parameters/cpa/tsivintzelis2011.json",

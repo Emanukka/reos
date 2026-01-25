@@ -1,6 +1,6 @@
 [package]
-name = "reos_py"
-version = "0.0.1"
+name = "pyreos"
+version = "0.1.0"
 edition = "2021"
 repository="https://github.com/Emanukka/reos"
 readme = "README.md"

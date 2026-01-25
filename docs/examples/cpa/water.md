@@ -7,9 +7,7 @@ hide:
 
 <!-- The correspondent python code can be found at [pure_water.py](../../../python_examples/phase_equilibrium/pure_water.py). -->
 
-## Initializing SCPA EOS
-
-```python
+```py title = "Initializing SCPA EOS"
 import numpy as np
 
 from reos.state import State
@@ -18,40 +16,50 @@ from reos.cpa import CPAParameters
 from reos.eos import EquationOfState
 
 
-p = CPAParameters.from_json(["water"], "/parameters/cpa/kontogeorgis2006.json")
-eos = EquationOfState.scpa(p)
+parameters = CPAParameters.from_json(["water"], "/parameters/cpa/kontogeorgis2006.json")
+eos = EquationOfState.scpa(parameters)
 
-see parameters object later
- 
+print(parameters) 
 ```
 
-## Liquid-vapor equilibrium
+```sh title = "CPA Parameters"
+CPAParameters(
+  CubicParameters(
+  a0=[0.12277],
+  b=[0.000014515],
+  c1=[0.67359],
+  tc=[647.29]),
+  AssociativeParameters(
+  na=1, nb=1, nc=0,
+  sites=[
+     Site(type=A,owner=0,idx=0,mul=2,eps=16655,kappa=0.0692),
+     Site(type=B,owner=0,idx=1,mul=2,eps=16655,kappa=0.0692)],
+  interactions=[
+     SiteInteraction(j=0,l=1,epsilon=16655,kappa=0.0692, rule='cr1')])
+)
+```
 
-```python
-def calc_psat(t,p0):
+```py title = "Psat algorithm "
+def calc_psat(t, p0):
     
     e = 1
-    max = 100
     it = 0
 
-    while abs(e) > 1e-8 and it < max:
+    while abs(e) > 1e-8 and it < 100:
 
         s1 = State.tpx(eos, t, p0, np.array([1.0]), 'vapor')
         s2 = State.tpx(eos, t, p0, np.array([1.0]), 'liquid')
         phiv = np.exp(s1.lnphi()[0])
         phil = np.exp(s2.lnphi()[0])
-
         r = phil / phiv
-
+        e = 1.0 - r
         p0 = p0 * r
         it += 1
 
     return p0, s1, s2
 ```
 
-## Computing properties
-
-```python
+```py title = "Computing properties"
 N = 100
 T=np.linspace(250.0, 650, N)
 
@@ -80,6 +88,9 @@ for (i,t) in enumerate(T):
 
     rhoV[i] = vap.density
     rhoL[i] = liq.density
+
+DS = entropyV - entropyL
+DH = T * DS
 ```
 
 <figure markdown="span">
@@ -87,12 +98,7 @@ for (i,t) in enumerate(T):
   <figcaption></figcaption>
 </figure>
 
-## Non-associated sites fraction
-
-To compute the unbondend sites fraction, just use the correspondent eos at the
-points at the saturation states.
-
-```python
+```py title = "Non-associated sites fraction"
 for (i,t) in enumerate(T):
     
     ...

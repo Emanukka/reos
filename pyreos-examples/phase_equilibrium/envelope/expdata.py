@@ -70,56 +70,60 @@ acoh_octane["orv"]=(xorv,porv)
 dfx = pd.DataFrame([xorv,porv],index=["x","px"]).T
 dfy = pd.DataFrame([xbol,pbol],index=["y","py"]).T
 
-dfTotal = pd.DataFrame([xorv,porv,xbol,pbol,[1e-3]],index=["x","px","y","py","cf"]).T
+dfTotal = pd.DataFrame([xorv,porv,xbol,pbol],index=["x","px","y","py"]).T
 
-with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists='replace') as writer:  # doctest: +SKIP
+dfTotal.to_csv('cases/acetic_acid#n-ocatane@343_2#K@kPa.csv',index=False)
+
+# with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists='replace') as writer:  # doctest: +SKIP
     
-    dfTotal.to_excel(writer, sheet_name='acetic acid,n-octane')
+#     dfTotal.to_excel(writer, sheet_name='acetic acid,n-octane')
 
 
 #%%
-xorv = np.array([
-    0.860323206205559, 0.5932794656324067, 0.3804740357681534, 0.2838375350140056,
-    0.21208791208791206, 0.1750484809308338, 0.16596423184658476, 0.14479422538246067,
-    0.12287868993751343, 0.10624218918336563, 0.09038138332255975, 0.07451195862960565,
-    0.06017022193492781, 0.043553113553113545, 0.029965524671406993, 0.015634561516914433
-])
+# xorv = np.array([
+#     0.860323206205559, 0.5932794656324067, 0.3804740357681534, 0.2838375350140056,
+#     0.21208791208791206, 0.1750484809308338, 0.16596423184658476, 0.14479422538246067,
+#     0.12287868993751343, 0.10624218918336563, 0.09038138332255975, 0.07451195862960565,
+#     0.06017022193492781, 0.043553113553113545, 0.029965524671406993, 0.015634561516914433
+# ])
 
-porv = np.array([
-    3.114285714285714, 4.614285714285714, 7.314285714285713, 9.414285714285715,
-    11.514285714285714, 13.228571428571428, 13.914285714285713, 14.985714285714286,
-    15.885714285714284, 16.785714285714285, 17.257142857142856, 17.9,
-    18.15714285714286, 18.67142857142857, 18.928571428571427, 18.97142857142857
-])
-
-
-xbol = np.array([
-    1.0, 0.9885240249946131, 0.9688407670760609, 0.9317539323421676,
-    0.8909308338720102, 0.8184205990088342, 0.7421719457013574, 0.7044279250161601,
-    0.6070825253178195, 0.5067442361560007, 0.40715147597500534, 0.3128571428571428,
-    0.2396746390864038, 0.16424046541693593, 0.10312648136177542,
-    0.06390648567119152, 0.02920491273432449,0.0
-])
-
-pbol = np.array([
-    2.2142857142857117, 3.1999999999999993, 4.699999999999999, 7.357142857142854,
-    9.328571428571426, 11.557142857142857, 13.14285714285714, 13.87142857142857,
-    15.07142857142857, 15.799999999999999, 16.7, 17.214285714285715,
-    17.814285714285713, 18.2, 18.757142857142856, 18.84285714285714,
-    19.057142857142857, 19.142857142857142
-])
-
-propanoic_hep={}
-
-propanoic_hep["bol"]=(xbol,pbol)
-propanoic_hep["orv"]=(xorv,porv)
+# porv = np.array([
+#     3.114285714285714, 4.614285714285714, 7.314285714285713, 9.414285714285715,
+#     11.514285714285714, 13.228571428571428, 13.914285714285713, 14.985714285714286,
+#     15.885714285714284, 16.785714285714285, 17.257142857142856, 17.9,
+#     18.15714285714286, 18.67142857142857, 18.928571428571427, 18.97142857142857
+# ])
 
 
-dfTotal = pd.DataFrame([xorv,porv,xbol,pbol],index=["x","px","y","py"]).T
+# xbol = np.array([
+#     1.0, 0.9885240249946131, 0.9688407670760609, 0.9317539323421676,
+#     0.8909308338720102, 0.8184205990088342, 0.7421719457013574, 0.7044279250161601,
+#     0.6070825253178195, 0.5067442361560007, 0.40715147597500534, 0.3128571428571428,
+#     0.2396746390864038, 0.16424046541693593, 0.10312648136177542,
+#     0.06390648567119152, 0.02920491273432449,0.0
+# ])
 
-with pd.ExcelWriter('data.xlsx',mode='a', if_sheet_exists="replace") as writer:  # doctest: +SKIP
+# pbol = np.array([
+#     2.2142857142857117, 3.1999999999999993, 4.699999999999999, 7.357142857142854,
+#     9.328571428571426, 11.557142857142857, 13.14285714285714, 13.87142857142857,
+#     15.07142857142857, 15.799999999999999, 16.7, 17.214285714285715,
+#     17.814285714285713, 18.2, 18.757142857142856, 18.84285714285714,
+#     19.057142857142857, 19.142857142857142
+# ])
+
+# propanoic_hep={}
+
+# propanoic_hep["bol"]=(xbol,pbol)
+# propanoic_hep["orv"]=(xorv,porv)
+
+
+# dfTotal = pd.DataFrame([xorv,porv,xbol,pbol],index=["x","px","y","py"]).T
+
+# dfTotal.to_csv('cases/propionic_acid#n-heptane@1_01325#bar@K.csv',index=False)
+
+# with pd.ExcelWriter('data.xlsx',mode='a', if_sheet_exists="replace") as writer:  # doctest: +SKIP
     
-    dfTotal.to_excel(writer, sheet_name='propionic acid,n-heptane')
+    # dfTotal.to_excel(writer, sheet_name='propionic acid,n-heptane')
 
 #%%
 x1 = np.array([
@@ -144,9 +148,11 @@ metoh_otctanol["orv"]=(y1,T)
 
 dfTotal = pd.DataFrame([x1,T,y1,T],index=["x","tx","y","ty"]).T
 
-with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
+dfTotal.to_csv('cases/methanol#1-octanol@1_01325#bar@K.csv',index=False)
+
+# with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
     
-    dfTotal.to_excel(writer, sheet_name='methanol,1-octanol')
+#     dfTotal.to_excel(writer, sheet_name='methanol,1-octanol')
 
 #%%
 xorv=np.array([
@@ -226,9 +232,10 @@ propanoic_hep_teb["bol"]=(xbol,tbol)
 
 dfTotal = pd.DataFrame([xorv,torv,xbol,tbol],index=["x","tx","y","ty"]).T
 
-with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
+dfTotal.to_csv('cases/propionic_acid#n-heptane@1_01325#bar@K.csv',index=False)
+# with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
     
-    dfTotal.to_excel(writer, sheet_name='propionic acid,n-heptane')
+#     dfTotal.to_excel(writer, sheet_name='propionic acid,n-heptane')
 
 #%%
 xbol=np.array([-0.0012736632222163924,
@@ -284,11 +291,13 @@ metoh_acoh={}
 metoh_acoh["orv"]=(xorv,porv)
 metoh_acoh["bol"]=(xbol,pbol)
 
-dfTotal = pd.DataFrame([xorv,porv,xbol,pbol,[1e-3]],index=["x","px","y","py","cf"]).T
+dfTotal = pd.DataFrame([xorv,porv,xbol,pbol],index=["x","px","y","py"]).T
 
-with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
+dfTotal.to_csv('cases/methanol#acetic_acid@1_01325#bar@kPa.csv',index=False)
+
+# with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
     
-    dfTotal.to_excel(writer, sheet_name='methanol,acetic acid')
+#     dfTotal.to_excel(writer, sheet_name='methanol,acetic acid')
 
 #%%
 xorv=np.array([0.0 ,
@@ -350,10 +359,10 @@ water_acoh["orv"]=(xorv,porv)
 water_acoh["bol"]=(xbol,pbol)
 
 dfTotal = pd.DataFrame([xorv,porv,xbol,pbol, [1e-5]],index=["x","px","y","py","cf"]).T
+dfTotal.to_csv('cases/water#acetic_acid@313_15#K@bar.csv',index=False)
 
-with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
-    
-    dfTotal.to_excel(writer, sheet_name='water,acetic acid')
+# with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
+    # dfTotal.to_excel(writer, sheet_name='water,acetic acid')
 
 # y=np.array([
 #     0.0000,
@@ -535,8 +544,9 @@ water_ethanol["bol"]=(y,pexp)
 
 dfTotal = pd.DataFrame([xorv,pexp,y,pexp],index=["x","px","y","py"]).T
 
-with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
-    
-    dfTotal.to_excel(writer, sheet_name='water,ethanol')
+dfTotal.to_csv('cases/ethanol#water@298_14#K@kPa.csv',index=False)
+
+# with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists="replace") as writer:  # doctest: +SKIP
+    # dfTotal.to_excel(writer, sheet_name='water,ethanol')
 
 # %%

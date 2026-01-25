@@ -250,9 +250,10 @@ df = pd.DataFrame(utilis)
 
 df.index = ["A","B","C"]# df.columns = ["A","B","C"]
 
-with pd.ExcelWriter('data.xlsx',mode='a',if_sheet_exists='replace') as writer:  # doctest: +SKIP
+df.to_csv("antoine.csv",index=False)
+# with pd.ExcelWriter('antoine.xlsx',mode='w') as writer:  # doctest: +SKIP
     
-    df.to_excel(writer, sheet_name='antoine')
+#     df.to_excel(writer, sheet_name='antoine')
 
 # df.to_excel("data.xlsx",sheet_name="antoine")
 #%%

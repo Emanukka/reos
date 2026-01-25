@@ -9,6 +9,13 @@ from reos.consts import *
 from reos.cpa import CPAParameters
 from reos.eos import EquationOfState
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("-s","--save", action="store_true")
+parser.add_argument("-p","--print", action="store_true")
+args = parser.parse_args()
+SAVE = args.save
+PRINT = args.print
 
 xsize=3.15 * 1.2
 ysize=3.15 * 1.2
@@ -20,7 +27,8 @@ plt.rcParams.update({
     "legend.fontsize": 14,
     "xtick.labelsize": 14,
     "ytick.labelsize": 14,
-    "figure.figsize": (xsize, ysize),  
+    "figure.figsize": (xsize, ysize),
+    # "figure.dpi": 300,  
     "text.usetex": True,
 
 })
@@ -210,26 +218,25 @@ psat=np.array([
 ])
 
 #%%Initializing
-p = CPAParameters.from_json(["water"], ppath="../../../parameters/cpa/kontogeorgis2006.json",)
-eos = EquationOfState.scpa(p)
 
-# antoine = np.array([water_antoine])
+parameters = CPAParameters.from_json(["water"], ppath="../../../parameters/cpa/kontogeorgis2006.json",)
+eos = EquationOfState.scpa(parameters)
+
 #%% Psat calc
-def calc_psat(t,p0):
+
+def calc_psat(t, p0):
     
     e = 1
-    max = 100
     it = 0
 
-    while abs(e) > 1e-8 and it < max:
+    while abs(e) > 1e-8 and it < 100:
 
-        s1 = State.tpx(eos,t,p0,np.array([1.0]),'vapor')
-        s2 = State.tpx(eos,t,p0,np.array([1.0]),'liquid')
+        s1 = State.tpx(eos, t, p0, np.array([1.0]), 'vapor')
+        s2 = State.tpx(eos, t, p0, np.array([1.0]), 'liquid')
         phiv = np.exp(s1.lnphi()[0])
         phil = np.exp(s2.lnphi()[0])
-
         r = phil / phiv
-
+        e = 1.0 - r
         p0 = p0 * r
         it += 1
 
@@ -272,79 +279,11 @@ for (i,t) in enumerate(T):
     XL[i] = eos.unbonded_sites_fraction(t, rhoL[i], np.array([1.0]))[0]
     XV[i] = eos.unbonded_sites_fraction(t, rhoV[i], np.array([1.0]))[0]
 
-
-
-#%%
-
-# plt.title("W4C")
-plt.ylabel(r"$X_{A,B}$")
-plt.xlabel(r"$\mathrm{T/K}$")
-plt.scatter(Tliq, Xliq2005,marker='o',facecolors='none',edgecolors='black')
-
-plt.plot(T[2:],XV[2:],linestyle="-",label="vap",color="black")
-plt.plot(T, XL,linestyle="-.",label="liq" ,color="black")
-
-plt.scatter(Tvap, Xvap2005,label="Dufal 2015",marker='o',facecolors='none',edgecolors='black')
-
-plt.legend()
-
-# plt.savefig("plots/water/xsat.png", bbox_inches='tight')
-
-#%%
-
-plt.ylabel(r"$\mathrm{P/bar}$")
-plt.scatter(tsat,psat,marker='o',facecolors='none',edgecolors='black')
-plt.xlabel(r"$\mathrm{T/K}$")
-plt.plot(T[2:],PRES[2:]/1e5,color="black")
-
-# plt.savefig("plots/water/psat.png", bbox_inches='tight')
-
-# %%
-to_kgm3 = 18.0153 / 1000
-
-plt.ylabel(r"$\mathrm{Density / (kg/m^3)}$")
-plt.xlabel("T/K")
-plt.plot(T,rhoL * to_kgm3,linestyle="-",label="liq" ,color="black")
-plt.plot(T[2:],rhoV[2:] * to_kgm3,linestyle="-.",label="vap",color="black")
-plt.scatter(temperature[::2], liquid_density[::2] * to_kgm3,marker='o',facecolors='none',edgecolors='black',alpha=1)
-plt.scatter(temperature[::2], vapor_density[::2] * to_kgm3,marker='o',facecolors='none',edgecolors='black',alpha=1)
-plt.legend()
-
-# plt.savefig("plots/water/rhosat.png", bbox_inches='tight')
-# plt.savefig("plots/water_psat_X.pdf",bbox_inches='tight')
-
-#%%
-
-plt.ylabel(r" $\mathrm{\Delta H _{vap}/ kJ \; mol^{-1}}$")
-plt.xlabel(r"$\mathrm{T/K}$")
-
-plt.scatter(temperature, dH, marker='o',s=40, facecolors='none', edgecolors='black',alpha=0.9)
-
 DS = entropyV - entropyL
 DH = T * DS
+to_kgm3 = 18.0153 / 1000
 
-plt.plot(T[2:], DH[2:] / 1000 , color="black")
-# plt.savefig("plots/water/dhsat.png", bbox_inches='tight')
-
-# plt.show()
-#%%
-
-plt.ylabel(r" $\mathrm{\Delta S _{vap}/ J \; (mol^{-1}} K^{-1})$")
-plt.xlabel(r"$\mathrm{T/K}$")
-
-plt.scatter(temperature, dS, marker='o',s=40 ,facecolors='none', edgecolors='black',alpha=0.9)
-
-DS = entropyV - entropyL
-
-plt.plot(T[2:], DS[2:]  , color="black")
-
-# plt.savefig("plots/water/dssat.png", bbox_inches='tight')
-
-# plt.show()
-
-#%%
-
-
+#%% Plot
 fig, axs = plt.subplots(nrows=2, ncols=2, figsize=(10,8), sharex=True)
 fig.tight_layout() # Or equivalently,  "plt.tight_layout()"
 plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.2, hspace= None)
@@ -369,7 +308,6 @@ ax.scatter(
     marker='o', facecolors='none', edgecolors='black'
 )
 
-# ax.legend()
 ax = axs[0, 1]
 
 ax.set_ylabel(density_label)
@@ -401,8 +339,6 @@ ax.scatter(
     marker='o', facecolors='none', edgecolors='black'
 )
 
-
-
 ax = axs[1, 1]
 
 ax.set_ylabel(entropy_label)
@@ -415,8 +351,10 @@ ax.scatter(
     marker='o', facecolors='none', edgecolors='black'
 )
 
-#%%
-fig.savefig("plots/pdes.png", bbox_inches='tight')
+
+
+if SAVE:
+    fig.savefig("plots/pdes.png", bbox_inches='tight', dpi = 300)
 
 # %%
 plt.figure(figsize=(xsize,ysize))
@@ -431,6 +369,16 @@ plt.scatter(Tvap, Xvap2005,label="Dufal 2015",marker='o',facecolors='none',edgec
 
 plt.legend()
 
-plt.savefig("plots/xsat.png", bbox_inches='tight', dpi = 300)
+if SAVE:
 
-# %%
+    plt.savefig("plots/xsat.png", bbox_inches='tight', dpi = 300)
+
+if PRINT:
+    fig1 = plt.figure(1)
+    fig2 = plt.figure(2)
+    wfig2 = 1.2 * fig1.get_figwidth() * fig1.get_dpi()
+    fig1.canvas.manager.window.wm_geometry("+%d+%d" % (100, 100))
+    fig2.canvas.manager.window.wm_geometry("+%d+%d" % (wfig2, 400))
+    fig1.tight_layout()
+    fig2.tight_layout()
+    plt.show()
