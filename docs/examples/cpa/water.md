@@ -5,8 +5,6 @@ hide:
 
 # Water
 
-<!-- The correspondent python code can be found at [pure_water.py](../../../python_examples/phase_equilibrium/pure_water.py). -->
-
 ``` py title="Initializing SCPA EOS"
 import numpy as np
 
