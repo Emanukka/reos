@@ -93,7 +93,7 @@ g_j = \frac{\partial Q}{\partial X_j}
 $$
 
 $$
-\hat{H}_{jl} = -\delta_{jl}\left( \frac{m_{j}}{X_{j}^2} \right) - K_{jl}
+\H_{jl} = -\delta_{jl}\left( \frac{m_{j}}{X_{j}^2} \right) - K_{jl}
 $$
 
 Otherwise, in simple cases, the fractions of unbonded sites can be calculated analytically.
