@@ -109,19 +109,20 @@ maturin build --release
 
 ```bash
 ├── crates
-├── docs
-├── mkdocs.yml
 ├── parameters
 ├── pyreos
 ├── pyreos-dev
-├── pyreos-examples
-├── README.md
-└── site
+└── pyreos-examples
 ```
 
+- `parameters`: Directory with pure and binary parameters for the current models implemented in Reos
+
 - `crates`: Contains `reos`, which is the Rust package that implement all the core functionalites
+
 - `pyreos`: Rust package that create the Python interface from `reos`
+
 - `pyreos-dev`: Directory used to test functionalites of `reos` in Python
+
 - `pyreos-examples`: Python examples of how to use `reos`
 
 ### Python package

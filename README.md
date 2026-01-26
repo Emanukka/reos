@@ -1,11 +1,6 @@
 # Welcome to ℜ*eos*
 
-<!-- [![docs](https://img.shields.io/badge/docs-github--pages-blue?logo=github)](https://emanukka.github.io/reos/)
- -->
-
-<a href="https://emanukka.github.io/reos/" target="_blank">
-    <img src="https://img.shields.io/badge/docs-github--pages-blue?logo=github">
-</a>
+[![docs](https://img.shields.io/badge/docs-github--pages-blue?logo=github)](https://emanukka.github.io/reos/)
 
 ℜ*eos* is a thermodynamic library written in **Rust** with a **Python interface**. It provides tools for calculating thermodynamic properties and phase equilibria.
 
@@ -101,13 +96,20 @@ maturin build --release
 └── pyreos-examples
 ```
 
+- `parameters`: Directory with pure and binary parameters for the current models implemented in Reos
+
 - `crates`: Contains `reos`, which is the Rust package that implement all the core functionalites
+
 - `pyreos`: Rust package that create the Python interface from `reos`
+
 - `pyreos-dev`: Directory used to test functionalites of `reos` in Python
+
 - `pyreos-examples`: Python examples of how to use `reos`
 
 ### Python package
 
 - `reos.eos`: Enables the creation and manipulation of equations of state with different models.
+
 - `reos.state`: Provides tools for working with thermodynamic states, including property calculations and phase equilibria.
+
 - `reos.{model_name}`: Each current model has its own submodule with its name, which contains the **pure model record**, the **binary model record** and the **parameters objects** .

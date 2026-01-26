@@ -12,7 +12,3 @@ Returns
 -------
 - str
         A JSON string representing the list of records.
-        
-
-```python
-
