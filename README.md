@@ -1,6 +1,11 @@
 # Welcome to ℜ*eos*
 
-[![docs](https://img.shields.io/badge/docs-github--pages-blue?logo=github)](https://emanukka.github.io/reos/)
+<!-- [![docs](https://img.shields.io/badge/docs-github--pages-blue?logo=github)](https://emanukka.github.io/reos/)
+ -->
+
+<a href="https://emanukka.github.io/reos/" target="_blank">
+    <img src="https://img.shields.io/badge/docs-github--pages-blue?logo=github">
+</a>
 
 ℜ*eos* is a thermodynamic library written in **Rust** with a **Python interface**. It provides tools for calculating thermodynamic properties and phase equilibria.
 
