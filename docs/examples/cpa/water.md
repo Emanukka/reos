@@ -7,7 +7,7 @@ hide:
 
 <!-- The correspondent python code can be found at [pure_water.py](../../../python_examples/phase_equilibrium/pure_water.py). -->
 
-```py title = "Initializing SCPA EOS"
+``` py title = "Initializing SCPA EOS"
 import numpy as np
 
 from reos.state import State
@@ -22,7 +22,7 @@ eos = EquationOfState.scpa(parameters)
 print(parameters) 
 ```
 
-```sh title = "CPA Parameters"
+``` sh title = "CPA Parameters"
 CPAParameters(
   CubicParameters(
   a0=[0.12277],
@@ -39,7 +39,7 @@ CPAParameters(
 )
 ```
 
-```py title = "Psat algorithm "
+``` py title = "Psat algorithm "
 def calc_psat(t, p0):
     
     e = 1
@@ -59,7 +59,7 @@ def calc_psat(t, p0):
     return p0, s1, s2
 ```
 
-```py title = "Computing properties"
+``` py title = "Computing properties"
 N = 100
 T=np.linspace(250.0, 650, N)
 
@@ -98,7 +98,7 @@ DH = T * DS
   <figcaption></figcaption>
 </figure>
 
-```py title = "Non-associated sites fraction"
+``` py title = "Non-associated sites fraction"
 for (i,t) in enumerate(T):
     
     ...

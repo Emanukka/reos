@@ -6,6 +6,8 @@ import scipy.optimize as opt
 import os
 import numpy as np
 
+from .timing import timing
+
 def bubble_diagram(
 
     VAR,
@@ -81,7 +83,7 @@ def bubble_diagram(
     plt.savefig(filepath,bbox_inches='tight')
   plt.show()
 
-
+@timing
 def linspace_bubble_p(eos,t,antoine,N=100):
 
   """
@@ -111,6 +113,7 @@ def linspace_bubble_p(eos,t,antoine,N=100):
 
   return PRES,LIQUID,VAPOR
 
+@timing
 def linspace_bubble_t(eos,p,antoine,N=100,tol=1e-8,it_max=100):
 
   vz=np.linspace(0.00001,0.9999,N)
