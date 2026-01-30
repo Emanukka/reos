@@ -231,7 +231,7 @@ pub mod readyto{
     }
     pub fn water4c()->Pure{
 
-        let c = CubicPureRecord::new_set1(0.12277, 0.0145e-3, 0.6736, 647.14);
+        let c = CubicPureRecord::new_set1(0.12277, 0.0145e-3, 0.6736, 647.14, None);
 
         let a = AssociationPureRecord::associative(
             166.55e2, 
@@ -245,7 +245,7 @@ pub mod readyto{
     }
 
     pub fn acetic1a()->Pure{
-        let c=CubicPureRecord::new_set1(0.91196, 0.0468e-3, 0.4644, 594.8);
+        let c=CubicPureRecord::new_set1(0.91196, 0.0468e-3, 0.4644, 594.8, None);
 
         let a = AssociationPureRecord::associative(
             403.23e2, 
@@ -271,7 +271,7 @@ pub mod readyto{
 
     pub fn co2()->Pure{
 
-        let c=CubicPureRecord::new_set1(0.35079, 0.0272e-3, 0.7602, 304.12);
+        let c=CubicPureRecord::new_set1(0.35079, 0.0272e-3, 0.7602, 304.12, None);
 
         let a=AssociationPureRecord::solvate(
             [0,1,0]);
@@ -295,7 +295,7 @@ pub mod readyto{
     }
 
     pub fn octane()->Pure{
-        let c=CubicPureRecord::new_set1(34.8750e-1, 0.1424e-3, 0.99415, 568.7);
+        let c=CubicPureRecord::new_set1(34.8750e-1, 0.1424e-3, 0.99415, 568.7, None);
         let a=AssociationPureRecord::inert();
 
 
@@ -320,7 +320,8 @@ pub mod readyto{
                 4.5897e-1, 
                 0.0334e-3, 
                 1.0068,
-                513.);
+                513.,
+            None);
 
             let a=AssociationPureRecord::associative(
                 160.70e2, 

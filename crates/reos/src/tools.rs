@@ -1,5 +1,6 @@
 use std::fmt;
 
+
 pub struct NewtonResult{
     pub x:f64,
     pub it:i32,

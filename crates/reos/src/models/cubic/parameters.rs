@@ -1,6 +1,6 @@
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
-use crate::{models::cubic::models::{ CubicModel, CubicModels},
+use crate::{models::cubic::{alpha::{Alpha, AlphaParameter}, models::{ CubicModel, CubicModels}},
 parameters::{ Parameters, records::{BinaryParameter, Properties}}};
 
 
@@ -13,12 +13,13 @@ pub struct CubicParameters {
     pub ncomp: usize,
     pub a0: Array1<f64>,
     pub b: Array1<f64>,
-    pub kappa: Array1<f64>,
     pub tc: Array1<f64>,
     pub aij: Array2<f64>,
     pub bij: Array2<f64>,
     pub epsilon: f64,
     pub sigma: f64,
+    pub alpha: Alpha,
+    pub vvolt: Array1<f64>,
     pub properties: Properties,
 }
 
@@ -34,25 +35,53 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
         let mut mkappa = Array1::<f64>::zeros(n);
         let mut maij   = Array2::<f64>::zeros((n,n));
         let mut mbij   = Array2::<f64>::zeros((n,n));
+        let mut vvolt = Array1::<f64>::zeros(n);
+        let mut alpha_parameters = Vec::<AlphaParameter>::with_capacity(n);
 
         for (i,record) in pure.iter().enumerate(){
 
             match record {
                 
-                &CubicPureRecord::Set1 { a0, b, c1, tc } =>
+                &CubicPureRecord::Set1 { a0, b, c1, tc, volt } =>
                 {
+
+                    let volt = volt.unwrap_or_default();
                     ma0[i] = a0;
                     mb[i] = b;
                     mkappa[i] = c1;
                     mtc[i] = tc;
+
+                    vvolt[i] = volt;
+
+                    alpha_parameters.push(AlphaParameter::Soave(c1));
                 }
                 
-                &CubicPureRecord::Set2 { tc, pc, w } =>
+                &CubicPureRecord::Set2 { tc, pc, w , volt} =>
                 {
+                    let volt = volt.unwrap_or_default();
                     ma0[i] = model.acrit(tc, pc);
                     mb[i] = model.bcrit(tc, pc);
-                    mkappa[i] = model.kappa_from_w(w);
                     mtc[i] = tc;
+                    vvolt[i] = volt;
+
+
+
+                    let c1 = model.kappa_from_w(w);
+                    alpha_parameters.push(AlphaParameter::Soave(c1));
+
+                }
+
+                &CubicPureRecord::Twu91 { tc, pc, l, n, m, volt } => 
+                {   
+                    let volt = volt.unwrap_or_default();
+                    ma0[i] = model.acrit(tc, pc);
+                    mb[i] = model.bcrit(tc, pc);
+                    mtc[i] = tc;
+                    vvolt[i] = volt;
+
+                    alpha_parameters.push(AlphaParameter::Twu91 { l, n, m });
+
+                    
                 }
             }
         }
@@ -78,14 +107,17 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
             }
         });
 
+        let alpha = Alpha::new(alpha_parameters);
+
         Self{
+            alpha,
             ncomp:n,
             a0: ma0,
             b: mb,
-            kappa: mkappa,
             tc: mtc,
             aij: maij,
             bij: mbij,
+            vvolt: vvolt,
             properties: properties.unwrap_or_default(),
             epsilon: model.eps(),
             sigma: model.sig(),
@@ -111,8 +143,30 @@ pub enum CubicBinaryRecord{
 #[derive(Clone,Debug,Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CubicPureRecord{
-    Set1{a0:f64,b:f64,c1:f64,tc:f64},
-    Set2{tc:f64,pc:f64,w:f64},
+
+    Set1{
+        a0:f64,
+        b:f64,
+        c1:f64,
+        tc:f64,
+        volt:Option<f64>
+    },
+
+    Set2{
+        tc:f64,
+        pc:f64,
+        w:f64,
+        volt:Option<f64>
+    },
+
+    Twu91 {
+        tc:f64,
+        pc:f64,
+        l:f64,
+        n:f64,
+        m:f64,
+        volt:Option<f64>
+    },
 
 }
 
@@ -121,20 +175,30 @@ pub enum CubicPureRecord{
 
 impl CubicPureRecord {
     
-    pub fn new_set1(a0:f64,b:f64,c1:f64,tc:f64)->Self{
+    pub fn new_set1(a0:f64, b:f64, c1:f64, tc:f64, volt:Option<f64>)->Self{
+
         Self::Set1{
             a0,
             b,
             c1,
-            tc
+            tc,
+            volt 
         }
     }
-    pub fn new_set2(tc:f64,pc:f64,w:f64)->Self{
+    pub fn new_set2(tc:f64,pc:f64,w:f64, volt:Option<f64>)->Self{
+
         Self::Set2{
             tc,
             pc,
             w,
+            volt
+        
         }
+    }
+
+    pub fn twu91(tc:f64, pc:f64, l:f64, n:f64, m:f64, volt:Option<f64>) -> Self {
+
+        Self::Twu91 { tc, pc, l, n, m, volt }
     }
 }
 
@@ -143,10 +207,10 @@ impl std::fmt::Display for CubicParameters {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         
         if self.ncomp == 1 {
-            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\tc1={},\n\ttc={})",
+            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\talpha={},\n\ttc={})",
                 self.a0.to_string(),
                 self.b.to_string(),
-                self.kappa.to_string(),
+                self.alpha.to_string(),
                 self.tc.to_string(),
             )
 
@@ -165,10 +229,10 @@ impl std::fmt::Display for CubicParameters {
             .collect::<Vec<_>>()
             .join("\n\t  ");
 
-            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\tc1={},\n\ttc={},\n\taij=\n\t  [{}],\n\tbij=\n\t  [{}])",
+            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\talpha={},\n\ttc={},\n\taij=\n\t  [{}],\n\tbij=\n\t  [{}])",
                 self.a0.to_string(),
                 self.b.to_string(),
-                self.kappa.to_string(),
+                self.alpha.to_string(),
                 self.tc.to_string(),
                 saij,
                 sbij
@@ -194,11 +258,15 @@ impl std::fmt::Display for CubicPureRecord {
         
         match self {
             
-            Self::Set1 { a0, b, c1, tc } => {
-                write!(f, "CubicPureRecord(a0={}, b={}, c1={}, tc={})", a0, b, c1, tc)
+            Self::Set1 { a0, b, c1, tc , volt} => {
+                write!(f, "CubicPureRecord(a0={}, b={}, c1={}, tc={}, volt={})", a0, b, c1, tc, volt.unwrap_or_default())
             }
-            Self::Set2 { tc, pc, w } => {
-                write!(f, "CubicPureRecord(tc={}, pc={}, w={})", tc, pc, w)
+            Self::Set2 { tc, pc, w, volt } => {
+                write!(f, "CubicPureRecord(tc={}, pc={}, w={}, volt={})", tc, pc, w, volt.unwrap_or_default())
+            }
+            Self::Twu91 { tc, pc, l, n, m, volt } => {
+                write!(f, "CubicPureRecord(tc={}, pc={}, l={}, n={}, m={}, c={})", tc, pc, l, n, m, volt.unwrap_or_default())
+
             }
         }
     }
@@ -338,8 +406,8 @@ mod tests{
         let pc = array![ 3290000. , 1246000.];
         let w  = array![ 0.27500  , 1.022  ];
 
-        let c1 = CubicPureRecord::new_set2(tc[0], pc[0], w[0]);
-        let c2 = CubicPureRecord::new_set2(tc[1], pc[1], w[1]);
+        let c1 = CubicPureRecord::new_set2(tc[0], pc[0], w[0], None);
+        let c2 = CubicPureRecord::new_set2(tc[1], pc[1], w[1], None);
 
         let pr1 = PureRecord::new(0.0, "".into(), c1);
         let pr2 = PureRecord::new(0.0, "".into(), c2);        

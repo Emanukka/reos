@@ -48,7 +48,7 @@ impl <R:Residual> EquationOfState<R> {
     }
 
     /// Pressure in Pa
-    pub fn pressure(&self,t: f64,d: f64,x: &Array1<f64>)->f64{
+    pub fn pressure(&self,t: f64, d: f64,x: &Array1<f64>)->f64{
 
         let r_pres = self.residual.r_pressure(t, d, x);
         let r_pig = d;

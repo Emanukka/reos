@@ -4,6 +4,7 @@ pub mod density_solver;
 use ndarray::{Array1, array};
 use std::sync::Arc;
 
+use crate::models::IDEAL_GAS_CONST;
 use crate::parameters::Properties;
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EquationOfState};
@@ -141,6 +142,11 @@ impl<R:Residual> State<R> {
         self.eos.entropy(self.t, self.d, &self.x)
     }
 
+    pub fn entropy_isov(&self)->f64{
+        self.eos.entropy_isov(self.t, self.d, &self.x)
+    }
+
+
     pub fn chem_pot(&self)->Array1<f64>{
         self.eos.chem_pot(self.t, self.d, &self.x)
     }
@@ -185,6 +191,41 @@ impl<R:Residual> State<R> {
 }
 
 
+impl<R: Residual> State<R> {
+
+    pub fn to_string(&self, reduced: bool) -> String {
+
+        let mut sresv = self.entropy_isov();
+        
+        if reduced {
+            sresv /= IDEAL_GAS_CONST
+        }
+
+        if self.x.len() == 1 {
+
+            format!("State(t={} K,\nd={} mol/m³,\np={} Pa,\nSresV={})",self.t,self.d,self.p,sresv)
+            
+        } else {
+            format!("State(t={} K,\nd={} mol/m³,\nx={}\np={} Pa,\nSresV={})",self.t,self.d,self.p,&self.x,sresv)
+
+        }
+    }
+}
+// impl<R:Residual> std::fmt::Display for State<R> {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+//         let sresv = self.entropy_isov();
+
+//         if self.x.len() == 1 {
+
+//             write!(f,"State(t={} K,\nd={} mol/m³,\np={} Pa,\nSresV={})",self.t,self.d,self.p,sresv)
+
+//         } else {
+//             write!(f,"State(t={} K,\nd={} mol/m³,\nx={}\np={} Pa,\nSresV={})",self.t,self.d,self.p,&self.x,sresv)
+
+//         }
+//     }
+// }
 #[cfg(test)]
 mod tests {
 

@@ -101,7 +101,7 @@ Otherwise, in simple cases, the fractions of unbonded sites can be calculated an
 If the mixture contains only 1 site of type $A$ and 1 site of type $B$, the fractions of unbonded sites can be calculated analytically:
 
 $$
-X_2 = \frac{2 m_1 m_2 }{m_{1} m_2 + k\left(m_1 M_1 - m_2 M_2\right) + \sqrt{4km_2m_1^2M_1 + \left[m_1m_2 + k \left(m_2 M_2 m_1 M_1 \right) \right]^2}} 
+X_2 = \frac{2 m_1 m_2 }{m_{1} m_2 + k\left(m_1 M_1 - m_2 M_2\right) + \sqrt{4km_2m_1^2M_1 + \left[m_1m_2 + k \left( m_1  m_2  M_1 M_2  \right) \right]^2}} 
 $$
 
 $$

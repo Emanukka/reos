@@ -15,17 +15,26 @@ pub trait CubicModel{
     // fn model() -> Self where Self: Sized;
     
     fn eps(&self)->f64;
+    
     fn sig(&self)->f64;
+    
     fn omega(&self,)->f64;
+    
     fn psi(&self)->f64;
+    
     fn kappa_from_w(&self,w:f64)->f64;
 
     fn acrit(&self,tc:f64,pc:f64)->f64{
-        self.psi()*(R*tc).powf(2.0)/pc
+    
+        self.psi() * (R * tc).powf(2.0) / pc
+    
     }
-    fn bcrit(&self,tc:f64,pc:f64)->f64{
-        self.omega()*R*tc/pc
+    fn bcrit(&self, tc:f64, pc:f64)->f64{
+
+        self.omega() * R * tc / pc
+    
     }
+
     fn to_string(&self)-> String;
 }
 
@@ -34,10 +43,7 @@ pub struct PR76;
 pub struct PR78;
 
 impl CubicModel for SRK{
-    
-    // fn model()->Self where Self: Sized {
-    //     SRK
-    // }
+
     fn omega(&self,)->f64 {
         0.08664
     }
