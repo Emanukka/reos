@@ -8,6 +8,7 @@ pub mod phase_equilibrium;
 pub mod models;
 pub mod contribution;
 pub mod consts;
+pub mod scaling;
 
 /// Macro to create and register a PyO3 submodule with multiple classes.
 /// see: <https://github.com/PyO3/pyo3/issues/1517#issuecomment-3402169068>
@@ -76,7 +77,14 @@ fn reos(m: &Bound<'_, PyModule>) -> PyResult<()> {
     add_pymodule!(m.py(), m, "eos", 
     [eos::PyEquationOfState])?;
 
+    // let scaling = PyModule::new(py, "scaling")?;
 
-    // m.add_class::<PyPhaseEquilibrium>()?;
+    // m.add_submodule(&scaling)?;
+
+    add_pymodule!(m.py(), m, "scaling",
+    [scaling::dehlouz::PyDehlouz])?;
+    // m.add_class::<PyPhaseEquilibrium>()?;co
     Ok(())
+    
+    
 }

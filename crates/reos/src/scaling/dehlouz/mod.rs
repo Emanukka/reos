@@ -7,7 +7,7 @@ use crate::{models::IDEAL_GAS_CONST, parameters::Parameters, residual::Residual,
 
 
 
-type ScalingRecord = [f64;6];
+pub type ScalingRecord = [f64;6];
 
 // // Vec<f64> , [c1, c2, c3, c4, c5, c6, ..., Cm] ?
 
@@ -54,6 +54,7 @@ pub struct Scaling<R:Residual> {
     pub state: Arc<State<R>>,
     
 }
+
 
 impl<R: Residual> Scaling<R> {
 
@@ -103,6 +104,14 @@ impl<R: Residual> Scaling<R> {
 
 }
 
+
+impl<R:Residual> std::fmt::Display for Scaling<R> {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        write!(f, "ScalingDehlouz(\n\t\tstate={},\n\t\tη_ref={} Pa.s,\n\t\tS/R={},\n\t\tparameters={:?}",self.state,self.reference,self.entropy,self.parameters)
+    }
+}
 // pub fn viscosity(residual: Residua)
 
 

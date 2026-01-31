@@ -149,6 +149,7 @@ pub enum CubicPureRecord{
         b:f64,
         c1:f64,
         tc:f64,
+        #[serde(default)]
         volt:Option<f64>
     },
 
@@ -156,6 +157,7 @@ pub enum CubicPureRecord{
         tc:f64,
         pc:f64,
         w:f64,
+        #[serde(default)]
         volt:Option<f64>
     },
 
@@ -165,6 +167,7 @@ pub enum CubicPureRecord{
         l:f64,
         n:f64,
         m:f64,
+        #[serde(default)]
         volt:Option<f64>
     },
 

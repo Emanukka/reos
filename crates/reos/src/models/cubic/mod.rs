@@ -121,37 +121,42 @@ impl Cubic{
 
     }
 
-    fn fi(&self, b:f64, vt:f64)->f64{
-
-        let sig = self.parameters.sigma;
-        let eps = self.parameters.epsilon;
-        
-        (1.0 / (sig - eps))*f64::ln((vt + sig * b )/(vt + eps * b))
-    }
-
-    fn delta(&self, bmix:f64, vm:f64) -> f64 {
-
+    fn fi(&self, v:f64, b:f64, c:f64)->f64{
 
         let sig = self.parameters.sigma;
         let eps = self.parameters.epsilon;
 
-        (vm + sig * bmix) * (vm + eps * bmix)
+        let r = (v + c + sig * b )/(v + c + eps * b);
+
+        (1.0 / (sig - eps)) * r.ln()
     }
 
-    fn tdelta(&self, b:f64, vt:f64) -> f64 {
+    fn delta(&self, v:f64, b:f64, c:f64) -> f64 {
 
 
         let sig = self.parameters.sigma;
         let eps = self.parameters.epsilon;
 
-        (vt + sig * b) * (vt + eps * b)
+        (v + c + sig * b) * (v + c + eps * b)
     }
 
-    fn ln_z_rep(&self, b:f64, v:f64, vt:f64) -> f64 {
+    fn ln_z_rep(&self, v:f64, b:f64, c:f64) -> f64 {
 
-        (v / (vt - b) ).ln()
+        (v / (v + c - b) ).ln()
 
     }
+
+    fn prep(&self, v:f64, b:f64, c:f64) -> f64{
+        (b - c) / v / (v + c - b)
+    }
+    
+    fn patt(&self, t:f64, v:f64, a:f64, b:f64, c:f64) -> f64{
+
+        let delta = self.delta(v, b, c);
+        a / delta / R / t
+
+    }
+
 }
 
 impl Residual for Cubic  {
@@ -178,55 +183,44 @@ impl Residual for Cubic  {
         let v = 1.0 / rho;
         let b = self.bmix(x);
         let c = self.parameters.vvolt.dot(x);
-        // pode transladar apenas 1?
-        
-        // let vtrans = self.transvol(v, x);
-        // let btrans = self.transb(b, x);
         
         let aij = self.faij(t);
-        let amix = self.famix(x, &aij.dot(x));
+        let a = self.famix(x, &aij.dot(x));
 
-        let delta = self.tdelta(b, v + c);
-
-        let repulsive = (b - c) / v / (v + c - b);
-        let attractive = amix / delta / R / t;
-
-        repulsive - attractive
+        self.prep(v, b, c) - self.patt(t, v, a, b, c)
 
     }
 
-    fn r_chemical_potential(&self,t:f64, rho:f64, x:&Array1<f64>)->Array1<f64> {
+    fn r_chemical_potential(&self,t:f64, d:f64, x:&Array1<f64>)->Array1<f64> {
 
-        let p = &self.parameters;
-        let n = p.ncomp;
-        let vm = 1. / rho;
-        let bmix= self.bmix(x);
+        let param = &self.parameters;
+        let n = param.ncomp;
+        
+        let v = 1. / d;
+        let b = self.bmix(x);
+        let c = self.parameters.vvolt.dot(x);
 
         let aij = self.faij(t);
         let ax = aij.dot(x);
-        let amix = self.famix(x, &ax);
-        let dadni = &self.fdadni(amix, &ax);
+        let a = self.famix(x, &ax);
+
+        let da_dn = &self.fdadni(a, &ax);
+        let db_dn = &param.b;
         
-        let ln_z_rep= self.ln_z_rep(bmix, vm, vm);
-        let q = self.fq(amix, bmix, t);
-        let i_upper = self.fi(bmix, vm);
+        let ln_z_rep= self.ln_z_rep(v, b, c);
+        let i = self.fi(v, b, c);
 
-        let delta = self.delta(bmix, vm);
-        let repulsive = bmix / vm / (vm - bmix);
-        let attractive = amix / delta / R / t;
-        let pressure = repulsive - attractive;
+        let p = self.prep(v, b, c) - self.patt(t, v, a, b, c);
+        let z_residual = p * v;
 
-        let z_residual = pressure / rho;
+        let q = self.fq(a, b, t);
 
 
-        Array1::from_shape_fn(n, |i| {
+        Array1::from_shape_fn(n, |j| {
 
-            let db_dni = p.b[i];
-            let da_dni = dadni[i];
+            let dq_dn = q * (1.0 + da_dn[j] / a - db_dn[j] / b);
 
-            let dq_dni = q * (1.0 + da_dni / amix - db_dni / bmix);
-
-            db_dni * z_residual / bmix + ln_z_rep - dq_dni * i_upper
+            db_dn[j] * z_residual / b + ln_z_rep - dq_dn * i
 
         })
 
@@ -234,18 +228,18 @@ impl Residual for Cubic  {
 
     }
     
-    fn r_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>) -> f64 {
+    fn r_helmholtz(&self,t:f64, d:f64, x:&Array1<f64>) -> f64 {
 
-        // let vm = 1./rho;
-        let vm = 1. / rho;
-        let bmix = self.bmix(x);
+        let v = 1. / d;
+        let b = self.bmix(x);
+        let c = self.parameters.vvolt.dot(x);
 
         let aij = self.faij(t);
-        let amix = self.famix(x, &aij.dot(x));
+        let a = self.famix(x, &aij.dot(x));
         
-        let ln_z_rep= self.ln_z_rep(bmix, vm, vm);
-        let q = self.fq(amix, bmix, t);
-        let i = self.fi(bmix, vm);       
+        let ln_z_rep= self.ln_z_rep(v, b, c);
+        let q = self.fq(a, b, t);
+        let i = self.fi(v, b, c);       
 
         ln_z_rep - q * i
 
@@ -256,14 +250,13 @@ impl Residual for Cubic  {
         let v = 1.0 / d;
         let b = self.bmix(x);
         let c = self.parameters.vvolt.dot(x);
-        let vt = v + c;
         
         let aij = self.faij(t);
         let amix = self.famix(x, &aij.dot(x));
         let q = self.fq(amix, b, t);
         let da_dt = self.da_dt(t, x);
-        let i = self.fi(b, vt);       
-        let ln_z_rep = self.ln_z_rep(b, v, vt);
+        let i = self.fi(v, b, c);       
+        let ln_z_rep = self.ln_z_rep(v, b, c);
         
 
         q * i * t * da_dt / amix - ln_z_rep
@@ -287,6 +280,19 @@ pub mod utilis {
             volt: Some(0.81628 / 1e6)
         };
         let pr = PureRecord::new(86.17848, "n-hexane".into(), pr);
+        Cubic::from_parameters(CubicParameters::new(vec![pr], vec![], PR78.into()))
+    }
+    pub fn water_dehlouz() -> Cubic {
+           
+        let pr = CubicPureRecord::Twu91 { 
+            tc: 507.60, 
+            pc: 220.60e5, 
+            l: 0.38720, 
+            n: 1.96692, 
+            m: 0.87198, 
+            volt: Some(5.27106e-6)
+        };
+        let pr = PureRecord::new(18.01528, "water".into(), pr);
         Cubic::from_parameters(CubicParameters::new(vec![pr], vec![], PR78.into()))
     }
 }
@@ -440,4 +446,34 @@ pub mod tests{
         // assert_relative_eq!(p_dehlouz, 1e5, epsilon = 1e0);
         
     }
+
+    // #[test]
+    // fn crit() {
+
+    //     let cub = super::utilis::nhexane_dehlouz();
+
+    //     // let param = cub.parameters;
+    //     let t =  507.60;
+    //     // let d = 8499.433742;
+    //     let p = 30.25 * 1e5;
+    //     let eos = std::sync::Arc::new(crate::state::E::from_residual(cub));
+
+    //     let state = crate::state::State::new_tp(eos, t, p, None).unwrap();
+    //     println!("{}", &state);
+
+    //     // let d = state.d;
+
+    //         // let v = 1. / d;
+    //     // let x = array![1.];
+
+    //     // let c = param.vvolt[0];
+    //     // let a0 = param.a0[0];
+    //     // let b = param.b[0];
+
+    //     // let tr = t / param.tc[0];
+    //     // let alpha = param.alpha.alpha(0, tr);
+
+        
+        
+    // }
 }

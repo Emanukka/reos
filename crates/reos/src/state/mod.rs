@@ -191,41 +191,39 @@ impl<R:Residual> State<R> {
 }
 
 
-impl<R: Residual> State<R> {
+// impl<R: Residual> State<R> {
 
-    pub fn to_string(&self, reduced: bool) -> String {
+//     pub fn to_string(&self, reduced: bool) -> String {
 
-        let mut sresv = self.entropy_isov();
+//         let mut sresv = self.entropy_isov();
         
-        if reduced {
-            sresv /= IDEAL_GAS_CONST
-        }
-
-        if self.x.len() == 1 {
-
-            format!("State(t={} K,\nd={} mol/m³,\np={} Pa,\nSresV={})",self.t,self.d,self.p,sresv)
-            
-        } else {
-            format!("State(t={} K,\nd={} mol/m³,\nx={}\np={} Pa,\nSresV={})",self.t,self.d,self.p,&self.x,sresv)
-
-        }
-    }
-}
-// impl<R:Residual> std::fmt::Display for State<R> {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        
-//         let sresv = self.entropy_isov();
+//         if reduced {
+//             sresv /= IDEAL_GAS_CONST
+//         }
 
 //         if self.x.len() == 1 {
 
-//             write!(f,"State(t={} K,\nd={} mol/m³,\np={} Pa,\nSresV={})",self.t,self.d,self.p,sresv)
-
+//             format!("State(t={} K,\nd={} mol/m³,\np={} Pa,\nSresV={})",self.t,self.d,self.p,sresv)
+            
 //         } else {
-//             write!(f,"State(t={} K,\nd={} mol/m³,\nx={}\np={} Pa,\nSresV={})",self.t,self.d,self.p,&self.x,sresv)
+//             format!("State(t={} K,\nd={} mol/m³,\nx={}\np={} Pa,\nSresV={})",self.t,self.d,self.p,&self.x,sresv)
 
 //         }
 //     }
 // }
+impl<R:Residual> std::fmt::Display for State<R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        if self.x.len() == 1 {
+
+            write!(f,"State(t = {:.3} K, p = {:.6} Pa, ρ = {:.6} mol/m³)",self.t,self.p,self.d)
+
+        } else {
+            write!(f,"State(t = {:.3} K, p = {:.6} Pa, ρ = {:.6} mol/m³), x= {:.6}",self.t,self.p,self.d, self.x)
+
+        }
+    }
+}
 #[cfg(test)]
 mod tests {
 

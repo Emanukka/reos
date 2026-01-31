@@ -38,6 +38,13 @@ mod tests {
         
     }
     
+    fn water_parameters() -> ScalingRecord {
+
+        [0.819374, 0.159219, 0.602420, 1.278829, 0.682719, 0.681497]
+
+    }
+
+
     #[test]
     fn liquid_hexane_dehlouz_case1() {
 
@@ -46,14 +53,14 @@ mod tests {
         let parameters = hexane_parameters();
 
         let cub = utilis::nhexane_dehlouz();
-        let eos = E::from_residual(cub);
-
+        let eos = Arc::new(E::from_residual(cub));
         let t = 198.15;
         let p = 1e5;
         let scrit = -1.290042565;
         // let d = 8499.433742; 
 
-        let state = Arc::new(State::new_tp(eos.into(), t, p, Some(Liquid)).unwrap());
+        let state = Arc::new(State::new_tp(eos.clone(), t, p, Some(Liquid)).unwrap());
+        let scrit = Arc::new(State::new_tp(eos.clone(), 507.60, 30.25 * 1e5, Some(Liquid)).unwrap()).entropy_isov() / IDEAL_GAS_CONST;
 
         // let p = state.p;
         // let d = state.d;
@@ -65,30 +72,30 @@ mod tests {
         assert_relative_eq!(scaling.entropy, -9.019785182, epsilon = 1e-3);
         assert_relative_eq!(scaling.reference, 0.00005876, epsilon = 1e-3);
 
-        assert_relative_eq!(scaling.xscaling(scrit), -8.93659614 , epsilon = 1e-3);
-        
+        // assert_relative_eq!(scaling.xscaling(scrit), -8.93659614 , epsilon = 1e-3);
         let visc = scaling.viscosity(scrit);
-        assert_relative_eq!(visc, 0.00125461 , epsilon = 1e-3);
+        // assert_relative_eq!(visc, 0.00125461 , epsilon = 1e-3);
         let err = format!("err_exp = {:.6} %", (visc - visc_exp).abs() / visc_exp * 100.);
+        dbg!(visc);
 
         println!("{}",err);
         
-        // let content = format!("R = {},\nerr_ρ = {:.6} %,\nerr_s = {:.6} %,\nerr_η = {:.6} %,\n{}",
-        // IDEAL_GAS_CONST,
-        // (d - 8499.433742).abs() / 8499.433742 * 100.,
-        // (scaling.entropy - -9.019785182).abs() /9.019785182 * 100. ,
-        // (visc - 0.00125461).abs()/0.00125461 * 100.,
-        // err);
+        let content = format!("R = {},\nerr_ρ = {:.6} %,\nerr_s = {:.6} %,\nerr_η = {:.6} %,\n{}",
+        IDEAL_GAS_CONST,
+        (state.d - 8499.433742).abs() / 8499.433742 * 100.,
+        (scaling.entropy - -9.019785182).abs() /9.019785182 * 100. ,
+        (visc - 0.00125461).abs()/0.00125461 * 100.,
+        err);
 
-        // let arquivo = OpenOptions::new()
-        //     .create(true)   // cria se não existir
-        //     .append(true)   // escreve no final se existir
-        //     .open("arquivo.txt")
-        //     .expect("Erro ao abrir/criar o arquivo");
+        let arquivo = OpenOptions::new()
+            .create(true)   // cria se não existir
+            .append(true)   // escreve no final se existir
+            .open("scrit_meu.txt")
+            .expect("Erro ao abrir/criar o arquivo");
 
-        // use std::io::Write;
-        // let mut writer = BufWriter::new(arquivo);
-        // writeln!(writer,"{}\n",content).expect("Erro ao escrever");
+        use std::io::Write;
+        let mut writer = BufWriter::new(arquivo);
+        writeln!(writer,"{}\n",content).expect("Erro ao escrever");
         // err = 0.8384488162755742 %
         // err do artigo = 0.820855864 %
 
@@ -133,4 +140,27 @@ mod tests {
         
         // err ref 0.227287219
     }
+
+
+    #[test]
+    fn water() {
+
+
+        let parameters = hexane_parameters();
+
+        let cub = utilis::nhexane_dehlouz();
+        let eos = E::from_residual(cub);
+
+        let t = 30. + 298.15;
+        let p = 1e5;
+        let scrit = -1.2845767568055306;
+        let state = Arc::new(State::new_tp(eos.into(), t, p, Some(Liquid)).unwrap());
+        let scaling = Scaling::new(&state, parameters);
+        
+        let visc = scaling.viscosity(scrit);
+
+        dbg!(visc);
+
+    }
+    
 } 

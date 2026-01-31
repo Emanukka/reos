@@ -3,6 +3,7 @@ pub use pyo3::exceptions::PyTypeError;
 pub use pyo3::types::PyDict;
 pub use pyo3::{Bound, PyResult, pyclass, pyclass_init, pymethods};
 
+use pythonize::depythonize;
 /// Macro to generate concrete Python wrapper-like structs for a `PureRecord<T>` generic, 
 /// given the corresponding concrete pure record model  `T`.
 #[macro_export]

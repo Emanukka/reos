@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use pyo3::exceptions::{PyRuntimeError};
 use pyo3::prelude::*;
-use numpy::{IntoPyArray, PyArray1, PyArrayMethods };
+use numpy::{IntoPyArray, PyArray1, PyArrayMethods, pyarray };
 use reos::{state::{S, State, density_solver::DensityInitialization}};
 
 use crate::eos::{PyEquationOfState, PyProperties};
@@ -15,6 +15,7 @@ use crate::contribution::PyContribution;
 
 
 /// A Thermodynamic State 
+#[derive(Clone)]
 #[pyclass(name="State")]
 pub struct PyState(pub Arc<S<PyContribution>>);
 
@@ -81,6 +82,38 @@ impl PyState {
         Ok(PyState(Arc::new(s)))
 
     }
+
+    #[staticmethod]
+    #[pyo3(signature = (eos,temperature,pressure, phase = None))]
+    pub fn pure_tp<'py>(
+        eos: Bound<'py,PyEquationOfState>,
+        temperature:f64,
+        pressure:f64,
+        phase:Option<&str>
+    )->PyResult<Self>{
+
+
+        
+        let s = phase.unwrap_or("stable");
+        let phase = DensityInitialization::from_str(s);
+
+        if let Err(e) = phase {
+
+            return Err(PyErr::new::<PyRuntimeError, _>(e.to_string()))
+
+        } else {
+            
+            let eos:PyEquationOfState = eos.extract()?;
+            let res= State::new_tp(Arc::clone(&eos.0), temperature, pressure, Some(phase.unwrap()));            
+            
+            match res {
+                Ok(state) => Ok(PyState(Arc::new(state))),
+                Err(e) =>  Err(PyErr::new::<PyRuntimeError, _>(e.to_string()))
+            }
+        
+        }
+    }
+
 
 
 }
@@ -211,6 +244,11 @@ impl PyState {
     pub fn entropy(&self) -> f64 {
 
         self.0.entropy()
+
+    }
+    pub fn entropy_isov(&self) -> f64 {
+
+        self.0.entropy_isov()
 
     }
     /// Residual Helmholtz free energy in J / mol
