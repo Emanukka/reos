@@ -190,11 +190,11 @@ impl Into<CombiningRule> for Option<CombiningRule> {
 
 impl SiteInteraction {
 
-    pub fn interactions_from_sites(sites:&Vec<Site>,binary:Vec<BinaryParameter<AssociationBinaryRecord>>)->Vec<Self>{
+    pub fn interactions_from_sites(sites:&Vec<Site>, binary:HashMap<(usize,usize), AssociationBinaryRecord>)->Vec<Self>{
 
-        let binary:HashMap<(usize,usize),AssociationBinaryRecord> = binary
-        .into_iter()
-        .map(|b| ((b.id1,b.id2),b.model_record)).collect();
+        // let binary:HashMap<(usize,usize),AssociationBinaryRecord> = binary
+        // .into_iter()
+        // .map(|b| ((b.id1,b.id2),b.model_record)).collect();
 
         let mut interactions = Vec::<SiteInteraction>::new();
         let s = sites.len();
@@ -406,7 +406,12 @@ pub mod tests{
         let site3 = Site::new(SiteType::B, 1, 2, 1.,0.0, 0.0);
         let sites = vec![site1,site2,site3];
         let b = AssociationBinaryRecord::new(None, Some(wco2), CombiningRule::default());
-        let interactions = SiteInteraction::interactions_from_sites(&sites,vec![BinaryParameter::new(b, 0, 1)]);
+        
+        let b = vec![BinaryParameter::new(b, 0, 1)]
+            .into_iter()
+            .map(|r| ((r.id1,r.id2),r.model_record))
+            .collect();
+        let interactions = SiteInteraction::interactions_from_sites(&sites,b);
         
         let i1 = &interactions[0];
         let i2 = &interactions[1];
@@ -440,7 +445,11 @@ pub mod tests{
         let b1 = AssociationBinaryRecord::new(None, None, CombiningRule::ECR);
         
         let sites = vec![site1,site2,site3,site4];
-        let b = vec![BinaryParameter::new(b1, 0, 1) , BinaryParameter::new(b2, 0, 2)];
+        let b = vec![BinaryParameter::new(b1, 0, 1) , BinaryParameter::new(b2, 0, 2)]
+            .into_iter()
+            .map(|r| ((r.id1,r.id2), r.model_record))
+            .collect();
+
         let interactions = SiteInteraction::interactions_from_sites(&sites,b);
 
         let i1 = &interactions[0];

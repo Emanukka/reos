@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
@@ -114,32 +115,28 @@ type Binary = CPABinaryRecord;
 
 impl Parameters<Pure, Binary, CubicModels> for CPAParameters {
 
-    fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<crate::parameters::Properties>, opt: CubicModels) -> Self {
-    
+    // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<crate::parameters::Properties>, opt: CubicModels) -> Self {
+    fn from_raw(pure:Vec<Pure>, binary: crate::parameters::BinaryMap<Binary>, properties: Option<crate::parameters::Properties>, opt: CubicModels) -> Self {
+        
         let n = pure.len();
 
-        // CPAbinMap -> CPAmodelRecord -> C,A -> CParamets,AParamets
         let mut c_pure= Vec::with_capacity(n);
         let mut a_pure = Vec::with_capacity(n);
-        let mut c_binary = vec![];
-        let mut a_binary = vec![];
+
+        let mut c_binary = HashMap::new();
+        let mut a_binary = HashMap::new();
         
-        for b in binary{
+        for (key, b) in binary{
 
-            let id1 = b.id1;
-            let id2 = b.id2;
+            if let Some(c) = b.c { 
 
-            if let Some(c) = b.model_record.c { 
+                c_binary.insert(key,c);
 
-                c_binary.push(
-                    BinaryParameter::new(c, id1, id2)
-                );
             }
 
-            if let Some(a) = b.model_record.a {
-                a_binary.push(
-                    BinaryParameter::new(a, id1, id2)
-                );
+            if let Some(a) = b.a {
+                a_binary.insert(key,a);
+
             }
                 
         }

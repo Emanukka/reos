@@ -50,14 +50,34 @@ impl Cubic{
         
         let p = &self.parameters;
         let n = p.ncomp;
-        let a0 = &p.a0;
+        let ac = &p.a;
         let tc = &p.tc;
+        
+        // let binary = &p.binary;
+        // let mut aij = Array2::zeros((n,n));
+
+        // for i in 0..n {
+        //     for j in i..n {
+                
+        //         let bin = binary.get(&(i,j)).unwrap_or_default();
+        //         let kij = bin.kij + bin.lij * t;
+
+        //         let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
+        //         let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
+
+        //         aij[(i,j)] = (1. - kij) * ( ai * aj ).sqrt();
+        //         aij[(j,i)] = aij[(i,j)]
+        //     }
+        // }
+        // aij
         Array2::from_shape_fn((n,n), |(i,j)| { 
 
+            // let bin = binary.get(&(i,j)).or(binary.get(&(j,i)))
+            // let bin = binary.get(&(i,j)).or(p)
             let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
 
-            let ai = a0[i] * p.alpha.alpha(i, t / tc[i]);
-            let aj = a0[j] * p.alpha.alpha(j, t / tc[j]);
+            let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
+            let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
 
             (1. - kij) * ( ai * aj ).sqrt()
         
@@ -68,7 +88,7 @@ impl Cubic{
     fn da_dt(&self, t:f64, x:&Array1<f64>) -> f64 {
 
         let p = &self.parameters;
-        let a0 = &p.a0; 
+        let ac = &p.a; 
         let tc = &p.tc; 
 
         let daij = Array2::from_shape_fn((p.ncomp,p.ncomp), |(i,j)| {
@@ -76,11 +96,11 @@ impl Cubic{
             let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
             let dkij = p.bij[(i,j)];
 
-            let ai = a0[i] * p.alpha.alpha(i, t / tc[i]);
-            let aj = a0[j] * p.alpha.alpha(j, t / tc[j]);
+            let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
+            let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
 
-            let dai= a0[i] * p.alpha.dalpha_dt(i, t, tc[i]); 
-            let daj= a0[j] * p.alpha.dalpha_dt(j, t, tc[j]); 
+            let dai = ac[i] * p.alpha.dalpha_dt(i, t, tc[i]); 
+            let daj = ac[j] * p.alpha.dalpha_dt(j, t, tc[j]); 
 
             let sqrt = (ai * aj).sqrt();
 
@@ -418,7 +438,7 @@ pub mod tests{
         let x = array![1.];
 
         let c = param.vvolt[0];
-        let a0 = param.a0[0];
+        let a0 = param.a[0];
         let b = param.b[0];
 
         let tr = t / param.tc[0];

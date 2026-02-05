@@ -1,17 +1,28 @@
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
 use crate::{models::cubic::{alpha::{Alpha, AlphaParameter}, models::{ CubicModel, CubicModels}},
-parameters::{ Parameters, records::{BinaryParameter, Properties}}};
+parameters::{ BinaryMap, Parameters, records::{BinaryParameter, Properties}}};
 
 
 type Pure = CubicPureRecord;
 type Binary = CubicBinaryRecord;
     
 
+// #[derive(Clone,Debug)]
+// pub struct CubicParameters {
+//     pub ncomp: usize,
+//     pub a: Array1<f64>,
+//     pub b: Array1<f64>,
+//     pub tc: Array1<f64>,
+//     pub alpha: Alpha,
+//     pub vvolt: Array1<f64>,
+//     pub properties: Properties,
+//     pub binary:BinaryMap<CubicBinaryRecord>
+// }
 #[derive(Clone,Debug)]
 pub struct CubicParameters {
     pub ncomp: usize,
-    pub a0: Array1<f64>,
+    pub a: Array1<f64>,
     pub b: Array1<f64>,
     pub tc: Array1<f64>,
     pub aij: Array2<f64>,
@@ -25,8 +36,11 @@ pub struct CubicParameters {
 
 impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
 
-    fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<Properties>, opt: CubicModels) -> Self {
+    fn from_raw(pure:Vec<Pure>, binary: crate::parameters::BinaryMap<Binary>, properties: Option<Properties>, opt: CubicModels) -> Self {
+        
+    // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<Properties>, opt: CubicModels) -> Self {
         let model = opt;
+
 
         let n = pure.len();
         let mut ma0    = Array1::<f64>::zeros(n);
@@ -86,11 +100,12 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
             }
         }
 
-        binary.iter().for_each(|b|{
-            let comp1 = b.id1;
-            let comp2 = b.id2;
+        binary.iter().for_each(|(key,b)|{
+            
+            let comp1 = key.0;
+            let comp2 = key.1;
 
-            match &b.model_record{
+            match b{
                 &CubicBinaryRecord::TemperatureDependent { aij, bij } => {
 
                     maij[(comp1,comp2)] = aij; 
@@ -109,18 +124,28 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
 
         let alpha = Alpha::new(alpha_parameters);
 
+        // Self{
+        //     alpha,
+        //     ncomp:n,
+        //     a: ma0,
+        //     b: mb,
+        //     tc: mtc,
+        //     vvolt: vvolt,
+        //     properties: properties.unwrap_or_default(),
+        //     binary
+        // }
         Self{
             alpha,
             ncomp:n,
-            a0: ma0,
+            a: ma0,
             b: mb,
             tc: mtc,
-            aij: maij,
-            bij: mbij,
             vvolt: vvolt,
             properties: properties.unwrap_or_default(),
-            epsilon: model.eps(),
-            sigma: model.sig(),
+            aij:maij,
+            bij:mbij,
+            sigma:model.sig(),
+            epsilon:model.eps()
         }
 
 
@@ -131,15 +156,21 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
 #[derive(Clone,Debug,Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CubicBinaryRecord{
-
-    TemperatureDependent{
-        aij:f64,
-        bij:f64
-    },
-    TemperatureIndependent{
-        kij:f64
-    }
+    TemperatureDependent{aij:f64, bij:f64},
+    TemperatureIndependent{kij:f64}
 }
+// #[derive(Clone,Debug,Serialize, Deserialize)]
+// pub struct CubicBinaryRecord{
+//     pub kij:f64,
+//     #[serde(default)]
+//     pub lij:f64
+// }
+
+// impl Default for CubicBinaryRecord {
+//     fn default() -> Self {
+//         Self { kij: 0., lij: 0. }
+//     }
+// } 
 #[derive(Clone,Debug,Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CubicPureRecord{
@@ -209,38 +240,39 @@ impl std::fmt::Display for CubicParameters {
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         
-        if self.ncomp == 1 {
-            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\talpha={},\n\ttc={})",
-                self.a0.to_string(),
-                self.b.to_string(),
-                self.alpha.to_string(),
-                self.tc.to_string(),
-            )
+        unimplemented!()
+        // if self.ncomp == 1 {
+        //     write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\talpha={},\n\ttc={})",
+        //         self.a.to_string(),
+        //         self.b.to_string(),
+        //         self.alpha.to_string(),
+        //         self.tc.to_string(),
+        //     )
 
-        } else {
+        // } else {
 
-            let saij = self.aij
-            .rows()
-            .into_iter()
-            .map(|row| row.to_string())
-            .collect::<Vec<_>>()
-            .join("\n\t  ");
-            let sbij = self.bij
-            .rows()
-            .into_iter()
-            .map(|row| row.to_string())
-            .collect::<Vec<_>>()
-            .join("\n\t  ");
+        //     let saij = self.aij
+        //     .rows()
+        //     .into_iter()
+        //     .map(|row| row.to_string())
+        //     .collect::<Vec<_>>()
+        //     .join("\n\t  ");
+        //     let sbij = self.bij
+        //     .rows()
+        //     .into_iter()
+        //     .map(|row| row.to_string())
+        //     .collect::<Vec<_>>()
+        //     .join("\n\t  ");
 
-            write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\talpha={},\n\ttc={},\n\taij=\n\t  [{}],\n\tbij=\n\t  [{}])",
-                self.a0.to_string(),
-                self.b.to_string(),
-                self.alpha.to_string(),
-                self.tc.to_string(),
-                saij,
-                sbij
-            )
-        }
+        //     write!(f, "CubicParameters(\n\ta0={},\n\tb={},\n\talpha={},\n\ttc={},\n\taij=\n\t  [{}],\n\tbij=\n\t  [{}])",
+        //         self.a.to_string(),
+        //         self.b.to_string(),
+        //         self.alpha.to_string(),
+        //         self.tc.to_string(),
+        //         saij,
+        //         sbij
+        //     )
+        // }
 
     }
 }
@@ -279,15 +311,16 @@ impl std::fmt::Display for CubicBinaryRecord {
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         
-        match self {
+        unimplemented!()
+        // match self {
             
-            Self::TemperatureDependent { aij, bij } => {
-                write!(f, "CubicBinaryRecord(aij={}, bij={})", aij, bij   )
-            }
-            Self::TemperatureIndependent { kij } => {
-                write!(f, "CubicBinaryRecord(kij={})", kij)
-            }
-        }
+        //     Self::TemperatureDependent { aij, bij } => {
+        //         write!(f, "CubicBinaryRecord(aij={}, bij={})", aij, bij   )
+        //     }
+        //     Self::TemperatureIndependent { kij } => {
+        //         write!(f, "CubicBinaryRecord(kij={})", kij)
+        //     }
+        // }
     }
 }
 

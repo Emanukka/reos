@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::sites::{CombiningRule, NS, Site, SiteInteraction, SiteType};
-use crate::parameters::{Parameters, Properties, records::BinaryParameter};
+use crate::parameters::{BinaryMap, Parameters, Properties};
 
 
 
@@ -19,7 +19,8 @@ type Binary = AssociationBinaryRecord;
 
 impl Parameters<Pure, Binary, ()> for AssociativeParameters {
 
-    fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, _: Option<Properties>, _: ()) -> Self {
+    // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, _: Option<Properties>, _: ()) -> Self {
+    fn from_raw(pure:Vec<Pure>, binary: BinaryMap<Binary>, _: Option<Properties>, _: ()) -> Self {
         
         let n = pure.len();
 

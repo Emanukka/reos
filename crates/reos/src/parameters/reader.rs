@@ -260,12 +260,11 @@ mod tests{
     }
     impl Parameters<PureModelTest, BinaryModelTest, ()> for ParametersTest {
 
-        fn from_raw(pure:Vec<PureModelTest>, binary: Vec<BinaryParameter<BinaryModelTest>>, properties: Option<Properties>, _: ()) -> Self {
-
+        fn from_raw(pure:Vec<PureModelTest>, binary: crate::parameters::BinaryMap<BinaryModelTest>, properties: Option<Properties>, _: ()) -> Self {
             // let pure = pure.iter().map(|x| x)
             Self {
                 pure,
-                bin: binary.into_iter().map(|x| ((x.id1, x.id2), x.model_record)).collect(),
+                bin: binary,
                 prop: properties.unwrap_or_default()
             }
         }
@@ -425,7 +424,7 @@ mod tests{
         let aij = p.cubic.aij.as_slice().unwrap();
         let bij = p.cubic.bij.as_slice().unwrap();
         let interactions= &p.assoc.interactions;
-
+        dbg!(&p.cubic.aij);
         assert_eq!(interactions.len(), 2);
         assert_eq!(interactions[1].epsilon, 166.55e2 /2.);
         assert_eq!(interactions[1].kappa,   0.1836);
