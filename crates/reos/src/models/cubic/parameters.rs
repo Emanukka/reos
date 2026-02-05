@@ -28,6 +28,7 @@ pub struct CubicParameters {
     pub aij: Array2<f64>,
     pub bij: Array2<f64>,
     pub epsilon: f64,
+    pub binary:BinaryMap<CubicBinaryRecord>,
     pub sigma: f64,
     pub alpha: Alpha,
     pub vvolt: Array1<f64>,
@@ -105,21 +106,26 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
             let comp1 = key.0;
             let comp2 = key.1;
 
-            match b{
-                &CubicBinaryRecord::TemperatureDependent { aij, bij } => {
+            maij[(comp1,comp2)] = b.kij; 
+            maij[(comp2,comp1)] = b.kij;
+            
+            mbij[(comp1,comp2)] = b.lij; 
+            mbij[(comp2,comp1)] = b.lij;
+            // match b{
+            //     &CubicBinaryRecord::TemperatureDependent { aij, bij } => {
 
-                    maij[(comp1,comp2)] = aij; 
-                    maij[(comp2,comp1)] = aij;
+            //         maij[(comp1,comp2)] = aij; 
+            //         maij[(comp2,comp1)] = aij;
                     
-                    mbij[(comp1,comp2)] = bij; 
-                    mbij[(comp2,comp1)] = bij;
+            //         mbij[(comp1,comp2)] = bij; 
+            //         mbij[(comp2,comp1)] = bij;
 
-                }
-                &CubicBinaryRecord::TemperatureIndependent { kij } => {
-                    maij[(comp1,comp2)] = kij; 
-                    maij[(comp2,comp1)] = kij;
-                }
-            }
+            //     }
+            //     &CubicBinaryRecord::TemperatureIndependent { kij } => {
+            //         maij[(comp1,comp2)] = kij; 
+            //         maij[(comp2,comp1)] = kij;
+            //     }
+            // }
         });
 
         let alpha = Alpha::new(alpha_parameters);
@@ -135,6 +141,7 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
         //     binary
         // }
         Self{
+            binary,
             alpha,
             ncomp:n,
             a: ma0,
@@ -153,24 +160,24 @@ impl Parameters<Pure, Binary, CubicModels> for CubicParameters{
 }
 
 
-#[derive(Clone,Debug,Serialize, Deserialize)]
-#[serde(untagged)]
-pub enum CubicBinaryRecord{
-    TemperatureDependent{aij:f64, bij:f64},
-    TemperatureIndependent{kij:f64}
-}
 // #[derive(Clone,Debug,Serialize, Deserialize)]
-// pub struct CubicBinaryRecord{
-//     pub kij:f64,
-//     #[serde(default)]
-//     pub lij:f64
+// #[serde(untagged)]
+// pub enum CubicBinaryRecord{
+//     TemperatureDependent{aij:f64, bij:f64},
+//     TemperatureIndependent{kij:f64}
 // }
+#[derive(Clone,Debug,Serialize, Deserialize)]
+pub struct CubicBinaryRecord{
+    pub kij:f64,
+    #[serde(default)]
+    pub lij:f64
+}
 
-// impl Default for CubicBinaryRecord {
-//     fn default() -> Self {
-//         Self { kij: 0., lij: 0. }
-//     }
-// } 
+impl Default for CubicBinaryRecord {
+    fn default() -> Self {
+        Self { kij: 0., lij: 0. }
+    }
+} 
 #[derive(Clone,Debug,Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum CubicPureRecord{

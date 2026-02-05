@@ -1,6 +1,7 @@
 use core::f64;
 use std::ops::Div;
 
+use crate::models::cubic::parameters::CubicBinaryRecord;
 use crate::models::cubic::parameters::CubicParameters;
 use crate::residual::Residual;
 use ndarray::Array1;
@@ -52,61 +53,97 @@ impl Cubic{
         let n = p.ncomp;
         let ac = &p.a;
         let tc = &p.tc;
+        let default = CubicBinaryRecord::default();
         
-        // let binary = &p.binary;
-        // let mut aij = Array2::zeros((n,n));
+        let binary = &p.binary;
+        let mut aij = Array2::zeros((n,n));
 
-        // for i in 0..n {
-        //     for j in i..n {
+        for i in 0..n {
+            for j in i..n {
                 
-        //         let bin = binary.get(&(i,j)).unwrap_or_default();
-        //         let kij = bin.kij + bin.lij * t;
+                let bin = binary.get(&(i,j)).unwrap_or(&default);
+                let kij = bin.kij + bin.lij * t;
 
-        //         let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
-        //         let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
+                let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
+                let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
 
-        //         aij[(i,j)] = (1. - kij) * ( ai * aj ).sqrt();
-        //         aij[(j,i)] = aij[(i,j)]
-        //     }
-        // }
-        // aij
-        Array2::from_shape_fn((n,n), |(i,j)| { 
-
-            // let bin = binary.get(&(i,j)).or(binary.get(&(j,i)))
-            // let bin = binary.get(&(i,j)).or(p)
-            let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
-
-            let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
-            let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
-
-            (1. - kij) * ( ai * aj ).sqrt()
+                aij[(i,j)] = (1. - kij) * ( ai * aj ).sqrt();
+                aij[(j,i)] = aij[(i,j)]
+            }
+        }
+        aij
         
-        })
+        // Array2::from_shape_fn((n,n), |(i,j)| { 
+
+        //     // let bin = binary.get(&(i,j)).or(binary.get(&(j,i)))
+        //     // let bin = binary.get(&(i,j)).or(p)
+        //     let bin = binary
+        //         .get(&(i,j))
+        //         // .or(binary.get(&(j,i)))
+        //         .unwrap_or(&default);
+
+        //     // let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
+        //     let kij = bin.kij + bin.lij * t;
+
+        //     let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
+        //     let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
+
+        //     (1. - kij) * ( ai * aj ).sqrt()
+        
+        // })
 
     }
 
     fn da_dt(&self, t:f64, x:&Array1<f64>) -> f64 {
 
         let p = &self.parameters;
+        let n = p.ncomp;
+        let binary = &p.binary;
         let ac = &p.a; 
         let tc = &p.tc; 
+        let default = CubicBinaryRecord::default();
 
-        let daij = Array2::from_shape_fn((p.ncomp,p.ncomp), |(i,j)| {
+        let mut daij = Array2::zeros((n,n));
 
-            let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
-            let dkij = p.bij[(i,j)];
+        for i in 0..n {
+            for j in i..n { 
 
-            let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
-            let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
+                let bin = binary.get(&(i,j)).unwrap_or(&default);
+                
+                let kij = bin.kij + bin.lij * t;
+                let dkij= bin.lij;
 
-            let dai = ac[i] * p.alpha.dalpha_dt(i, t, tc[i]); 
-            let daj = ac[j] * p.alpha.dalpha_dt(j, t, tc[j]); 
+                let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
+                let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
 
-            let sqrt = (ai * aj).sqrt();
+                let dai = ac[i] * p.alpha.dalpha_dt(i, t, tc[i]); 
+                let daj = ac[j] * p.alpha.dalpha_dt(j, t, tc[j]); 
 
-            0.5 * (1. - kij) * ( dai * aj + daj * ai) / sqrt - sqrt * dkij
+                let sqrt = (ai * aj).sqrt();
+
+                daij[(i,j)] = 0.5 * (1. - kij) * ( dai * aj + daj * ai) / sqrt - sqrt * dkij;
+                daij[(j,i)] = daij[(i,j)];
+            }
+
+        }
+
+        // daij
+        // let daij = Array2::from_shape_fn((p.ncomp,p.ncomp), |(i,j)| {
+
+        //     let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
+        //     let dkij = p.bij[(i,j)];
+
+        //     let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
+        //     let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
+
+        //     let dai = ac[i] * p.alpha.dalpha_dt(i, t, tc[i]); 
+        //     let daj = ac[j] * p.alpha.dalpha_dt(j, t, tc[j]); 
+
+        //     let sqrt = (ai * aj).sqrt();
+
+        //     0.5 * (1. - kij) * ( dai * aj + daj * ai) / sqrt - sqrt * dkij
         
-        });
+        // });
 
         x.dot(&daij.dot(x))
 

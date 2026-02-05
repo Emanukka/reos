@@ -256,7 +256,8 @@ pub mod readyto{
 
     pub fn water4c_acetic1a()->Binary{
 
-        let c = CubicBinaryRecord::TemperatureIndependent { kij: -0.222 };
+        // let c = CubicBinaryRecord::TemperatureIndependent { kij: -0.222 };
+        let c = CubicBinaryRecord{ kij: -0.222, lij: 0.0 };
         
         let a = AssociationBinaryRecord {  epsilon: None, kappa: None, combining_rule: CombiningRule::ECR };
         
@@ -281,7 +282,9 @@ pub mod readyto{
 
     pub fn water4c_co2()->Binary{
 
-        let c = CubicBinaryRecord::TemperatureDependent { aij: -0.15508 , bij: 0.000877 };
+        // let c = CubicBinaryRecord::TemperatureDependent { aij: -0.15508 , bij: 0.000877 };
+        
+        let c = CubicBinaryRecord{ kij: -0.15508 , lij: 0.000877 };
         
         let a = AssociationBinaryRecord {epsilon: None, kappa: Some(0.1836), combining_rule: CombiningRule::default() };
         
@@ -303,7 +306,9 @@ pub mod readyto{
     pub fn acoh_octane()->Binary{
 
 
-        let c = CubicBinaryRecord::TemperatureIndependent { kij: 0.064 };
+        // let c = CubicBinaryRecord::TemperatureIndependent { kij: 0.064 };
+        let c = CubicBinaryRecord{ kij: 0.064, lij: 0.0 };
+
         let a = AssociationBinaryRecord {epsilon: None, kappa: None, combining_rule: CombiningRule::default() };
         let b = CPABinaryRecord::full(c, a);
         
