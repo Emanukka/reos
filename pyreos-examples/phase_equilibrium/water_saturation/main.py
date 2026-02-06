@@ -8,13 +8,16 @@ from os import listdir
 from reos.eos import EquationOfState
 from reos.state import State
 from reos.cpa import CPAParameters
+from water_saturation.methods import *
 from si_units import KELVIN, BAR, PASCAL, CELSIUS
-from calculators import *
 
+# from src.water_saturation.methods import *
+
+#%%
 xsize = 3.15
 ysize = 3.15
 
-SAVE = True
+SAVE = False
 PLOT = True
 PLTDIR = "./plots/"
 DATAPATH = "./data/"
@@ -68,14 +71,14 @@ def compute(
     if bpath is None: bpath = "../../../parameters/cpa/tsivintzelis2011_binary.json"
 
     case_name = "/".join(case["names"])
-    names = ["ethane"] + case["names"]
+    names = ["water"] + case["names"]
     y_dry_gas = [0.0] + case["y_dry_gas"]
     t = case["t"] / KELVIN
     y_dry_gas = np.array(y_dry_gas)
 
 
     p = CPAParameters.from_json(names, ppath, bpath)
-
+    # print(p)
     eos = EquationOfState.scpa(p)
     vpressure, yw, vdeveloped, vincipient = linspace_wsat(
         eos, 
@@ -128,6 +131,7 @@ pressure = []
 water_content = []
 nfiles = 0
 
+n = len(filenames)
 for filename in filenames:
 
     n += 1
@@ -176,57 +180,57 @@ for (i, t) in enumerate(sheet_names):
 
 #%%Cases
 
-cases = [
-    {"id1":"propionic acid", "id2":"n-heptane", "var":101.33e3 * PASCAL,},
+# cases = [
+#     {"id1":"propionic acid", "id2":"n-heptane", "var":101.33e3 * PASCAL,},
 
-    {"id1":"water",          "id2":"acetic acid","var":313.15 * KELVIN,
-        "ppath": "../../../parameters/cpa/kontogeorgis2006.json",
-        "bpath": "../../../parameters/cpa/kontogeorgis2006_binary.json"},
+#     {"id1":"water",          "id2":"acetic acid","var":313.15 * KELVIN,
+#         "ppath": "../../../parameters/cpa/kontogeorgis2006.json",
+#         "bpath": "../../../parameters/cpa/kontogeorgis2006_binary.json"},
 
-    {"id1":"methanol", "id2":"1-octanol", "var":101.32e3 * PASCAL},
+#     {"id1":"methanol", "id2":"1-octanol", "var":101.32e3 * PASCAL},
 
-    {"id1":"acetic acid",    "id2":"n-octane",   "var":343.2 * KELVIN},
+#     {"id1":"acetic acid",    "id2":"n-octane",   "var":343.2 * KELVIN},
 
-    {"id1":"ethanol",    "id2":"water",   "var":298.14 * KELVIN,
-        "ppath": "../../../parameters/cpa/kontogeorgis2006.json",
-        "bpath": "../../../parameters/cpa/kontogeorgis2006_binary.json"},
+#     {"id1":"ethanol",    "id2":"water",   "var":298.14 * KELVIN,
+#         "ppath": "../../../parameters/cpa/kontogeorgis2006.json",
+#         "bpath": "../../../parameters/cpa/kontogeorgis2006_binary.json"},
     
-    ]
+#     ]
 
-infos = [HEAD]
-for case in cases:
+# infos = [HEAD]
+# for case in cases:
 
-    result, info = compute(case)
-    vtarget, vliq, vvap, _ = result
-    infos.append(info)
-    plot(case, vtarget, vliq, vvap, save = False)
+#     result, info = compute(case)
+#     vtarget, vliq, vvap, _ = result
+#     infos.append(info)
+#     plot(case, vtarget, vliq, vvap, save = False)
 
-data = '\n'.join(infos)
+# data = '\n'.join(infos)
 
-print(data)
+# print(data)
 
-# #%%Test
-# test_case =   {"id1":"methane",    "id2":"carbon dioxide",   "var": 240 * KELVIN,
-#         "ppath": "../../../parameters/cpa/tsivintzelis2011.json",
-#         "bpath": "../../../parameters/cpa/tsivintzelis2011_binary.json"}
+# # #%%Test
+# # test_case =   {"id1":"methane",    "id2":"carbon dioxide",   "var": 240 * KELVIN,
+# #         "ppath": "../../../parameters/cpa/tsivintzelis2011.json",
+# #         "bpath": "../../../parameters/cpa/tsivintzelis2011_binary.json"}
 
-# result, info = compute(test_case)
-# vtarget, vliq, vvap, _ = result
-# # infos.append(info)
-# plot(case, vtarget, vliq, vvap, save = False)
+# # result, info = compute(test_case)
+# # vtarget, vliq, vvap, _ = result
+# # # infos.append(info)
+# # plot(case, vtarget, vliq, vvap, save = False)
 
-#%%
-try:
+# #%%
+# try:
 
-    from cpuinfo import get_cpu_info
+#     from cpuinfo import get_cpu_info
 
-    cpuinfo = get_cpu_info()
-    filename = "bench/" + "_".join(cpuinfo["brand_raw"].split()) + ".csv"
+#     cpuinfo = get_cpu_info()
+#     filename = "bench/" + "_".join(cpuinfo["brand_raw"].split()) + ".csv"
 
-    with open(filename, "x") as f:
-        f.write(data)
+#     with open(filename, "x") as f:
+#         f.write(data)
 
-except Exception as e:
-    print(e)
+# except Exception as e:
+#     print(e)
 
 
