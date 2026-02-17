@@ -221,8 +221,10 @@ mod tests{
     
 
     use super::*;   
-    // use super::super::Parameters;
-    use crate::{models::{associative::sites::CombiningRule, cpa::parameters::readyto::*, cubic::models::CubicModels}, parameters::Parameters};
+    use crate::parameters::Parameters;
+
+    #[cfg(feature = "cpa")]
+    use crate::{models::{associative::sites::CombiningRule, cpa::parameters::readyto::*, cubic::models::CubicModels}};
 
     #[derive(Serialize,Deserialize, Clone)]
     pub struct PureModelTest {
@@ -260,15 +262,16 @@ mod tests{
     }
     impl Parameters<PureModelTest, BinaryModelTest, ()> for ParametersTest {
 
-        fn from_raw(pure:Vec<PureModelTest>, binary: crate::parameters::BinaryMap<BinaryModelTest>, properties: Option<Properties>, _: ()) -> Self {
+        fn from_raw(pure:Vec<PureModelTest>, binary: crate::parameters::BinaryMap<BinaryModelTest>, properties: Option<Properties>, _: ()) -> Result<Self, Box<dyn Error>> {
             // let pure = pure.iter().map(|x| x)
-            Self {
+            Ok(Self {
                 pure,
                 bin: binary,
                 prop: properties.unwrap_or_default()
-            }
+            })
         }
     }
+    #[cfg(feature = "cpa")]
     #[test]
     fn file_not_found(){
 
@@ -278,6 +281,7 @@ mod tests{
 
     }
 
+    #[cfg(feature = "cpa")]
     #[test]
     fn comp_not_found(){
 
@@ -291,6 +295,7 @@ mod tests{
 
 
 
+    #[cfg(feature = "cpa")]
     #[test]
     fn pure_jsons_unmatch_sets(){
 
@@ -312,6 +317,7 @@ mod tests{
 
     }
 
+    #[cfg(feature = "cpa")]
     #[test]
     fn binary_jsons_unmatch_sets(){
 
@@ -334,6 +340,7 @@ mod tests{
     }
 
 
+    #[cfg(feature = "cpa")]
     #[test]
     fn from_multiple_jsons_comps_not_found(){
 
@@ -413,6 +420,8 @@ mod tests{
         });
 
     }
+    
+    #[cfg(feature = "cpa")]
     #[test]
     fn cpa_from_json(){
 
@@ -437,6 +446,7 @@ mod tests{
     }
     
 
+    #[cfg(feature = "cpa")]
     #[test]
     fn cpa_from_multiple_jsons(){
 
@@ -471,6 +481,7 @@ mod tests{
     }
 
     #[test]
+    #[cfg(feature = "cpa")]
     fn cpa_from_multiple_jsons2(){
 
         let names1 = vec!["water"];

@@ -1,11 +1,10 @@
 use core::f64;
-use std::ops::Div;
 
-use crate::models::cubic::parameters::CubicBinaryRecord;
+use crate::models::cubic::mixing_rule::MixingRuleModel;
+use crate::models::cubic::models::CubicModel;
 use crate::models::cubic::parameters::CubicParameters;
 use crate::residual::Residual;
 use ndarray::Array1;
-use ndarray::Array2;
 use crate::models::IDEAL_GAS_CONST as R;
 
 
@@ -16,6 +15,12 @@ pub const PR78_KAPPA_FACTORS: [f64; 4] = [0.374642, 1.48503, -0.164423, 0.016666
 pub mod models;
 pub mod parameters;
 pub mod alpha;
+pub mod combining_rule;
+pub mod mixing_rule;
+pub mod options;
+
+#[cfg(test)]
+pub mod tests;
 // #[derive(Clone)]
 pub struct Cubic{
     pub parameters:CubicParameters,
@@ -23,514 +28,412 @@ pub struct Cubic{
 
 impl Cubic {
     
-    pub fn from_parameters(parameters:CubicParameters)->Self{
+    pub fn from_parameters(parameters:CubicParameters) -> Self {
         Self { parameters }
     }
 
 }
 
 
+/// w = (B, D, d1, d2), where B = f(N), D = f(N, T) and d1,d2 are parameters of a generic cubic.
+/// such that  w = u ∩ x
+pub struct W {
+    pub b:f64,
+    pub d:f64,
+    pub d1:f64,
+    pub d2:f64
+}
 
-impl Cubic{
+
+pub struct DwDni{
+    pub b:Vec<f64>,
+    pub d:Vec<f64>
+}
+
+pub struct DwDt{
+    pub d:f64,
+}
+
+struct F;
+
+impl F {
+
+    fn me(t:f64, v:f64, w:&W) -> f64 {
+
+        - Self::g(v, w) - w.d * Self::f(v, w) / t
+    }
+
+    fn g(v:f64, w:&W) -> f64 {
+
+        let inner = (v - w.b) / v;
+        // let inner = (v + c - b) / v;
+        inner.ln()
+    }
+    fn f(v:f64, w:&W) -> f64 {
+
+        let d3 = w.d2 - w.d1;
+        let r = (v + w.d2 * w.b ) / (v + w.d1 * w.b); 
+        // let r = (v + c + d2 * b ) / (v + c + d1 * b); 
+        
+        r.ln() / R / w.b / d3
+    }
+}
+/// Interface for derivatives of F in u = (n, T, V, B, D),
+struct DFu ;
+
+// Derivatives of aux. functions g(V, B) and f(V, B) 
+impl DFu  {
+
+    fn gv(v:f64, w:&W) -> f64{
+
+        w.b / v / (v - w.b)
+    }
+
+    fn gb(v:f64, w:&W) -> f64{
+
+        - 1. / (v - w.b)
+    }
 
 
-    pub fn transvol(&self, v:f64, x:&Array1<f64>) -> f64 {
+    fn fv(v:f64, w:&W) -> f64 {
 
-        let c = self.parameters.vvolt.dot(x);
-        v + c
+        // let d3 = w.d2 - w.d1;
+        - 1. / R / (v + w.d1 * w.b) / (v + w.d2 * w.b)
+    }
+
+    fn fb(v:f64, f:f64, fv:f64, w:&W) -> f64 {
+
+        - (f + fv * v) / w.b
 
     }
-    pub fn transb(&self, b:f64, x:&Array1<f64>) -> f64 {
 
-        let c = self.parameters.vvolt.dot(x);
-        b + c
 
+
+}
+
+// Derivaties of F in respect to variables in u = (n, T, V, B, D)
+impl DFu {
+
+    fn dt(t:f64, f:f64, w:&W) -> f64 {
+        w.d * f / t.powi(2)
     }
     
-    fn faij(&self,t:f64)->Array2<f64>{
-        
-        let p = &self.parameters;
-        let n = p.ncomp;
-        let ac = &p.a;
-        let tc = &p.tc;
-        let default = CubicBinaryRecord::default();
-        
-        let binary = &p.binary;
-        let mut aij = Array2::zeros((n,n));
+    fn db(t:f64,v:f64, w:&W) -> f64 {
 
+        let gb = Self::gb(v, w);
+        let f = F::f(v, w);
+        let fv = Self::fv(v, w);
+        let fb = Self::fb(v, f, fv, w);
+        
+        - gb - w.d / t * fb
+        // let df_dd = - f / t;
+    }
+
+    fn dd(t:f64,v:f64, w:&W) -> f64 {
+
+        let f = F::f(v, w);
+        - f / t
+    }
+
+    fn dv(t:f64, v:f64, w:&W) -> f64 {
+
+        let gv = Self::gv(v, w);
+        let fv = Self::fv(v, w);
+
+        - gv - fv * w.d / t
+    }
+
+}
+
+/// Interface for derivaties of F in respect to x = (n, T, V)
+pub struct DFx; 
+
+impl DFx {
+    fn dni(t:f64, v:f64, w:&W, dw_dni:&DwDni) -> Array1<f64> {
+
+        let n = dw_dni.b.len();
+        let df_dn = - F::g(v, w);
+        let df_db = DFu::db(t, v, w);
+        let df_dd = DFu::dd(t, v, w);
+        
+        let mut df_dni = Array1::from_elem(n, df_dn);
+        
         for i in 0..n {
-            for j in i..n {
+
+            df_dni[i] += {
                 
-                let bin = binary.get(&(i,j)).unwrap_or(&default);
-                let kij = bin.kij + bin.lij * t;
-
-                let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
-                let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
-
-                aij[(i,j)] = (1. - kij) * ( ai * aj ).sqrt();
-                aij[(j,i)] = aij[(i,j)]
+                df_db * dw_dni.b[i] + 
+                df_dd * dw_dni.d[i]
             }
         }
-        aij
+
+        df_dni
+    }
+
+    fn dt(t:f64, v:f64, w:&W, dw_dt:&DwDt) -> f64{
+
+        let f = F::f(v, w);
+        let df_dt = DFu::dt(t, f, w);
+        let df_dd = DFu::dd(t, v, w);
         
-        // Array2::from_shape_fn((n,n), |(i,j)| { 
-
-        //     // let bin = binary.get(&(i,j)).or(binary.get(&(j,i)))
-        //     // let bin = binary.get(&(i,j)).or(p)
-        //     let bin = binary
-        //         .get(&(i,j))
-        //         // .or(binary.get(&(j,i)))
-        //         .unwrap_or(&default);
-
-        //     // let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
-        //     let kij = bin.kij + bin.lij * t;
-
-        //     let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
-        //     let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
-
-        //     (1. - kij) * ( ai * aj ).sqrt()
-        
-        // })
+        df_dt + df_dd * dw_dt.d
 
     }
 
-    fn da_dt(&self, t:f64, x:&Array1<f64>) -> f64 {
 
-        let p = &self.parameters;
-        let n = p.ncomp;
-        let binary = &p.binary;
-        let ac = &p.a; 
-        let tc = &p.tc; 
-        let default = CubicBinaryRecord::default();
+    fn dv(t:f64, v:f64, w:&W,) -> f64 {
 
-        let mut daij = Array2::zeros((n,n));
-
-        for i in 0..n {
-            for j in i..n { 
-
-                let bin = binary.get(&(i,j)).unwrap_or(&default);
-                
-                let kij = bin.kij + bin.lij * t;
-                let dkij= bin.lij;
-
-                let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
-                let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
-
-                let dai = ac[i] * p.alpha.dalpha_dt(i, t, tc[i]); 
-                let daj = ac[j] * p.alpha.dalpha_dt(j, t, tc[j]); 
-
-                let sqrt = (ai * aj).sqrt();
-
-                daij[(i,j)] = 0.5 * (1. - kij) * ( dai * aj + daj * ai) / sqrt - sqrt * dkij;
-                daij[(j,i)] = daij[(i,j)];
-            }
-
-        }
-
-        // daij
-        // let daij = Array2::from_shape_fn((p.ncomp,p.ncomp), |(i,j)| {
-
-        //     let kij = p.aij[(i,j)] + p.bij[(i,j)] * t;
-        //     let dkij = p.bij[(i,j)];
-
-        //     let ai = ac[i] * p.alpha.alpha(i, t / tc[i]);
-        //     let aj = ac[j] * p.alpha.alpha(j, t / tc[j]);
-
-        //     let dai = ac[i] * p.alpha.dalpha_dt(i, t, tc[i]); 
-        //     let daj = ac[j] * p.alpha.dalpha_dt(j, t, tc[j]); 
-
-        //     let sqrt = (ai * aj).sqrt();
-
-        //     0.5 * (1. - kij) * ( dai * aj + daj * ai) / sqrt - sqrt * dkij
-        
-        // });
-
-        x.dot(&daij.dot(x))
-
-    }
-
-    fn bmix(&self, x:&Array1<f64>)->f64{
-
-        self.parameters.b.dot(x) 
-
-    }
-
-    fn famix(&self, x:&Array1<f64>, ax:&Array1<f64>)->f64{
-
-        x.dot(ax)
-
-    }
-
-    fn fq(&self,amix:f64,bmix:f64,t:f64)->f64{
-        amix / bmix / R / t
-    }
-
-    fn fdadni(&self, amix:f64, ax:&Array1<f64>)->Array1<f64>{
-        
-        let n = self.parameters.ncomp;
-
-        Array1::from_shape_fn(n, |i| {
-
-            2.0 * ax[i] - amix
-            
-        })
-
-
-    }
-
-    fn fi(&self, v:f64, b:f64, c:f64)->f64{
-
-        let sig = self.parameters.sigma;
-        let eps = self.parameters.epsilon;
-
-        let r = (v + c + sig * b )/(v + c + eps * b);
-
-        (1.0 / (sig - eps)) * r.ln()
-    }
-
-    fn delta(&self, v:f64, b:f64, c:f64) -> f64 {
-
-
-        let sig = self.parameters.sigma;
-        let eps = self.parameters.epsilon;
-
-        (v + c + sig * b) * (v + c + eps * b)
-    }
-
-    fn ln_z_rep(&self, v:f64, b:f64, c:f64) -> f64 {
-
-        (v / (v + c - b) ).ln()
-
-    }
-
-    fn prep(&self, v:f64, b:f64, c:f64) -> f64{
-        (b - c) / v / (v + c - b)
-    }
-    
-    fn patt(&self, t:f64, v:f64, a:f64, b:f64, c:f64) -> f64{
-
-        let delta = self.delta(v, b, c);
-        a / delta / R / t
+        DFu::dv(t, v, w)
 
     }
 
 }
+// 
+
 
 impl Residual for Cubic  {
     
-    fn get_properties(&self)->&crate::parameters::Properties {
-        &self.parameters.properties
-    }
-    fn molar_weight(&self)->&Array1<f64> {
-        &self.parameters.properties.molar_weight
-    }
-    fn components(&self)->usize {
-        self.parameters.ncomp
-    }
+    fn get_properties(&self)->&crate::parameters::Properties { &self.parameters.properties }
 
-    fn max_density(&self,x:&Array1<f64>)->f64 {
+    fn molar_weight(&self)->&Array1<f64> {&self.parameters.properties.molar_weight}
 
-        1.0 / self.bmix(x) 
+    fn components(&self)->usize {self.parameters.a.len()}
+
+    fn max_density(&self, x:&Array1<f64>)->f64 {
+
+        let arr = Array1::from_vec(self.parameters.b.clone());
+        1.0 / (arr.dot(x))  
 
     }
 
+    fn r_helmholtz(&self,t:f64, rho:f64, x:&Array1<f64>) -> f64 {
+
+        let v = 1. / rho;
+        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+        // let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+        let g = F::g(v, &w);
+        let f = F::f(v, &w);
+        let d = w.d;
+        
+        - g - f * d / t
+        // let w = self.parameters.m
+        // let mix = MixParameters::new(t, d, x, &self.parameters);
+        // let inner = v / (mix.tv - mix.b);
+        
+        // inner.ln() - mix.q * mix.i
+
+    }
+
+    fn r_entropy(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
+
+        // let mix = MixParameters::new(t, d, x, &self.parameters);
+        // let mix_dt = MixTemperatureDerivatives::new(t, x, &mix, &self.parameters);
+        
+        // let a = self.r_helmholtz(t, d, x);
+        // let da_dt = -  mix.i * mix_dt.dq_dt;
+        
+        // -a - t * da_dt
+        let v = 1. / rho;
+        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+
+        let dw_dt = self.parameters.options.mix.dw_dt(t, v, x, &w, &self.parameters);
+        let df_dt = DFx::dt(t, v, &w, &dw_dt);
+        let f = F::me(t, v, &w);
+
+        - t * df_dt - f
+        // // let mix = MixParameters::new(t, d, x, &self.parameters);
+        // let mix_dt = MixTemperatureDerivatives::new(t, x, &mix, &self.parameters);
+        
+        // let a = self.r_helmholtz(t, d, x);
+        // let da_dt = -  mix.i * mix_dt.dq_dt;
+        
+        // -a - t * da_dt
+    }
 
     fn r_pressure(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
 
-        let v = 1.0 / rho;
-        let b = self.bmix(x);
-        let c = self.parameters.vvolt.dot(x);
-        
-        let aij = self.faij(t);
-        let a = self.famix(x, &aij.dot(x));
+        let v = 1. / rho;
+        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+        let df_dv = DFx::dv(t, v, &w);
 
-        self.prep(v, b, c) - self.patt(t, v, a, b, c)
+        - df_dv
+        // let mix = MixParameters::new(t, d, x, &self.parameters);
+        // let rep = (mix.b - mix.c) / v / (mix.tv - mix.b);
+        // let att = mix.a / mix.delta / R / t;
+// 
+        // rep - att
 
     }
 
-    fn r_chemical_potential(&self,t:f64, d:f64, x:&Array1<f64>)->Array1<f64> {
-
-        let param = &self.parameters;
-        let n = param.ncomp;
+    fn r_chemical_potential(&self,t:f64, rho:f64, x:&Array1<f64>)->Array1<f64> {
         
-        let v = 1. / d;
-        let b = self.bmix(x);
-        let c = self.parameters.vvolt.dot(x);
+        let v = 1. / rho;
+        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+        let dw_dni = self.parameters.options.mix.dw_dni(t, v, x,& w, &self.parameters);
 
-        let aij = self.faij(t);
-        let ax = aij.dot(x);
-        let a = self.famix(x, &ax);
+        DFx::dni(t, v, &w, &dw_dni)
 
-        let da_dn = &self.fdadni(a, &ax);
-        let db_dn = &param.b;
-        
-        let ln_z_rep= self.ln_z_rep(v, b, c);
-        let i = self.fi(v, b, c);
+        // let n = self.parameters.a.len();
+        // let mix = MixParameters::new(t, d, x, &self.parameters);
+        // let mix_dn = MixMoleDerivatives::new(t, x, &mix, &self.parameters);
+        // let inner = v / (mix.tv - mix.b );
+        // let ln = inner.ln();
+        // let z_residual = self.r_pressure(t, d, x) * v;
 
-        let p = self.prep(v, b, c) - self.patt(t, v, a, b, c);
-        let z_residual = p * v;
+        // Array1::from_shape_fn(n, |i| {
 
-        let q = self.fq(a, b, t);
+        //     mix_dn.dnb_dni[i] * z_residual / mix.b + ln - mix_dn.dnq_dni[i] * mix.i
 
-
-        Array1::from_shape_fn(n, |j| {
-
-            let dq_dn = q * (1.0 + da_dn[j] / a - db_dn[j] / b);
-
-            db_dn[j] * z_residual / b + ln_z_rep - dq_dn * i
-
-        })
-
+        // })
 
 
     }
     
-    fn r_helmholtz(&self,t:f64, d:f64, x:&Array1<f64>) -> f64 {
 
-        let v = 1. / d;
-        let b = self.bmix(x);
-        let c = self.parameters.vvolt.dot(x);
-
-        let aij = self.faij(t);
-        let a = self.famix(x, &aij.dot(x));
-        
-        let ln_z_rep= self.ln_z_rep(v, b, c);
-        let q = self.fq(a, b, t);
-        let i = self.fi(v, b, c);       
-
-        ln_z_rep - q * i
-
-    }
-
-    fn r_entropy(&self, t:f64, d:f64, x:&Array1<f64>)->f64 {
-
-        let v = 1.0 / d;
-        let b = self.bmix(x);
-        let c = self.parameters.vvolt.dot(x);
-        
-        let aij = self.faij(t);
-        let amix = self.famix(x, &aij.dot(x));
-        let q = self.fq(amix, b, t);
-        let da_dt = self.da_dt(t, x);
-        let i = self.fi(v, b, c);       
-        let ln_z_rep = self.ln_z_rep(v, b, c);
-        
-
-        q * i * t * da_dt / amix - ln_z_rep
-
-    }
 }
 
-#[cfg(test)]
-pub mod utilis {
-    use crate::{models::cubic::{Cubic, models::PR78, parameters::{CubicParameters, CubicPureRecord}}, parameters::{Parameters, PureRecord}};
 
+// pub struct MixParameters{
+//     pub a:f64,
+//     pub b:f64,  
+//     pub c:f64,
+//     pub q:f64,
+//     pub i:f64,
+//     pub delta:f64,
+//     pub tv:f64, //translated molar volume
+// }
+// impl MixParameters{
 
-    pub fn nhexane_dehlouz() -> Cubic {
-           
-        let pr = CubicPureRecord::Twu91 { 
-            tc: 507.60, 
-            pc: 30.25 * 1e5, 
-            l: 0.28726, 
-            n: 2.01991, 
-            m: 0.83405, 
-            volt: Some(0.81628 / 1e6)
-        };
-        let pr = PureRecord::new(86.17848, "n-hexane".into(), pr);
-        Cubic::from_parameters(CubicParameters::new(vec![pr], vec![], PR78.into()))
-    }
-    pub fn water_dehlouz() -> Cubic {
-           
-        let pr = CubicPureRecord::Twu91 { 
-            tc: 507.60, 
-            pc: 220.60e5, 
-            l: 0.38720, 
-            n: 1.96692, 
-            m: 0.87198, 
-            volt: Some(5.27106e-6)
-        };
-        let pr = PureRecord::new(18.01528, "water".into(), pr);
-        Cubic::from_parameters(CubicParameters::new(vec![pr], vec![], PR78.into()))
-    }
-}
-
-#[cfg(test)]
-pub mod tests{
-    
-    
-
-    use std::{fs::OpenOptions, io::BufWriter};
-
-    use crate::{models::cubic::{Cubic, models::{PR78, SRK}, parameters::{CubicParameters, CubicPureRecord}}, parameters::{ Parameters, records::PureRecord}, residual::Residual};
-    use approx::assert_relative_eq;
-    use ndarray::array;
-    use crate::models::IDEAL_GAS_CONST as R;
-    fn water()->PureRecord<CubicPureRecord>{
-
-        let m = CubicPureRecord::new_set1(0.12277, 0.0145e-3, 0.6736, 647.14, None);
-
-        PureRecord::new(0.0, "water".to_string(), m)
-
-    }
-
-
-    fn cub()->Cubic{
-
-        let w = water();
-        let p = CubicParameters::new(vec![w], vec![], SRK.into());
-        Cubic::from_parameters(p)
-    }
-
-    fn nhexane_yohann() -> Cubic {
-           
-        let pr = CubicPureRecord::Twu91 { 
-            tc: 507.60, 
-            pc: 30.25 * 1e5, 
-            l: 0.2557, 
-            n: 2.1871, 
-            m: 0.8377, 
-            volt: Some(0.7925 / 1e6)
-        };
-        let pr = PureRecord::new(0.0, "n-hexane".into(), pr);
-        Cubic::from_parameters(CubicParameters::new(vec![pr], vec![], PR78.into()))
-    }
-
-
-    fn pressure_dehlouz(t:f64, v:f64, a0:f64, alpha:f64, b:f64, c:f64,)->f64{
+//     pub fn new(t:f64, d:f64, x:&Array1<f64>, parameters:&CubicParameters) -> Self{
         
-        let rep = R * t / (v + c - b);
-        let att = a0 * alpha / ( (v + c) * (v + c + b) + b * (v + c - b) );
-
-        rep - att
+//         let n = parameters.a.len();
+//         let epsilon = parameters.options.model.eps();  
+//         let sigma = parameters.options.model.sig();  
+//         let bin = &parameters.binary;
+//         let alpha = &parameters.options.alpha.alpha(t, &parameters.tc);
+//         let [ac, bc, vt] = [&parameters.a,&parameters.b,&parameters.c];
         
-    }
+//         let [mut a,mut b, mut c] = [0.,0.,0.];
 
-    #[test]
-    fn test_srk_helmholtz() {
+//         for i in 0..n {
+            
+//             b += x[i] * bc[i];
+//             c += x[i] * vt[i];
+
+//             for j in 0..n {
+
+//                 let [ai, aj] = [ac[i] * alpha[i], ac[j] * alpha[j]];
+                
+//                 let sqrt = (ai * aj).sqrt();
+//                 let kij = bin[(i,j)].kij + bin[(i,j)].lij * t;
+//                 let aij = (1. - kij) * sqrt;
+//                 a += x[i] * x[j] * aij;
+
+//             }
+//         }
         
-        let srk = self::cub();
-        let t = 298.15;
-        let d= 1_000.;
-        let x = array![1.0];
-
-        let val = srk.r_helmholtz(t, d, &x);
-
-        assert_relative_eq!(val, -0.058144295861,epsilon = 1e-10)
-
-    }
-
-    #[test]
-    fn test_srk_entropy() {
+//         let tv = 1. / d + c;
+//         let q = a / b / R / t;
         
-        let srk = cub();
-        let t = 298.15;
-        let d= 1_000.;
-        let x = array![1.0];
-
-        let val = srk.r_entropy(t, d, &x);
-
-        assert_relative_eq!(val, -0.041951593945, epsilon = 1e-10)
-
-    }
-
-    #[test]
-    fn test_srk_chem_pot() {
+//         let r = (tv + sigma * b) / (tv + epsilon * b);
+//         let i = 1. / (sigma - epsilon) * r.ln();
+//         let delta = (tv + sigma * b) * (tv + epsilon * b);
         
-        let srk = cub();
-        let t = 298.15;
-        let d= 1_000.;
-        let x = array![1.0];
-
-        let val = srk.r_chemical_potential(t, d, &x);
-
-        assert_relative_eq!(val[0], -0.115660251059, epsilon = 1e-10)
+//         // dbg!(a, b, c, q, i, delta, tv);
+//         Self { a, b, c, q, i, delta, tv}
+//     }
 
 
-    }
-    
-    #[test]
-    fn test_srk_pressure() {
+// }
+
+// pub struct MixTemperatureDerivatives{
+//     pub da_dt:f64,
+//     pub dq_dt:f64,
+// }
+
+// impl MixTemperatureDerivatives {
+
+//     pub fn new(t:f64, x:&Array1<f64>, mix: &MixParameters, parameters:&CubicParameters ) -> Self{
+
+//         let n = x.len();
+//         let alpha = parameters.options.alpha.alpha(t, &parameters.tc);
+//         let dalpha_dt = parameters.options.alpha.dalpha_dt(t, &parameters.tc);
+//         let ac = &parameters.a;
+//         let bin = &parameters.binary;
+//         let [a, q] = [mix.a, mix.q];
+
+//         let mut da_dt = 0.;
+
+//         for i in 0..n {
+//             for j in 0..n{
+
+//                 let dkij = bin[(i,j)].lij;
+//                 let kij = bin[(i,j)].kij + dkij * t;
+                 
+//                 let [ai, aj] = [ac[i] * alpha[i] , ac[j] * alpha[j]];
+//                 let [dai, daj] = [ac[i] * dalpha_dt[i] , ac[j] * dalpha_dt[j]];
+
+//                 let sqrt = (ai * aj).sqrt();
+
+//                 da_dt += 0.5 * (1. - kij) * ( dai * aj + daj * ai) / sqrt - sqrt * dkij;
+
+//             }
+//         }   
+
+//         let dq_dt = q * (da_dt / a - 1./t);
+
+//         Self { da_dt, dq_dt }
+//     }
+// }
+// pub struct MixMoleDerivatives{
+//     pub dna_dni:Vec<f64>,
+//     pub dnb_dni:Vec<f64>,
+//     pub dnc_dni:Vec<f64>,
+//     pub dnq_dni:Vec<f64>,
+// }
+
+// impl MixMoleDerivatives {
+
+//     pub fn new(t:f64, x:&Array1<f64>, mix: &MixParameters, parameters:&CubicParameters ) -> Self{
+
+//         let n = x.len();
+//         let [ac, bc, vt] = [&parameters.a,&parameters.b,&parameters.c];
+//         let [a, b, q] = [mix.a, mix.b, mix.q];
+//         let bin = &parameters.binary;
+//         let alpha = &parameters.options.alpha.alpha(t, &parameters.tc);
+
+//         let mut dna_dni = Vec::with_capacity(n);
+//         let mut dnb_dni = Vec::with_capacity(n);
+//         let mut dnc_dni = Vec::with_capacity(n);
+//         let mut dnq_dni = Vec::with_capacity(n);
         
-        let srk = cub();
-        let t = 298.15;
-        let d= 1_000.;
-        let x = array![1.0];
+//         for i in 0..n {
+            
+//             let dnb = bc[i];
+//             let dnc = vt[i];
+//             let mut sum = 0.; 
+//             for j in 0..n {
+                
+//                 let kij = bin[(i,j)].kij + bin[(i,j)].lij * t;
 
-        let val = srk.r_pressure(t, d, &x);
+//                 let [ai, aj] = [ac[i] * alpha[i], ac[j] * alpha[j]];
+//                 let sqrt = (ai * aj).sqrt();
 
-        assert_relative_eq!(val, -57.5159551979349, epsilon = 1e-10)
+//                 let aij = (1. - kij) * sqrt;
 
-    }
-    
-    #[test]
-    fn test_volume_translation_tcpr78() {
-        
-        let cub = super::utilis::nhexane_dehlouz();
+//                 sum += aij * x[j];
 
-        let param = &cub.parameters;
+//             }
 
-        let t = 198.15;
-        let d = 8499.433742;
-        let v = 1. / d;
-        let x = array![1.];
+//             let dna = 2. * sum - a;
+//             let dnq = q * (1. + dna / a - dnb / b);
+//             dna_dni.push(dna);
+//             dnb_dni.push(dnb);
+//             dnc_dni.push(dnc);
+//             dnq_dni.push(dnq);
+            
+//         }
 
-        let c = param.vvolt[0];
-        let a0 = param.a[0];
-        let b = param.b[0];
-
-        let tr = t / param.tc[0];
-        let alpha = param.alpha.alpha(0, tr);
-
-        let p_dehlouz = pressure_dehlouz(t, v, a0, alpha, b, c);
-        
-
-        let p = R * t * (d + cub.r_pressure(t, d, &x));
-
-        assert_relative_eq!(p / 1e5, p_dehlouz / 1e5, epsilon = 1e-9);
-        
-        assert_relative_eq!(p / 1e5, 2.0070345678300554, epsilon = 1e-9);
-        
-        // let content = format!("R = {},\nerr_P = {:.6} %", R, (p - 1e5).abs()/1e5 * 100.);
-        // let arquivo = OpenOptions::new()
-        //     .create(true)   // cria se não existir
-        //     .append(true)   // escreve no final se existir
-        //     .open("errp.txt")
-        //     .expect("Erro ao abrir/criar o arquivo");
-
-        // use std::io::Write;
-        // let mut writer = BufWriter::new(arquivo);
-        // writeln!(writer,"{}\n",content).expect("Erro ao escrever");
-        // assert_relative_eq!(p_dehlouz, 1e5, epsilon = 1e0);
-        
-    }
-
-    // #[test]
-    // fn crit() {
-
-    //     let cub = super::utilis::nhexane_dehlouz();
-
-    //     // let param = cub.parameters;
-    //     let t =  507.60;
-    //     // let d = 8499.433742;
-    //     let p = 30.25 * 1e5;
-    //     let eos = std::sync::Arc::new(crate::state::E::from_residual(cub));
-
-    //     let state = crate::state::State::new_tp(eos, t, p, None).unwrap();
-    //     println!("{}", &state);
-
-    //     // let d = state.d;
-
-    //         // let v = 1. / d;
-    //     // let x = array![1.];
-
-    //     // let c = param.vvolt[0];
-    //     // let a0 = param.a0[0];
-    //     // let b = param.b[0];
-
-    //     // let tr = t / param.tc[0];
-    //     // let alpha = param.alpha.alpha(0, tr);
-
-        
-        
-    // }
-}
+//         Self { dna_dni, dnb_dni, dnc_dni, dnq_dni }
+//     }
+// }

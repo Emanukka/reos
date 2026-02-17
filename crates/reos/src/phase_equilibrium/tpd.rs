@@ -119,6 +119,7 @@ impl<R:Residual> Into<(f64,Arc<State<R>>)> for MinTPD<R> {
     }
 }
 
+#[cfg(feature = "cpa")]
 #[cfg(test)]
 pub mod tests{
     use std::sync::Arc;

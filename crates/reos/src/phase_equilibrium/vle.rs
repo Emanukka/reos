@@ -131,6 +131,7 @@ fn antoine_water_acetic_acid()->Antoine{
     Antoine::from_records(vec![ant1,ant2])
 }
 
+#[cfg(feature = "cpa")]
 #[cfg(test)]
 pub mod tests{
     use std::sync::Arc;

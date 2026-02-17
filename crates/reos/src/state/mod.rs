@@ -225,6 +225,7 @@ impl<R:Residual> std::fmt::Display for State<R> {
     }
 }
 #[cfg(test)]
+#[cfg(feature = "cpa")]
 mod tests {
 
     use approx::assert_relative_eq;

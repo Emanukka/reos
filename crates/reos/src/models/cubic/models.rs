@@ -1,7 +1,7 @@
-use std::f64::consts::SQRT_2;
+use std::{f64::consts::SQRT_2, str::FromStr};
 
 
-use crate::models::IDEAL_GAS_CONST as R;
+use crate::models::{IDEAL_GAS_CONST as R, cubic::options::OptionsParseError};
 
 
 pub const SRK_KAPPA_FACTORS:  [f64; 3] = [0.480000, 1.57400, -0.17600];
@@ -37,9 +37,11 @@ pub trait CubicModel{
 
     fn to_string(&self)-> String;
 }
-
+#[derive(Clone,Debug)]
 pub struct SRK;
+#[derive(Clone,Debug)]
 pub struct PR76;
+#[derive(Clone,Debug)]
 pub struct PR78;
 
 impl CubicModel for SRK{
@@ -130,8 +132,8 @@ impl CubicModel for PR78 {
     }
 }
 
-// #[derive(Serialize)]
 #[enum_dispatch]
+#[derive(Clone,Debug)]
 pub enum CubicModels{
     SRK,
     PR76,
@@ -147,32 +149,30 @@ impl Default for CubicModels {
 
 }
 
-#[derive(Debug)]
-pub struct CubicModelParseError;
-
-impl std::fmt::Display for CubicModelParseError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "CubicModelParseError: invalid cubic model string")
-    }
-}
-impl std::error::Error for CubicModelParseError {}
 
 
+// impl std::fmt::Display for CubicModelParseError {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         write!(f, "CubicModelParseError: invalid cubic model string")
+//     }
+// }
+// impl std::error::Err for CubicModelParseError {}
 
-impl TryFrom<&str> for CubicModels {
-    type Error = CubicModelParseError;
-
+impl FromStr for CubicModels {
     
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    type Err = OptionsParseError;
+    
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value.to_lowercase().as_str(){
-            "srk"=> Ok(SRK.into()),
-            "pr76"=> Ok(PR76.into()),
-            "pr78"=> Ok(PR78.into()),
-            _=> Err(CubicModelParseError)
+            "srk"  => Ok(SRK.into()),
+            "pr76" => Ok(PR76.into()),
+            "pr78" => Ok(PR78.into()),
+            
+            "" => Err(OptionsParseError(format!("cubic model is a mandatory parameter"))),
+            _ => Err(OptionsParseError(format!("{} is not a valid cubic model", value))),
         }
     }
 }
-
 
 
 

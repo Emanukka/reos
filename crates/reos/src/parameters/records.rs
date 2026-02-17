@@ -31,12 +31,12 @@ impl<M:Display> Display for PureRecord<M> {
 
 impl<M> PureRecord<M>{
     
-    pub fn new(molar_weight:f64,name: String, model_record: M)->Self{
+    pub fn new<T:ToString>(molar_weight:f64,name: T, model_record: M)->Self{
         
         Self{
             molar_weight,
             model_record,
-            name
+            name:name.to_string()
         }
     }
 
@@ -52,8 +52,8 @@ pub struct BinaryRecord<M>{
 
 impl<M> BinaryRecord<M>{
     
-    pub fn new(model_record:M, id1:String, id2:String)->Self{
-        Self { model_record, id1, id2 }
+    pub fn new<T: ToString>(model_record:M, id1:T, id2:T)->Self{
+        Self { model_record, id1:id1.to_string(), id2: id2.to_string() }
     }
 
     pub fn get_id(&self) -> (&str, &str) {

@@ -8,20 +8,17 @@ use std::{collections::{HashMap, HashSet}, error::Error, fmt::Display, vec};
 
 use serde::de::DeserializeOwned;
 
-// use crate::parameters::records::ModelRecords;
 pub use crate::parameters::records::{BinaryParameter, BinaryRecord, Properties, PureRecord};
 
 
 pub trait Parameters<M:DeserializeOwned + Clone, B:DeserializeOwned + Clone, T>: Display {
 
 
-
-    /// Raw initializer function for a parameters object.
-    /// This function receives 'processed' parameters by the `new()` function.
-    fn from_raw(pure:Vec<M>, binary: BinaryMap<B>, properties: Option<Properties>, opt: T) -> Self;
+    fn from_raw(pure:Vec<M>, binary: BinaryMap<B>, properties: Option<Properties>, opt: T) ->  Result<Self, Box<dyn Error>> 
+    where Self: Sized ;
 
 
-    fn new(pure_records:Vec<PureRecord<M>>, binary_records: Vec<BinaryRecord<B>>, opt: T) -> Self
+    fn new(pure_records:Vec<PureRecord<M>>, binary_records: Vec<BinaryRecord<B>>, opt: T) ->  Result<Self, Box<dyn Error>> 
         where Self: Sized  {
 
         let component_map = self::component_map(&pure_records);
@@ -50,9 +47,10 @@ pub trait Parameters<M:DeserializeOwned + Clone, B:DeserializeOwned + Clone, T>:
         
         }
 
-        let p = Self::new(pure_records, binary_records, opt);
+        // let p = Self::new(pure_records, binary_records, opt);
 
-        Ok(p)
+        Self::new(pure_records, binary_records, opt)
+        // Ok(p)
     }
 
     fn from_multiple_jsons<A: AsRef<str> + Clone>(sets: &[Vec<A>], ppaths: &[A], bpaths: Option<&[A]>, opt: T)-> Result<Self, Vec<Box<dyn Error>>> where Self : Sized{
@@ -70,9 +68,16 @@ pub trait Parameters<M:DeserializeOwned + Clone, B:DeserializeOwned + Clone, T>:
         
         }
 
-        let p = Self::new(pure_records, binary_records, opt);
+        let res = Self::new(pure_records, binary_records, opt);
 
-        Ok(p)
+        match res {
+            Ok(ok) => Ok(ok),
+            Err(e) => {
+                Err(vec![e])
+            }
+        }
+
+        // Ok(p)
     }
     
 }

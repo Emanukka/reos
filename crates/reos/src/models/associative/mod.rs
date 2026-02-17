@@ -520,7 +520,7 @@ mod tests {
 
 
         let pr = PureRecord::new(0.0, "methanol".to_string(), m);    
-        let p = AssociativeParameters::new(vec![pr], vec![], ());
+        let p = AssociativeParameters::new(vec![pr], vec![], ()).unwrap();
         let asc = Associative::from_parameters(p);
 
         asc    
@@ -528,7 +528,7 @@ mod tests {
     
     fn water() -> Associative {
         let pr = watercpa_record();
-        let p = AssociativeParameters::new(vec![pr], vec![], ());
+        let p = AssociativeParameters::new(vec![pr], vec![], ()).unwrap();
         let asc = Associative::from_parameters(p);
 
         asc

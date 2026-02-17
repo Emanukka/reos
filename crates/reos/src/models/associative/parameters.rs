@@ -20,7 +20,7 @@ type Binary = AssociationBinaryRecord;
 impl Parameters<Pure, Binary, ()> for AssociativeParameters {
 
     // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, _: Option<Properties>, _: ()) -> Self {
-    fn from_raw(pure:Vec<Pure>, binary: BinaryMap<Binary>, _: Option<Properties>, _: ()) -> Self {
+    fn from_raw(pure:Vec<Pure>, binary: BinaryMap<Binary>, _: Option<Properties>, _: ()) -> Result<Self, Box<dyn std::error::Error>> {
         
         let n = pure.len();
 
@@ -60,13 +60,13 @@ impl Parameters<Pure, Binary, ()> for AssociativeParameters {
 
         let interactions = SiteInteraction::interactions_from_sites(&sites, binary); 
 
-        AssociativeParameters{
+        Ok(        AssociativeParameters{
             na: n_a,
             nb: n_b,
             nc: n_c,
             interactions,
             sites,
-        }
+        })
 
     }
 }
@@ -282,7 +282,7 @@ mod tests{
         // let induced = AssociationBinaryRecord::new(None,Some(0.1836), None);
         // let br = BinaryRecord::new(induced, "water".into(), "co2".into());
 
-        let p = AssociativeParameters::new(vec![pr1,pr2], vec![br], ());
+        let p = AssociativeParameters::new(vec![pr1,pr2], vec![br], ()).unwrap();
 
         let string = p.to_string();
 

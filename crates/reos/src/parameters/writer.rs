@@ -22,6 +22,7 @@ pub fn to_json_vec<S:serde::Serialize>(name:&str, vec:Vec<S>, build:bool) -> Res
     Ok(json)
 }
 
+#[cfg(feature = "cpa")]
 #[cfg(test)]
 mod tests {
     use crate::{models::cpa::parameters::readyto::{water4c,water4c_co2}};
