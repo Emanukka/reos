@@ -93,7 +93,7 @@ fn alpha_function_unmatch_records(){
 
     let mr = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345, None);
         let pr = PureRecord::new(18.02, "water", mr);
-        
+
         let options = CubicOptions::classic(PR78.into(), Alpha::twu91());
         
         let boxx = CubicParameters::new(vec![pr], vec![], options).unwrap_err();

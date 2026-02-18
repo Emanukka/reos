@@ -16,7 +16,7 @@ name = "reos"
 
 [dependencies] 
 serde = { version = "1.0.228", features = ["derive"] }
-ndarray = { version = "0.16.1", features = ["serde"] }
+ndarray = { version = "0.16.1", features = ["serde", "approx"] }
 serde_json = "1.0"
 thiserror = "2"
 approx = "0.5"

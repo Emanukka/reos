@@ -121,16 +121,18 @@ pub struct CubicParameters {
     pub properties: Properties,
 }
 
-type Pure = CubicPureRecord;
-type Binary = CubicBinaryRecord;
 
-impl Parameters<Pure, Binary, CubicOptions> for CubicParameters {
+
+impl Parameters for CubicParameters {
+    type Pure = CubicPureRecord;
+    type Binary = CubicBinaryRecord;
+    type Options = CubicOptions;
 
     fn from_raw(
-        pure:Vec<Pure>, 
-        binary: crate::parameters::BinaryMap<Binary>, 
+        pure:Vec<Self::Pure>, 
+        binary: crate::parameters::BinaryMap<Self::Binary>, 
         properties: Option<Properties>, 
-        opt: CubicOptions) -> Result<Self, Box<dyn std::error::Error>> {
+        opt: Self::Options) -> Result<Self, Box<dyn std::error::Error>> {
 
         let n = pure.len();
         

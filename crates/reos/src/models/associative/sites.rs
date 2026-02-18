@@ -6,7 +6,11 @@ use super::parameters::{AssociationBinaryRecord};
 use super::R;
 use super::strength;
 
-const W:[[f64;3];3]=[[0.0,1.0,1.0],[1.0,0.0,1.0],[1.0,1.0,1.0]];
+// allowed site interactions
+const W:[[f64;3];3]=[
+    [0.0,1.0,1.0],
+    [1.0,0.0,1.0],
+    [1.0,1.0,1.0]];
 
 pub const A: usize = 0;
 pub const B: usize = 1;
@@ -152,7 +156,7 @@ pub trait AssociationStrength: Default{
 }
 #[derive(Serialize,Clone,Debug)]
 pub struct SiteInteraction{
-    pub site_j:usize, //Site -> usize 
+    pub site_j:usize, 
     pub site_l:usize,
     pub epsilon:f64,
     pub kappa: f64,

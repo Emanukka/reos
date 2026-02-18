@@ -108,15 +108,15 @@ impl CPABinaryRecord{
 }
 
 
-type Pure = CPAPureRecord;
-type Binary = CPABinaryRecord;
-type Options = super::super::cubic::options::CubicOptions;
 
 
-impl Parameters<Pure, Binary, Options> for CPAParameters {
-    
+
+impl Parameters for CPAParameters {
+    type Pure = CPAPureRecord;
+    type Binary = CPABinaryRecord;
+    type Options = super::super::cubic::options::CubicOptions;
     // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<crate::parameters::Properties>, opt: CubicModels) -> Self {
-    fn from_raw(pure:Vec<Pure>, binary: crate::parameters::BinaryMap<Binary>, properties: Option<crate::parameters::Properties>, opt: Options) -> Result<Self, Box<dyn std::error::Error>> {
+    fn from_raw(pure:Vec<Self::Pure>, binary: crate::parameters::BinaryMap<Self::Binary>, properties: Option<crate::parameters::Properties>, opt: Self::Options) -> Result<Self, Box<dyn std::error::Error>> {
         
         let n = pure.len();
 

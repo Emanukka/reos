@@ -17,8 +17,10 @@ pub struct AssociativeParameters{
 type Pure = AssociationPureRecord;
 type Binary = AssociationBinaryRecord;
 
-impl Parameters<Pure, Binary, ()> for AssociativeParameters {
-
+impl Parameters for AssociativeParameters {
+    type Pure = AssociationPureRecord;
+    type Binary = AssociationBinaryRecord;
+    type Options = ();
     // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, _: Option<Properties>, _: ()) -> Self {
     fn from_raw(pure:Vec<Pure>, binary: BinaryMap<Binary>, _: Option<Properties>, _: ()) -> Result<Self, Box<dyn std::error::Error>> {
         
@@ -60,7 +62,7 @@ impl Parameters<Pure, Binary, ()> for AssociativeParameters {
 
         let interactions = SiteInteraction::interactions_from_sites(&sites, binary); 
 
-        Ok(        AssociativeParameters{
+        Ok( AssociativeParameters{
             na: n_a,
             nb: n_b,
             nc: n_c,

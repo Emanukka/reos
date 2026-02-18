@@ -1,7 +1,7 @@
 
 use std::{error::Error, fmt::Display, vec};
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 use ndarray::{Array1, array};
 
@@ -40,7 +40,9 @@ impl<M> PureRecord<M>{
         }
     }
 
+
 }
+
 
 #[derive(Serialize,Deserialize,Debug,Clone)]
 pub struct BinaryRecord<M>{

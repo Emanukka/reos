@@ -12,26 +12,7 @@ pub mod recipes{
         Ok(CPA::from_parameters(parameters))
     }
 
-    #[macro_export]
-    macro_rules! arr_eq {
-        ($a:expr, $b:expr, $tol:expr) => {{
-            if $a.len() != $b.len() {
-                println!("dim wrong!");
-                false
-            } else {
-                $a.iter().zip($b.iter()).all(|(x, y)| {
 
-                  if (x - y).abs() < $tol + $tol * y.abs(){
-                    true
-                  }
-                  else {
-                    println!("left = {}, right = {}",x,y);
-                    false
-                  }
-                })
-              }}
-          }
-    }
     pub fn water4c()->Pure{
 
         let c = CubicPureRecord::regressed_soave(0.12277, 0.0145e-3, 647.14, 0.6736, None);

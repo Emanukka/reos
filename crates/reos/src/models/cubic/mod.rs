@@ -216,23 +216,12 @@ impl Residual for Cubic  {
         let d = w.d;
         
         - g - f * d / t
-        // let w = self.parameters.m
-        // let mix = MixParameters::new(t, d, x, &self.parameters);
-        // let inner = v / (mix.tv - mix.b);
-        
-        // inner.ln() - mix.q * mix.i
 
     }
 
     fn r_entropy(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
 
-        // let mix = MixParameters::new(t, d, x, &self.parameters);
-        // let mix_dt = MixTemperatureDerivatives::new(t, x, &mix, &self.parameters);
-        
-        // let a = self.r_helmholtz(t, d, x);
-        // let da_dt = -  mix.i * mix_dt.dq_dt;
-        
-        // -a - t * da_dt
+
         let v = 1. / rho;
         let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
 
@@ -241,13 +230,7 @@ impl Residual for Cubic  {
         let f = F::me(t, v, &w);
 
         - t * df_dt - f
-        // // let mix = MixParameters::new(t, d, x, &self.parameters);
-        // let mix_dt = MixTemperatureDerivatives::new(t, x, &mix, &self.parameters);
-        
-        // let a = self.r_helmholtz(t, d, x);
-        // let da_dt = -  mix.i * mix_dt.dq_dt;
-        
-        // -a - t * da_dt
+
     }
 
     fn r_pressure(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
@@ -257,11 +240,7 @@ impl Residual for Cubic  {
         let df_dv = DFx::dv(t, v, &w);
 
         - df_dv
-        // let mix = MixParameters::new(t, d, x, &self.parameters);
-        // let rep = (mix.b - mix.c) / v / (mix.tv - mix.b);
-        // let att = mix.a / mix.delta / R / t;
-// 
-        // rep - att
+
 
     }
 
@@ -273,167 +252,8 @@ impl Residual for Cubic  {
 
         DFx::dni(t, v, &w, &dw_dni)
 
-        // let n = self.parameters.a.len();
-        // let mix = MixParameters::new(t, d, x, &self.parameters);
-        // let mix_dn = MixMoleDerivatives::new(t, x, &mix, &self.parameters);
-        // let inner = v / (mix.tv - mix.b );
-        // let ln = inner.ln();
-        // let z_residual = self.r_pressure(t, d, x) * v;
-
-        // Array1::from_shape_fn(n, |i| {
-
-        //     mix_dn.dnb_dni[i] * z_residual / mix.b + ln - mix_dn.dnq_dni[i] * mix.i
-
-        // })
-
-
     }
     
 
 }
 
-
-// pub struct MixParameters{
-//     pub a:f64,
-//     pub b:f64,  
-//     pub c:f64,
-//     pub q:f64,
-//     pub i:f64,
-//     pub delta:f64,
-//     pub tv:f64, //translated molar volume
-// }
-// impl MixParameters{
-
-//     pub fn new(t:f64, d:f64, x:&Array1<f64>, parameters:&CubicParameters) -> Self{
-        
-//         let n = parameters.a.len();
-//         let epsilon = parameters.options.model.eps();  
-//         let sigma = parameters.options.model.sig();  
-//         let bin = &parameters.binary;
-//         let alpha = &parameters.options.alpha.alpha(t, &parameters.tc);
-//         let [ac, bc, vt] = [&parameters.a,&parameters.b,&parameters.c];
-        
-//         let [mut a,mut b, mut c] = [0.,0.,0.];
-
-//         for i in 0..n {
-            
-//             b += x[i] * bc[i];
-//             c += x[i] * vt[i];
-
-//             for j in 0..n {
-
-//                 let [ai, aj] = [ac[i] * alpha[i], ac[j] * alpha[j]];
-                
-//                 let sqrt = (ai * aj).sqrt();
-//                 let kij = bin[(i,j)].kij + bin[(i,j)].lij * t;
-//                 let aij = (1. - kij) * sqrt;
-//                 a += x[i] * x[j] * aij;
-
-//             }
-//         }
-        
-//         let tv = 1. / d + c;
-//         let q = a / b / R / t;
-        
-//         let r = (tv + sigma * b) / (tv + epsilon * b);
-//         let i = 1. / (sigma - epsilon) * r.ln();
-//         let delta = (tv + sigma * b) * (tv + epsilon * b);
-        
-//         // dbg!(a, b, c, q, i, delta, tv);
-//         Self { a, b, c, q, i, delta, tv}
-//     }
-
-
-// }
-
-// pub struct MixTemperatureDerivatives{
-//     pub da_dt:f64,
-//     pub dq_dt:f64,
-// }
-
-// impl MixTemperatureDerivatives {
-
-//     pub fn new(t:f64, x:&Array1<f64>, mix: &MixParameters, parameters:&CubicParameters ) -> Self{
-
-//         let n = x.len();
-//         let alpha = parameters.options.alpha.alpha(t, &parameters.tc);
-//         let dalpha_dt = parameters.options.alpha.dalpha_dt(t, &parameters.tc);
-//         let ac = &parameters.a;
-//         let bin = &parameters.binary;
-//         let [a, q] = [mix.a, mix.q];
-
-//         let mut da_dt = 0.;
-
-//         for i in 0..n {
-//             for j in 0..n{
-
-//                 let dkij = bin[(i,j)].lij;
-//                 let kij = bin[(i,j)].kij + dkij * t;
-                 
-//                 let [ai, aj] = [ac[i] * alpha[i] , ac[j] * alpha[j]];
-//                 let [dai, daj] = [ac[i] * dalpha_dt[i] , ac[j] * dalpha_dt[j]];
-
-//                 let sqrt = (ai * aj).sqrt();
-
-//                 da_dt += 0.5 * (1. - kij) * ( dai * aj + daj * ai) / sqrt - sqrt * dkij;
-
-//             }
-//         }   
-
-//         let dq_dt = q * (da_dt / a - 1./t);
-
-//         Self { da_dt, dq_dt }
-//     }
-// }
-// pub struct MixMoleDerivatives{
-//     pub dna_dni:Vec<f64>,
-//     pub dnb_dni:Vec<f64>,
-//     pub dnc_dni:Vec<f64>,
-//     pub dnq_dni:Vec<f64>,
-// }
-
-// impl MixMoleDerivatives {
-
-//     pub fn new(t:f64, x:&Array1<f64>, mix: &MixParameters, parameters:&CubicParameters ) -> Self{
-
-//         let n = x.len();
-//         let [ac, bc, vt] = [&parameters.a,&parameters.b,&parameters.c];
-//         let [a, b, q] = [mix.a, mix.b, mix.q];
-//         let bin = &parameters.binary;
-//         let alpha = &parameters.options.alpha.alpha(t, &parameters.tc);
-
-//         let mut dna_dni = Vec::with_capacity(n);
-//         let mut dnb_dni = Vec::with_capacity(n);
-//         let mut dnc_dni = Vec::with_capacity(n);
-//         let mut dnq_dni = Vec::with_capacity(n);
-        
-//         for i in 0..n {
-            
-//             let dnb = bc[i];
-//             let dnc = vt[i];
-//             let mut sum = 0.; 
-//             for j in 0..n {
-                
-//                 let kij = bin[(i,j)].kij + bin[(i,j)].lij * t;
-
-//                 let [ai, aj] = [ac[i] * alpha[i], ac[j] * alpha[j]];
-//                 let sqrt = (ai * aj).sqrt();
-
-//                 let aij = (1. - kij) * sqrt;
-
-//                 sum += aij * x[j];
-
-//             }
-
-//             let dna = 2. * sum - a;
-//             let dnq = q * (1. + dna / a - dnb / b);
-//             dna_dni.push(dna);
-//             dnb_dni.push(dnb);
-//             dnc_dni.push(dnc);
-//             dnq_dni.push(dnq);
-            
-//         }
-
-//         Self { dna_dni, dnb_dni, dnc_dni, dnq_dni }
-//     }
-// }

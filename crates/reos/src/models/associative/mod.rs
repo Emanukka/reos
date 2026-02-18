@@ -1,11 +1,16 @@
-pub mod sites;
-pub mod parameters;
-pub mod strength;
 use crate::models::IDEAL_GAS_CONST as R;
 use crate::models::associative::parameters::AssociativeParameters;
 use crate::state::eos::{EosError, EosResult};
 
 use ndarray::{Array1, Array2};
+
+
+pub mod sites;
+pub mod parameters;
+pub mod strength;
+
+#[cfg(test)]
+mod tests;
 
 #[derive(Clone)]
 pub struct Associative{
@@ -27,7 +32,6 @@ impl Associative {
 
     pub fn r_pressure(&self, h:f64, d:f64, dlng_drho:f64)->f64 {
 
-        // let h = self.h(x,&unbonded);
         - d * (1. + d * dlng_drho) * h / 2.
 
     }
@@ -487,163 +491,163 @@ impl Associative {
 }
 
 
-#[cfg(test)]
-mod tests {
+// #[cfg(test)]
+// mod tests {
     
 
-    use approx::assert_relative_eq;
-    use ndarray::array;
+//     use approx::assert_relative_eq;
+//     use ndarray::array;
 
-    use crate::{models::associative::{Associative, parameters::{AssociationPureRecord, AssociativeParameters}}, parameters::{Parameters, records::PureRecord}};
+//     use crate::{models::associative::{Associative, parameters::{AssociationPureRecord, AssociativeParameters}}, parameters::{Parameters, records::PureRecord}};
 
 
 
-    fn watercpa_record() -> PureRecord<AssociationPureRecord> {
+//     fn watercpa_record() -> PureRecord<AssociationPureRecord> {
 
-        let m = AssociationPureRecord::associative(
-            166.55e2, 
-            0.0692, 
-            [2,2,0]);
+//         let m = AssociationPureRecord::associative(
+//             166.55e2, 
+//             0.0692, 
+//             [2,2,0]);
 
             
-        let pr = PureRecord::new(0.0, "water".to_string(), m);    
+//         let pr = PureRecord::new(0.0, "water".to_string(), m);    
         
-        pr
-    }
+//         pr
+//     }
 
-    fn methanol()-> Associative{
+//     fn methanol()-> Associative{
 
-        let m=AssociationPureRecord::associative(
-            160.70e2, 
-            34.4e-3, 
-            [2,1,0],);
+//         let m=AssociationPureRecord::associative(
+//             160.70e2, 
+//             34.4e-3, 
+//             [2,1,0],);
 
 
-        let pr = PureRecord::new(0.0, "methanol".to_string(), m);    
-        let p = AssociativeParameters::new(vec![pr], vec![], ()).unwrap();
-        let asc = Associative::from_parameters(p);
+//         let pr = PureRecord::new(0.0, "methanol".to_string(), m);    
+//         let p = AssociativeParameters::new(vec![pr], vec![], ()).unwrap();
+//         let asc = Associative::from_parameters(p);
 
-        asc    
-    } 
+//         asc    
+//     } 
     
-    fn water() -> Associative {
-        let pr = watercpa_record();
-        let p = AssociativeParameters::new(vec![pr], vec![], ()).unwrap();
-        let asc = Associative::from_parameters(p);
+//     fn water() -> Associative {
+//         let pr = watercpa_record();
+//         let p = AssociativeParameters::new(vec![pr], vec![], ()).unwrap();
+//         let asc = Associative::from_parameters(p);
 
-        asc
-    }
+//         asc
+//     }
 
-    #[test]
-    fn test_unbonded_sites_fraction_3b(){
+//     #[test]
+//     fn test_unbonded_sites_fraction_3b(){
 
-        // t = 298.15 K , d = 1000.0
-        let asc = methanol();
-        let k = array![[0.           , 0.76195179893041],
-                                                     [0.76195179893041, 0.           ]];
+//         // t = 298.15 K , d = 1000.0
+//         let asc = methanol();
+//         let k = array![[0.           , 0.76195179893041],
+//                                                      [0.76195179893041, 0.           ]];
                                                      
-        let x = array![1.0];
+//         let x = array![1.0];
 
-        let unb = asc.unbonded_sites_fraction(&x, &k);
-        let reff = array![0.73571946249752, 0.47143892500497];
+//         let unb = asc.unbonded_sites_fraction(&x, &k);
+//         let reff = array![0.73571946249752, 0.47143892500497];
 
-        unb.iter().zip(reff.iter()).for_each(|(x,y)| {
-            assert_relative_eq!(x, y, epsilon = 1e-10)
-        });
+//         unb.iter().zip(reff.iter()).for_each(|(x,y)| {
+//             assert_relative_eq!(x, y, epsilon = 1e-10)
+//         });
         
-        let m = &asc.sites_mole_frac(&x);
-        let tan = asc.x_tan(m, &k).unwrap();
+//         let m = &asc.sites_mole_frac(&x);
+//         let tan = asc.x_tan(m, &k).unwrap();
         
-        unb.iter().zip(tan.iter()).for_each(|(x,y)| {
-            assert_relative_eq!(x, y, epsilon = 1e-10)
-        });
+//         unb.iter().zip(tan.iter()).for_each(|(x,y)| {
+//             assert_relative_eq!(x, y, epsilon = 1e-10)
+//         });
 
-    }
+//     }
 
-    #[test]
-    fn test_unbonded_sites_fraction_4c(){
+//     #[test]
+//     fn test_unbonded_sites_fraction_4c(){
 
 
-        // t = 298.15 K , d = 1000.0
-        let asc = water();
-        let k = array![[0.           , 0.83518048731],
-                                                     [0.83518048731, 0.           ]];
+//         // t = 298.15 K , d = 1000.0
+//         let asc = water();
+//         let k = array![[0.           , 0.83518048731],
+//                                                      [0.83518048731, 0.           ]];
 
-        let x = array![1.0];
+//         let x = array![1.0];
 
-        let unb = asc.unbonded_sites_fraction(&x, &k);
-        let reff = array![0.530287110928 , 0.530287110928];
+//         let unb = asc.unbonded_sites_fraction(&x, &k);
+//         let reff = array![0.530287110928 , 0.530287110928];
 
-        unb.iter().zip(reff.iter()).for_each(|(x,y)| {
-            assert_relative_eq!(x, y, epsilon = 1e-10)
-        });
+//         unb.iter().zip(reff.iter()).for_each(|(x,y)| {
+//             assert_relative_eq!(x, y, epsilon = 1e-10)
+//         });
         
-        let m = &asc.sites_mole_frac(&x);
-        let tan = asc.x_tan(m, &k).unwrap();
+//         let m = &asc.sites_mole_frac(&x);
+//         let tan = asc.x_tan(m, &k).unwrap();
         
-        unb.iter().zip(tan.iter()).for_each(|(x,y)| {
-            assert_relative_eq!(x, y, epsilon = 1e-10)
-        });
+//         unb.iter().zip(tan.iter()).for_each(|(x,y)| {
+//             assert_relative_eq!(x, y, epsilon = 1e-10)
+//         });
 
-    }
+//     }
 
-    #[test]
-    fn test_association_helmholtz() {
+//     #[test]
+//     fn test_association_helmholtz() {
 
-        let asc = water();
+//         let asc = water();
 
-        let x = array![1.0];
-        let unbonded = array![0.530287110928 , 0.530287110928];
+//         let x = array![1.0];
+//         let unbonded = array![0.530287110928 , 0.530287110928];
         
-        let a = asc.r_helmholtz(&x, &unbonded);
+//         let a = asc.r_helmholtz(&x, &unbonded);
 
-        assert_relative_eq!(a, -1.597921023379, epsilon = 1e-10)
-    }
+//         assert_relative_eq!(a, -1.597921023379, epsilon = 1e-10)
+//     }
 
-    #[test]
-    fn test_association_entropy() {
+//     #[test]
+//     fn test_association_entropy() {
 
-        let t = 298.15;
-        let asc = water();
-        let x = array![1.0];
-        let k = array![[0.           , 0.83518048731],
-                                                     [0.83518048731, 0.           ]];
+//         let t = 298.15;
+//         let asc = water();
+//         let x = array![1.0];
+//         let k = array![[0.           , 0.83518048731],
+//                                                      [0.83518048731, 0.           ]];
 
-        let s = asc.r_entropy(t, &x, &k);
+//         let s = asc.r_entropy(t, &x, &k);
 
-        assert_relative_eq!(s, -4.713659269705, epsilon = 1e-9)
+//         assert_relative_eq!(s, -4.713659269705, epsilon = 1e-9)
 
-    }
+//     }
 
-    #[test]
-    fn test_association_pressure() {
+//     #[test]
+//     fn test_association_pressure() {
 
-        let d = 1000.0;
+//         let d = 1000.0;
 
-        let asc = water();
-        let x = array![1.0];
-        let unbonded = array![0.530287110928 , 0.530287110928];
-        let h = asc.h(&x, &unbonded);
-        let p = asc.r_pressure(h, d, 6.9352666490453005 * 1e-6);
+//         let asc = water();
+//         let x = array![1.0];
+//         let unbonded = array![0.530287110928 , 0.530287110928];
+//         let h = asc.h(&x, &unbonded);
+//         let p = asc.r_pressure(h, d, 6.9352666490453005 * 1e-6);
 
-        assert_relative_eq!(p, -945.9409464127781, epsilon = 1e-9)
+//         assert_relative_eq!(p, -945.9409464127781, epsilon = 1e-9)
 
-    }
+//     }
 
-    #[test]
-    fn test_association_chem_pot() {
+//     #[test]
+//     fn test_association_chem_pot() {
 
-        let asc = water();
-        let x = array![1.0];
-        let unbonded = array![0.530287110928 , 0.530287110928];
-        let h = asc.h(&x, &unbonded);
+//         let asc = water();
+//         let x = array![1.0];
+//         let unbonded = array![0.530287110928 , 0.530287110928];
+//         let h = asc.h(&x, &unbonded);
         
-        let mu = asc.r_chemical_potential(h, &array![0.00693526664905], &unbonded);
-        let reff = array![-2.54386196979185, -2.54386196979185];
+//         let mu = asc.r_chemical_potential(h, &array![0.00693526664905], &unbonded);
+//         let reff = array![-2.54386196979185, -2.54386196979185];
 
-        mu.iter().zip(reff.iter()).for_each(|(x,y)| {
-            assert_relative_eq!(x, y, epsilon = 1e-10)
-        });
-    }
+//         mu.iter().zip(reff.iter()).for_each(|(x,y)| {
+//             assert_relative_eq!(x, y, epsilon = 1e-10)
+//         });
+//     }
 
-}
+// }

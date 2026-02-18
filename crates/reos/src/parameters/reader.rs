@@ -260,8 +260,11 @@ mod tests{
             write!(f, "Test(kij={}, lij={})", self.kij, self.lij)
         }
     }
-    impl Parameters<PureModelTest, BinaryModelTest, ()> for ParametersTest {
+    impl Parameters for ParametersTest {
 
+        type Pure = PureModelTest;
+        type Binary =  BinaryModelTest;
+        type Options = ();
         fn from_raw(pure:Vec<PureModelTest>, binary: crate::parameters::BinaryMap<BinaryModelTest>, properties: Option<Properties>, _: ()) -> Result<Self, Box<dyn Error>> {
             // let pure = pure.iter().map(|x| x)
             Ok(Self {
