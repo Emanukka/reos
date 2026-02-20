@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::models::cubic::{alpha::{AlphaError, AlphaModel, AlphaRecord, Alpha}, models::{CubicModel, CubicModels}, parameters};
 
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct Soave(pub Vec<f64>);
 
 impl AlphaModel for Soave {

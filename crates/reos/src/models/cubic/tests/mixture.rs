@@ -71,7 +71,7 @@ mod ybip {
         let t = 298.15;
         let d= 38.082099077791675;
         let x = &array![0.6, 0.4];
-        // println!("{}", cub.parameters);
+        println!("{}", cub.parameters);
         
         // let val = cub.r_helmholtz(t, d, &x);
         assert_relative_eq!(cub.r_helmholtz(t, d, x), 0.0593270749233682,epsilon = TOL)

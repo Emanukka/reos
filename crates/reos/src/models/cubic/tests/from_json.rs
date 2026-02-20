@@ -1,7 +1,13 @@
 use approx::assert_relative_eq;
 use ndarray::array;
 
-use crate::{models::cubic::{Cubic, mixing_rule::MixingRule, models::PR78, options::CubicOptions, parameters::{CubicBinaryRecord, CubicParameters, CubicPureRecord}}, parameters::{BinaryRecord, Parameters, PureRecord}, residual::Residual};
+
+use crate::models::cubic::Cubic;
+use crate::parameters::{PureRecord, BinaryRecord,Parameters};
+use crate::residual::Residual;
+use super::super::parameters::{CubicPureRecord, CubicBinaryRecord, CubicParameters};
+use super::super::options::*;
+
 
 use super::recipes::water_co2_bip;
 
@@ -44,7 +50,7 @@ fn water_co2_pr78_from_json() {
     let br = BinaryRecord::new(mb, "water", "carbon dioxide");
     
     // let options = CubicOptions::new(PR78.into(), Alpha::soave(), MixingRule::default());
-    let options = CubicOptions::classic_soave(PR78.into());
+    let options = CubicOptions::classic_soave(CubicModelOption::PR78);
 
     let p = CubicParameters::new(vec![pr1, pr2], vec![br], options).unwrap();
 
@@ -58,51 +64,44 @@ fn water_co2_pr78_from_json() {
     assert_relative_eq!(cub.r_entropy(t, d, x), reff.r_entropy(t, d, x))
     // }
 }
+
 #[test]
-fn bla(){
-        use ::serde::{ Deserialize, Serialize };
+fn options(){
 
-        #[derive(Deserialize, Serialize)]
-        struct X;
+    let options = CubicOptions::classic_soave(CubicModelOption::SRK);
 
-        #[derive(Deserialize, Serialize)]
-        struct Y;
+    let s = r#"
+    {
+        "cubic_model": "srk",
+        "alpha_model": "soave"
+    }
+    "#;
 
+    assert_eq!(options, serde_json::from_str(s).unwrap());
 
-    
-        #[derive(Serialize,Deserialize)]
-        // #[serde(untagged)]
-        enum Z{
-            X(X),
-            Y(Y)
-        }
+    let options = CubicOptions::classic_soave(CubicModelOption::PR78);
 
-        #[derive(Deserialize, Serialize)]
-        struct W{
-            z:Z,
-            i:usize
-        }
-        // let ty = List { elements: vec![42] };
-        let z = Z::X(X);
-        let serialized = serde_json::to_string(&z).unwrap();
+    let s = r#"
+    {
+        "cubic_model": "pr78",
+        "alpha_model": "soave"
+    }
+    "#;
 
-        dbg!(serialized);
+    assert_eq!(options, serde_json::from_str(s).unwrap());
 
-        let w = W{z,i:1};
-        let serialized = serde_json::to_string(&w).unwrap();
+    let options = CubicOptions::classic(CubicModelOption::PR78, AlphaOption::Twu91);
 
-        println!("{}",serialized);
-        // assert_eq!(serialized, r#"[42]"#);
+    let s = r#"
+    {
+        "cubic_model": "pr78",
+        "alpha_model": "twu91"
+    }
+    "#;
 
-        // #[derive(Deserialize, Serialize)]
-        // struct ListObject<T> {
-        //     elements: Vec<T>,
-        // }
+    assert_eq!(options, serde_json::from_str(s).unwrap());
 
-        // let ty = ListObject { elements: vec![42] };
-        // let serialized = serde_json::to_string(&ty).unwrap();
-
-        // assert_eq!(serialized, r#"{"elements":[42]}"#);
+    // assert_eq!(options, classic_soave_srk); 
 }
 // #[test]
 // fn options_from_json() {

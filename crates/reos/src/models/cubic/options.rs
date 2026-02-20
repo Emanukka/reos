@@ -1,39 +1,60 @@
-use std::str::FromStr;
+use serde::{Deserialize, Serialize};
 
-use thiserror::Error;
 
-use crate::models::cubic::{alpha::Alpha, combining_rule::CombiningRule, mixing_rule::MixingRule, models::CubicModels};
+pub use super::models::CubicModelOption;
+pub use super::alpha::AlphaOption;
+pub use super::combining_rule::CombiningRuleOption;
+pub use super::mixing_rule::MixingRuleOption;
 
-#[derive(Error, Debug)]
-#[error("{}",self.0)]
-pub struct OptionsParseError(pub String);
+// #[derive(Clone, Debug)]
+// pub struct CubicParamet{
+//     pub model:CubicModels,
+//     pub alpha:Alpha,
+//     pub combr:CombiningRule,
+//     pub mix:MixingRule,
+// }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize,PartialEq)]
+
 pub struct CubicOptions{
-    pub model:CubicModels,
-    pub alpha:Alpha,
-    pub combr:CombiningRule,
-    pub mix:MixingRule,
+    pub cubic_model:CubicModelOption,
+    #[serde(default)]
+    pub alpha_model:AlphaOption,
+    #[serde(default)]
+    pub combining_rule:CombiningRuleOption,
+    #[serde(default)]
+    pub mixing_rule:MixingRuleOption,
     
 }
 
+// impl From<CubicOptions> for CubicOptions {
+
+//     fn from(value: CubicOptions) -> Self {
+        
+//         CubicOptions { model: value.model.into(), alpha: value.alpha.into(), combr: value.combr.into(), mix: value.mix.into() }
+
+//     }
+    
+// }
 impl CubicOptions {
 
-    pub fn new(model: CubicModels, alpha: Alpha,  combr: CombiningRule, mix:MixingRule,) -> Self {
+    pub fn new(cubic_model: CubicModelOption, alpha_model: AlphaOption,  combining_rule: CombiningRuleOption, mixing_rule:MixingRuleOption,) -> Self {
 
-        Self { model, alpha, combr, mix}
+        Self { cubic_model, alpha_model, combining_rule, mixing_rule}
     }
 
-    pub fn classic(model: CubicModels, alpha: Alpha) -> Self{
+    pub fn classic(cubic_model: CubicModelOption, alpha_model: AlphaOption) -> Self{
 
-        Self { model, alpha, combr: CombiningRule::default(), mix: MixingRule::default() }
+        Self { cubic_model, alpha_model, combining_rule: CombiningRuleOption::default(), mixing_rule: MixingRuleOption::default() }
 
     }
-    pub fn classic_soave(model:CubicModels) -> Self {
 
-        Self::classic(model, Alpha::soave())
+    pub fn classic_soave(model:CubicModelOption) -> Self {
+
+        Self::classic(model, AlphaOption::Soave.into())
         // Self { model, alpha: Alpha::soave(), combr: CombiningRule::default(), mix: MixingRule::default() }
     }
+
 }
 
 // pub struct CubicOptionsHelper{

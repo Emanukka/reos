@@ -58,10 +58,12 @@ pub enum AlphaError {
 
 macro_rules! impl_alpha {
     ($($var:ident),*) => {
-        #[derive(Debug,Clone)]
+        
+        #[derive(Debug,Clone, PartialEq)]
         pub enum Alpha { $(
             $var($var),
         )*}
+
 
         impl Alpha {
 
@@ -96,7 +98,55 @@ macro_rules! impl_alpha {
                     )*
             }
         }   
-    }
+    
+
+
+}
 }
 
 impl_alpha!{Soave, Twu91}
+
+
+#[derive(Clone,Debug,Serialize,Deserialize,PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum AlphaOption {
+    Soave,
+    Twu91
+}
+
+impl Default for AlphaOption {
+
+    fn default() -> Self {
+        Self::Soave
+    }
+}
+impl From<AlphaOption> for Alpha {
+    
+    fn from(value: AlphaOption) -> Self {
+        match value {
+
+            AlphaOption::Soave => Self::soave(),
+            AlphaOption::Twu91 => Self::twu91(),
+
+        }    
+    }
+}
+
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn assert_model_parse() {
+
+        let soave:Alpha = AlphaOption::Soave.into();
+        let twu91:Alpha = AlphaOption::Twu91.into();
+
+        assert_eq!(soave,  Alpha::Soave(Soave(vec![])));
+        assert_eq!(twu91, Alpha::Twu91(Twu91(vec![])));
+        
+    }
+}

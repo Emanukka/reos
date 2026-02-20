@@ -14,15 +14,12 @@ pub struct AssociativeParameters{
     pub nc:           usize,
 }
 
-type Pure = AssociationPureRecord;
-type Binary = AssociationBinaryRecord;
-
 impl Parameters for AssociativeParameters {
     type Pure = AssociationPureRecord;
     type Binary = AssociationBinaryRecord;
     type Options = ();
     // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, _: Option<Properties>, _: ()) -> Self {
-    fn from_raw(pure:Vec<Pure>, binary: BinaryMap<Binary>, _: Option<Properties>, _: ()) -> Result<Self, Box<dyn std::error::Error>> {
+    fn from_raw(pure:Vec<Self::Pure>, binary: BinaryMap<Self::Binary>, _: Option<Properties>, _: ()) -> Result<Self, Box<dyn std::error::Error>> {
         
         let n = pure.len();
 

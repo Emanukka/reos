@@ -5,8 +5,9 @@ use std::{fmt::Debug, str::FromStr};
 
 use enum_dispatch::enum_dispatch;
 use ndarray::Array1;
+use serde::{Deserialize, Serialize};
 
-use crate::models::cubic::{DwDni, DwDt, W, combining_rule::CombiningRuleModel, models::CubicModel, options::OptionsParseError, parameters::CubicParameters};
+use crate::models::cubic::{DwDni, DwDt, W, combining_rule::CombiningRuleModel, models::CubicModel, parameters::CubicParameters};
 
 
 #[enum_dispatch]
@@ -21,7 +22,7 @@ pub trait MixingRuleModel: Clone + Debug{
     fn to_string(&self)->String;
 }
 
-#[derive(Clone,Debug,)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct Quadratic;
 
 
@@ -34,14 +35,14 @@ impl MixingRuleModel for  Quadratic {
     
     fn apply(&self, t:f64, _:f64, x:&Array1<f64>, parameters:&CubicParameters) -> W {
         let n = parameters.a.len();
-        // let epsilon = parameters.options.model.eps();  
-        // let sigma = parameters.options.model.sig();  
+        // let epsilon = parameters.model.eps();  
+        // let sigma = parameters.model.sig();  
         let bin = &parameters.binary;
-        let alpha = &parameters.options.alpha.alpha(t, &parameters.tc);
+        let alpha = &parameters.alpha.alpha(t, &parameters.tc);
 
         let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
         let [mut d,mut b, _] = [0.,0.,0.];
-        let combr = &parameters.options.combr;
+        let combr = &parameters.combr;
 
         for i in 0..n {
             
@@ -64,8 +65,8 @@ impl MixingRuleModel for  Quadratic {
             }
         }
 
-        let d1 = parameters.options.model.eps();
-        let d2 = parameters.options.model.sig();
+        let d1 = parameters.model.eps();
+        let d2 = parameters.model.sig();
         W{b, d, d1, d2}
 
     }
@@ -73,13 +74,13 @@ impl MixingRuleModel for  Quadratic {
     fn dw_dt(&self, t:f64, _:f64, x:&Array1<f64>, _:&W, parameters:&CubicParameters) -> DwDt{
 
         let bin = &parameters.binary;
-        let alpha = &parameters.options.alpha.alpha(t, &parameters.tc);
-        let dalpha_dt = parameters.options.alpha.dalpha_dt(t, &parameters.tc);
+        let alpha = &parameters.alpha.alpha(t, &parameters.tc);
+        let dalpha_dt = parameters.alpha.dalpha_dt(t, &parameters.tc);
 
         let [ac, _, _] = [&parameters.a,&parameters.b,&parameters.c];
         let n = alpha.len();
         let mut dd = 0.;
-        let combr = &parameters.options.combr;
+        let combr = &parameters.combr;
 
 
         for i in 0..n {
@@ -110,7 +111,7 @@ impl MixingRuleModel for  Quadratic {
 
         let n = x.len();
         let bin = &parameters.binary;
-        let alpha = &parameters.options.alpha.alpha(t, &parameters.tc);
+        let alpha = &parameters.alpha.alpha(t, &parameters.tc);
         let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
 
         let mut db = Vec::with_capacity(n);
@@ -147,27 +148,49 @@ impl MixingRuleModel for  Quadratic {
 }
 
 #[enum_dispatch(MixingRuleModel)]
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub enum MixingRule{
     Quadratic,
 }
 
-impl Default for MixingRule {
+#[derive(Clone,Debug,Serialize,Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
 
+pub enum MixingRuleOption {
+    Quadratic,
+}
+
+impl Default for MixingRuleOption {
+    
     fn default() -> Self {
-        Self::Quadratic(Quadratic)
+        Self::Quadratic
+    }
+}
+
+impl From<MixingRuleOption> for MixingRule {
+    
+    fn from(value: MixingRuleOption) -> Self {
+        
+        match value {
+
+            MixingRuleOption::Quadratic => Quadratic.into(),
+
+        }    
     }
 }
 
 
-impl FromStr for MixingRule {
-    type Err = OptionsParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+#[cfg(test)]
+mod tests {
 
-        match s.to_lowercase().as_str() {
-            "quadratic" => Ok(Self::Quadratic(Quadratic)),
-            "" => Ok(Self::default()),
-            _ => Err(OptionsParseError(format!("{} is not a mixing rule implemented",s)))
-        }
+    use super::*;
+
+    #[test]
+    fn assert_model_parse() {
+
+        let quad:MixingRule = MixingRuleOption::Quadratic.into();
+
+        assert_eq!(quad, MixingRule::Quadratic(Quadratic));
+        
     }
 }

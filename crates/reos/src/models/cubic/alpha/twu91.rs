@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::cubic::{alpha::{AlphaError, AlphaModel, AlphaRecord, Alpha}, models::{ CubicModels}};
 
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct Twu91(pub Vec<[f64;3]>);
 
 impl AlphaModel for Twu91 {

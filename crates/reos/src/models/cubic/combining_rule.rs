@@ -1,6 +1,6 @@
 use enum_dispatch::enum_dispatch;
+use serde::{Deserialize, Serialize};
 
-use crate::models::cubic::options::OptionsParseError;
 
 
 #[enum_dispatch]
@@ -10,11 +10,16 @@ pub trait CombiningRuleModel {
 
     fn dt(&self,  ai_aj:[f64;2], dai_daj:[f64;2], kij:f64, dkij:f64) -> f64;
 
-}
-#[derive(Clone, Debug)]
+    fn to_string(&self) -> String;
+}   
+#[derive(Clone, Debug, PartialEq)]
 pub struct Classic;
 
 impl CombiningRuleModel for Classic {
+
+    fn to_string(&self) -> String {
+        "Classic".into()
+    }
 
     fn apply(&self, ai_aj:[f64;2], bi_bj:[f64;2], kij:f64) -> [f64;2] {
         
@@ -41,25 +46,49 @@ impl CombiningRuleModel for Classic {
 }
 
 #[enum_dispatch(CombiningRuleModel)]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CombiningRule {
     Classic,
 }
 
-impl Default for CombiningRule {
+
+
+#[derive(Clone, Debug, Serialize, Deserialize,PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum CombiningRuleOption {
+    Classic,
+}
+
+impl Default for CombiningRuleOption {
     fn default() -> Self {
-        Self::Classic(Classic)
+        Self::Classic
     }
 }
 
-impl std::str::FromStr for CombiningRule {
-    type Err = OptionsParseError;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+impl From<CombiningRuleOption> for CombiningRule {
+    
+    fn from(value: CombiningRuleOption) -> Self {
+        
+        match value {
 
-        match s.to_lowercase().as_str() {
-            "classic" => Ok(Self::Classic(Classic)),
-            "" => Ok(Self::default()),
-            _ => Err(OptionsParseError(format!("{} is not a combining rule implemented",s)))
-        }
+            CombiningRuleOption::Classic => Classic.into(),
+
+        }    
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+
+    #[test]
+    fn assert_model_parse() {
+
+        let classic:CombiningRule = CombiningRuleOption::Classic.into();
+
+        assert_eq!(classic, CombiningRule::Classic(Classic));
+        
     }
 }

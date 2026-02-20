@@ -1,13 +1,14 @@
-use std::{f64::consts::SQRT_2, str::FromStr};
+use std::{f64::consts::SQRT_2,};
 
 
-use crate::models::{IDEAL_GAS_CONST as R, cubic::options::OptionsParseError};
+use crate::models::{IDEAL_GAS_CONST as R};
 
 
 pub const SRK_KAPPA_FACTORS:  [f64; 3] = [0.480000, 1.57400, -0.17600];
 pub const PR76_KAPPA_FACTORS: [f64; 3] = [0.374640, 1.54226, -0.26992];
 pub const PR78_KAPPA_FACTORS: [f64; 4] = [0.374642, 1.48503, -0.164423, 0.016666];
 use enum_dispatch::enum_dispatch;
+use serde::{Deserialize, Serialize};
 
 #[enum_dispatch(CubicModels)]
 pub trait CubicModel{
@@ -37,11 +38,11 @@ pub trait CubicModel{
 
     fn to_string(&self)-> String;
 }
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct SRK;
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct PR76;
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq)]
 pub struct PR78;
 
 impl CubicModel for SRK{
@@ -133,46 +134,55 @@ impl CubicModel for PR78 {
 }
 
 #[enum_dispatch]
-#[derive(Clone,Debug)]
+#[derive(Clone,Debug, PartialEq, )]
 pub enum CubicModels{
     SRK,
     PR76,
     PR78,
 }
-// 
 
-impl Default for CubicModels {
+#[derive(Clone,Debug,Serialize,Deserialize,PartialEq)]
+#[serde(rename_all = "lowercase")]
 
-    fn default() -> Self {
-        SRK.into()
-    }
-
+pub enum CubicModelOption {
+    SRK,
+    PR76,
+    PR78
 }
 
 
-
-// impl std::fmt::Display for CubicModelParseError {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(f, "CubicModelParseError: invalid cubic model string")
-//     }
-// }
-// impl std::error::Err for CubicModelParseError {}
-
-impl FromStr for CubicModels {
+impl From<CubicModelOption> for CubicModels {
     
-    type Err = OptionsParseError;
-    
-    fn from_str(value: &str) -> Result<Self, Self::Err> {
-        match value.to_lowercase().as_str(){
-            "srk"  => Ok(SRK.into()),
-            "pr76" => Ok(PR76.into()),
-            "pr78" => Ok(PR78.into()),
-            
-            "" => Err(OptionsParseError(format!("cubic model is a mandatory parameter"))),
-            _ => Err(OptionsParseError(format!("{} is not a valid cubic model", value))),
-        }
+    fn from(value: CubicModelOption) -> Self {
+        
+        match value {
+
+            CubicModelOption::SRK => SRK.into(),
+            CubicModelOption::PR76 => PR76.into(),
+            CubicModelOption::PR78 => PR78.into(),
+
+
+        }    
     }
 }
 
 
 
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn assert_model_parse() {
+
+        let srk:CubicModels = CubicModelOption::SRK  .into();
+        let pr76:CubicModels = CubicModelOption::PR76.into();
+        let pr78:CubicModels = CubicModelOption::PR78.into();
+
+        assert_eq!(srk, CubicModels::SRK(SRK));
+        assert_eq!(pr76, CubicModels::PR76(PR76));
+        assert_eq!(pr78, CubicModels::PR78(PR78));
+        
+    }
+}

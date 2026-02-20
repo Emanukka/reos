@@ -4,6 +4,7 @@ pub fn dimensionless_delta_jl(t:f64,epsilon:f64,kappa:f64)->f64{
     (epsilon / R / t).exp_m1() * kappa
 }
 
+
 pub fn elliot_dimensionless_delta_jl(
     t:f64,
     epsilon_j:f64,
@@ -20,6 +21,7 @@ pub fn elliot_dimensionless_delta_jl(
 pub fn cr1_factor_ik(f_ii:f64,f_kk:f64)->f64{
     0.5 * (f_ii + f_kk)
 }
+
 pub fn elliot_factor_ik(f_ii:f64,f_kk:f64)->f64{
     (f_ii * f_kk).sqrt()
 }

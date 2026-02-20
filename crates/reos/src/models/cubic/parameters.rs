@@ -1,7 +1,12 @@
 use ndarray::{Array1, Array2};
 use serde::{Deserialize, Serialize};
-use crate::{models::cubic::{alpha::{Alpha, AlphaRecord}, combining_rule::CombiningRule, mixing_rule::{MixingRule, MixingRuleModel}, models::{ CubicModel, CubicModels, PR76, PR78}, options::CubicOptions},
-parameters::{ BinaryMap, Parameters, records::{BinaryParameter, Properties}}};
+
+use super::alpha::{Alpha, AlphaRecord};
+use super::models::{CubicModels,CubicModel};
+use super::mixing_rule::{MixingRule,MixingRuleModel};
+use super::combining_rule::{CombiningRule,CombiningRuleModel};
+
+use super::options::*;
 
 
 #[derive(Clone,Debug,Serialize, Deserialize)]
@@ -116,14 +121,17 @@ pub struct CubicParameters {
     pub b: Vec<f64>,
     pub c: Vec<f64>,
     pub tc:Vec<f64>,
-    pub options:CubicOptions,
+    pub model:CubicModels,
+    pub combr:CombiningRule,
+    pub mix: MixingRule,
+    pub alpha:Alpha,
     pub binary:Array2<CubicBinaryRecord>,
-    pub properties: Properties,
+    pub properties: crate::parameters::Properties,
 }
 
 
 
-impl Parameters for CubicParameters {
+impl crate::parameters::Parameters for CubicParameters {
     type Pure = CubicPureRecord;
     type Binary = CubicBinaryRecord;
     type Options = CubicOptions;
@@ -131,15 +139,15 @@ impl Parameters for CubicParameters {
     fn from_raw(
         pure:Vec<Self::Pure>, 
         binary: crate::parameters::BinaryMap<Self::Binary>, 
-        properties: Option<Properties>, 
+        properties: Option<crate::parameters::Properties>, 
         opt: Self::Options) -> Result<Self, Box<dyn std::error::Error>> {
 
         let n = pure.len();
         
-        let model = opt.model;
-        let alpha = opt.alpha;
-        let combr = opt.combr;
-        let mix = opt.mix;
+        let model: CubicModels = opt.cubic_model.into();
+        let alpha: Alpha = opt.alpha_model.into();
+        let combr = opt.combining_rule.into();
+        let mix = opt.mixing_rule.into();
         
         let properties = properties.unwrap_or_default();
 
@@ -177,14 +185,17 @@ impl Parameters for CubicParameters {
 
         let alpha = alpha.build(&properties.names, alpha_records, &model)?;
 
-        let options = CubicOptions::new(model, alpha, combr, mix);
+        // let options = CubicOptions::new(model, alpha, combr, mix);
         Ok(
         Self{
             a:a_,
             b:b_,
             c,
             tc,
-            options,
+            model,
+            mix,
+            combr,
+            alpha,
             binary:binary_,
             properties,
         })
@@ -200,11 +211,11 @@ impl std::fmt::Display for CubicParameters {
         
         if self.a.len() == 1 {
             write!(f, "CubicParameters(\n\tmodel={:?},\n\tac={:?},\n\tbc={:?},\n\ttc={:?},\n\t{})",
-                self.options.model.to_string(),
+                self.model.to_string(),
                 self.a,
                 self.b,
                 self.tc,
-                self.options.alpha.to_string(),
+                self.alpha.to_string(),
             )
 
         } else {
@@ -216,13 +227,14 @@ impl std::fmt::Display for CubicParameters {
             .collect::<Vec<_>>()
             .join("\n\t       ");
 
-            write!(f, "CubicParameters(\n\tmodel={:?},\n\tmixing={:?},\n\tac={:?},\n\tbc={:?},\n\ttc={:?},\n\t{},\n\tbinary=[{}]\n)",
-                self.options.model.to_string(),
-                self.options.mix.to_string(),
+            write!(f, "CubicParameters(\n\tmodel={:?}, mixing_rule={:?}, combining_rule={:?}, \n\ta={:?},\n\tb={:?},\n\ttc={:?},\n\t{},\n\tbinary=[{}]\n)",
+                self.model.to_string(),
+                self.mix.to_string(),
+                self.combr.to_string(),
                 self.a,
                 self.b,
                 self.tc,
-                self.options.alpha.to_string(),
+                self.alpha.to_string(),
                 sbin
             )
 

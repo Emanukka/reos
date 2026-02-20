@@ -39,6 +39,27 @@ pub mod recipes {
         )
 
     }
+
+
+    pub fn acetic_acid() -> Pure {
+
+
+        let m = AssociationPureRecord::associative(
+            403.23e2, 
+            4.5e-3, 
+            [0,0,1]);
+
+        PureRecord::new(0.0, "acetic_acid", m)
+    }
+
+    pub fn water_acetic_acid() -> Binary {
+        
+        let b = AssociationBinaryRecord {  epsilon: None, kappa: None, combining_rule: CombiningRule::ECR };
+        
+
+        BinaryRecord::new(b, "water", "acetic_acid")
+    }
+    
     pub fn methanol()-> Pure{
 
         let m=AssociationPureRecord::associative(

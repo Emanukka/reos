@@ -209,8 +209,8 @@ impl Residual for Cubic  {
     fn r_helmholtz(&self,t:f64, rho:f64, x:&Array1<f64>) -> f64 {
 
         let v = 1. / rho;
-        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
-        // let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+        let w = self.parameters.mix.apply(t, v, x, &self.parameters);
+        // let w = self.parameters.mix.apply(t, v, x, &self.parameters);
         let g = F::g(v, &w);
         let f = F::f(v, &w);
         let d = w.d;
@@ -223,9 +223,9 @@ impl Residual for Cubic  {
 
 
         let v = 1. / rho;
-        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+        let w = self.parameters.mix.apply(t, v, x, &self.parameters);
 
-        let dw_dt = self.parameters.options.mix.dw_dt(t, v, x, &w, &self.parameters);
+        let dw_dt = self.parameters.mix.dw_dt(t, v, x, &w, &self.parameters);
         let df_dt = DFx::dt(t, v, &w, &dw_dt);
         let f = F::me(t, v, &w);
 
@@ -236,7 +236,7 @@ impl Residual for Cubic  {
     fn r_pressure(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
 
         let v = 1. / rho;
-        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
+        let w = self.parameters.mix.apply(t, v, x, &self.parameters);
         let df_dv = DFx::dv(t, v, &w);
 
         - df_dv
@@ -247,8 +247,8 @@ impl Residual for Cubic  {
     fn r_chemical_potential(&self,t:f64, rho:f64, x:&Array1<f64>)->Array1<f64> {
         
         let v = 1. / rho;
-        let w = self.parameters.options.mix.apply(t, v, x, &self.parameters);
-        let dw_dni = self.parameters.options.mix.dw_dni(t, v, x,& w, &self.parameters);
+        let w = self.parameters.mix.apply(t, v, x, &self.parameters);
+        let dw_dni = self.parameters.mix.dw_dni(t, v, x,& w, &self.parameters);
 
         DFx::dni(t, v, &w, &dw_dni)
 

@@ -3,19 +3,19 @@ mod association;
 
 pub mod recipes{
 
-    use crate::{models::{associative::{parameters::{AssociationBinaryRecord, AssociationPureRecord}, sites::CombiningRule}, cpa::{Binary, CPA, Pure, SCPA, parameters::{CPABinaryRecord, CPAParameters, CPAPureRecord}}, cubic::{models::SRK, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
+    use crate::{models::{associative::{parameters::{AssociationBinaryRecord, AssociationPureRecord}, sites::CombiningRule}, cpa::{Binary, CPA, Pure, SCPA, parameters::{CPABinaryRecord, CPAParameters, CPAPureRecord}}, cubic::{models::{CubicModelOption, SRK}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
 
     
     pub fn scpa(pure_records: Vec<Pure>, binary_records: Vec<Binary>)->Result<SCPA, Box<dyn std::error::Error>>{
         
-        let parameters = CPAParameters::new(pure_records, binary_records, CubicOptions::classic_soave(SRK.into()))?;
+        let parameters = CPAParameters::new(pure_records, binary_records, CubicOptions::classic_soave(CubicModelOption::SRK))?;
         Ok(CPA::from_parameters(parameters))
     }
 
 
     pub fn water4c()->Pure{
 
-        let c = CubicPureRecord::regressed_soave(0.12277, 0.0145e-3, 647.14, 0.6736, None);
+        let c = CubicPureRecord::regressed_soave(0.12277, 0.014515e-3, 647.29, 0.67359, None);
 
         let a = AssociationPureRecord::associative(
             166.55e2, 
@@ -29,7 +29,7 @@ pub mod recipes{
     }
 
     pub fn acetic1a()->Pure{
-        let c = CubicPureRecord::regressed_soave(0.91196, 0.0468e-3, 594.8, 0.4644, None);
+        let c = CubicPureRecord::regressed_soave(0.91196, 0.0468e-3, 594.95, 0.4644, None);
 
         let a = AssociationPureRecord::associative(
             403.23e2, 

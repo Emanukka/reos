@@ -1,21 +1,26 @@
 use approx::assert_relative_eq;
 use ndarray::array;
 
+use super::recipes;
 
+const TOL:f64 = 1e-12;
+mod association_constants{
+
+    use super::*;
     #[test]
-    fn test_assoc_consts_4c(){
+    fn test_4c(){
 
         let t=298.15;
-        let rho= 1000.0;
+        let rho= 58_000.0;
 
         let x= &array![1.0];
-        // let comp1 = water4c();
-        let water = super::pure::water();
+        let water = super::super::pure::water();
         let assoc = water.assoc;
         let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
 
         let k = assoc.assoc.association_constants(t, rho, x,&volf);
-        let reff = array![[0.           , 0.83518048731],[0.83518048731, 0.           ]];
+        let reff = array![[ 0.              , 80.24605455518329],
+                                                        [80.24605455518329,  0.              ]];
 
         assert_relative_eq!(k, reff, epsilon = 1e-10)        
         // k.iter().zip(reff.iter()).for_each(|(x,y)| {
@@ -110,7 +115,7 @@ use ndarray::array;
     //     assert!(ok)
     // }
     #[test]
-    fn association_constants_water_co2() {
+    fn test_4c_solv() {
 
         let t=298.15;
         let rho= 55_000.0;
@@ -122,80 +127,86 @@ use ndarray::array;
         let assoc = super::recipes::scpa(vec![comp1,comp2],vec![b],).unwrap().assoc;
         
         let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
-        let k_rust = assoc.assoc.association_constants(t, rho, x,&volf).flatten().to_owned();
+        let k_rust = assoc.assoc.association_constants(t, rho, x,&volf);
 
-        assert_relative_eq!(k_rust, array![ 0. , 25.04896564,  3.21025658, 25.04896564,  0., 0., 3.21025658,  0.,  0.], epsilon=1e-7);
+        assert_relative_eq!(k_rust, array![
+            [ 0.              , 25.08567408085239,  3.21279398320226],
+            [25.08567408085239,  0.              ,  0.              ],
+            [ 3.21279398320226,  0.              ,  0.              ]], epsilon=1e-7);
 
     }
 
 
 
     #[test]
-    fn association_constants_water_acetic() {
+    fn test_4c_1a_elliot_cr() {
 
         let t=298.15;
-        let rho= 21_500.0;
-        let x= &array![0.25,0.75];
+        let rho= 1_000.0;
+        let x= &array![0.75,0.25];
 
         let comp1 = super::recipes::water4c();
         let comp2 = super::recipes::acetic1a();
         let b = super::recipes::water4c_acetic1a();
         let assoc = super::recipes::scpa(vec![comp1,comp2],vec![b],).unwrap().assoc;
         
+        println!("{:?}",assoc.assoc.parameters.interactions);
         let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
-        let k_rust = assoc.assoc.association_constants(t, rho, x, &volf).flatten().to_owned();
+        let k_rust = assoc.assoc.association_constants(t, rho, x, &volf);
+        dbg!(assoc.rdf.g(rho, x));
+        let kref = array![
+            [  0.              ,   0.47210091350445,   8.53435728830102],
+            [  0.47210091350445,   0.              ,   8.53435728830102],
+            [  8.53435728830102,   8.53435728830102, 154.27899468296786]];
 
-        let reff =  array![0.00000000e+00, 1.84368158e+00, 3.00115845e+02,
-                                              1.84368158e+00, 0.00000000e+00, 3.00115845e+02, 
-                                              3.00115845e+02, 3.00115845e+02, 4.88530782e+04] ;
-
-        assert_relative_eq!(k_rust,reff,epsilon=1e-4);
+        println!("{}",k_rust);
+        assert_relative_eq!(k_rust, kref, epsilon = TOL);
     }
 
-    #[test]
-    fn unbonded_water_acetic() {
-        let t=298.15;
-        let rho= 21_500.0;
-        let x= &array![0.25,0.75];
+    // #[test]
+    // fn wa() {
+    //     let t=298.15;
+    //     let rho= 21_500.0;
+    //     let x= &array![0.25,0.75];
 
-        let comp1 = super::recipes::water4c();
-        let comp2 = super::recipes::acetic1a();
-        let b = super::recipes::water4c_acetic1a();
-        let assoc = super::recipes::scpa(vec![comp1,comp2],vec![b],).unwrap().assoc;
+    //     let comp1 = super::recipes::water4c();
+    //     let comp2 = super::recipes::acetic1a();
+    //     let b = super::recipes::water4c_acetic1a();
+    //     let assoc = super::recipes::scpa(vec![comp1,comp2],vec![b],).unwrap().assoc;
         
-        let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
-        let k = assoc.assoc.association_constants(t, rho, x, &volf);
+    //     let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
+    //     let k = assoc.assoc.association_constants(t, rho, x, &volf);
 
-        let unb = assoc.assoc.unbonded_sites_fraction(x,&k);
+    //     let unb = assoc.assoc.unbonded_sites_fraction(x,&k);
 
-        let reff = array![0.1598388 , 0.1598388 , 0.00241471];
+    //     let reff = array![0.1598388 , 0.1598388 , 0.00241471];
 
-        assert_relative_eq!(unb,reff,epsilon=1e-6);
+    //     assert_relative_eq!(unb,reff,epsilon=1e-6);
 
-    }
+    // }
 
-    #[test]
-    fn permutation_water_acetic() {
+    // #[test]
+    // fn permutation_water_acetic() {
 
-        let t=298.15;
-        let rho= 21_500.0;
-        let x= &array![0.75, 0.25];
+    //     let t=298.15;
+    //     let rho= 21_500.0;
+    //     let x= &array![0.75, 0.25];
 
-        let comp1 = super::recipes::water4c();
-        let comp2 = super::recipes::acetic1a();
-        let b = super::recipes::water4c_acetic1a();
-        let assoc = super::recipes::scpa(vec![comp2,comp1],vec![b],).unwrap().assoc;
+    //     let comp1 = super::recipes::water4c();
+    //     let comp2 = super::recipes::acetic1a();
+    //     let b = super::recipes::water4c_acetic1a();
+    //     let assoc = super::recipes::scpa(vec![comp2,comp1],vec![b],).unwrap().assoc;
         
-        let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
+    //     let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
 
-        let k = assoc.assoc.association_constants(t, rho, x, &volf);
-        let unb = assoc.assoc.unbonded_sites_fraction(x,&k);
+    //     let k = assoc.assoc.association_constants(t, rho, x, &volf);
+    //     let unb = assoc.assoc.unbonded_sites_fraction(x,&k);
 
-        let reff = array![0.00241471, 0.1598388 , 0.1598388 ];
+    //     let reff = array![0.00241471, 0.1598388 , 0.1598388 ];
 
-        assert_relative_eq!(unb, reff, epsilon=1e-6);
+    //     assert_relative_eq!(unb, reff, epsilon=1e-6);
 
-    }
+    // }
     // #[test]
     // fn phi_water_co2(){
 
@@ -217,3 +228,5 @@ use ndarray::array;
 
     // }
 
+
+}

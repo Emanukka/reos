@@ -258,6 +258,7 @@ impl SiteInteraction {
             CombiningRule::CR1 => {
 
                 strength::cr1_association_strength_jl(t, f_ii, f_kk, self.epsilon, self.kappa)
+
             }
 
             CombiningRule::ECR => {
@@ -275,6 +276,15 @@ impl SiteInteraction {
                 let kappa_l = sl.kappa;
 
                 strength::ecr_association_strength_jl(t, f_ii, f_kk, epsilon_j, epsilon_l, kappa_j, kappa_l)
+                // // strength::cr1_association_strength_jl(t, f_ii, f_kk, self.epsilon, self.kappa)
+                // let f = strength::elliot_factor_ik(f_ii, f_kk) ;
+                // println!("caso1");
+                // println!("f = {f}");
+
+                // let d = strength::association_strength_jl(t, self.epsilon, self.kappa, f);
+
+                // println!("DELTA = {d}");
+                // d
             }
         }
 
@@ -416,7 +426,8 @@ pub mod tests{
             .map(|r| ((r.id1,r.id2),r.model_record))
             .collect();
         let interactions = SiteInteraction::interactions_from_sites(&sites,b);
-        
+
+        assert_eq!(interactions.len(), 2);
         let i1 = &interactions[0];
         let i2 = &interactions[1];
 
