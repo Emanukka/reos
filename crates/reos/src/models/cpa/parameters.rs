@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use ndarray::array;
 use serde::{Deserialize, Serialize};
 
 use crate::models::associative::parameters::{AssociationBinaryRecord, AssociationPureRecord, AssociativeParameters};
 
-use crate::models::cubic::models::CubicModels;
+use crate::models::cpa::rdf::{RDF, RDFcpa, RDFmodel, RDFmodelOption};
+use crate::models::cubic::models::{CubicModelOption, CubicModels};
+use crate::models::cubic::options::CubicOptions;
 use crate::models::cubic::parameters::{CubicBinaryRecord, CubicParameters, CubicPureRecord};
 use crate::parameters::{Parameters};
 use crate::parameters::records::{BinaryParameter, BinaryRecord, PureRecord};
@@ -41,6 +44,7 @@ impl std::fmt::Display for CPAPureRecord {
 pub struct CPAParameters{
     pub cubic: CubicParameters, 
     pub assoc: AssociativeParameters,
+    pub rdf: RDFcpa,
 }
 
 #[derive(Serialize,Deserialize,Clone,Debug)]
@@ -52,7 +56,24 @@ pub struct CPABinaryRecord{
     pub c: Option<CubicBinaryRecord>
 
 }
+#[derive(Serialize,Deserialize)]
+pub struct CPAOptions{
 
+    pub rdf_model: RDFmodelOption,
+    #[serde(flatten)]
+    pub cubic_options: CubicOptions
+}
+
+impl Default for CPAOptions {
+
+    fn default() -> Self {
+        
+        let rdf_model = RDFmodelOption::default();
+        let cubic_options = CubicOptions::classic_soave(CubicModelOption::SRK);
+        Self { rdf_model, cubic_options }
+    }
+    
+}
 impl std::fmt::Display for CPABinaryRecord {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
@@ -112,10 +133,11 @@ impl CPABinaryRecord{
 
 
 impl Parameters for CPAParameters {
+
     type Pure = CPAPureRecord;
     type Binary = CPABinaryRecord;
-    type Options = super::super::cubic::options::CubicOptions;
-    // fn from_raw(pure:Vec<Pure>, binary: Vec<BinaryParameter<Binary>>, properties: Option<crate::parameters::Properties>, opt: CubicModels) -> Self {
+    type Options = CPAOptions;
+
     fn from_raw(pure:Vec<Self::Pure>, binary: crate::parameters::BinaryMap<Self::Binary>, properties: Option<crate::parameters::Properties>, opt: Self::Options) -> Result<Self, Box<dyn std::error::Error>> {
         
         let n = pure.len();
@@ -145,12 +167,23 @@ impl Parameters for CPAParameters {
             a_pure.push(record.a);
         }
 
-        let cubic = CubicParameters::from_raw(c_pure, c_binary, properties, opt)?;
+        let cubic = CubicParameters::from_raw(c_pure, c_binary, properties, opt.cubic_options)?;
         let assoc = AssociativeParameters::from_raw(a_pure, a_binary, None, ())?;
+        let rdf_model: RDF = opt.rdf_model.into();
 
+
+        let n = cubic.b.len();
+        let rdf = RDFcpa { 
+            b: ndarray::Array1::from_vec(cubic.b.clone()), 
+            bij: ndarray::Array2::from_shape_fn((n,n), |(i,j)| {
+                0.5 * (cubic.b[i] + cubic.b[j])
+            }),
+            model: rdf_model };
+            
         Ok(CPAParameters{
             cubic,
             assoc,
+            rdf
         })
 
     }
@@ -159,8 +192,9 @@ impl Parameters for CPAParameters {
 impl std::fmt::Display for CPAParameters {
     
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        
-        write!(f, "CPAParameters(\n  {},\n  {}\n)", self.cubic, self.assoc)
+
+        write!(f, "CPAParameters(\n  rdf_model='{}',\n  {},\n  {}\n)", self.rdf.model.to_string(),self.cubic, self.assoc,  )
+
     }
 
 }

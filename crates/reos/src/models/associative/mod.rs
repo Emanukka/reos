@@ -30,16 +30,16 @@ impl Associative {
 
 impl Associative {
 
-    pub fn r_pressure(&self, h:f64, d:f64, dlng_drho:f64)->f64 {
+    pub fn df_dv(&self, h:f64, d:f64, dlng_drho:f64)->f64 {
 
-        - d * (1. + d * dlng_drho) * h / 2.
-
+        d * (1. + d * dlng_drho) * h / 2.
+        
     }
 
-    pub fn r_chemical_potential(&self, h:f64, ndlng_dni:&Array1<f64>, unbonded:&Array1<f64>, )->Array1<f64>{
+    pub fn df_dn(&self, h:f64, ndlng_dni:&Array1<f64>, unbonded:&Array1<f64>, )->Array1<f64>{
         
         let sites = &self.parameters.sites;
-        let mut mu = - 0.5 * h * ndlng_dni;
+        let mut df_dn = - 0.5 * h * ndlng_dni;
 
         for sj in sites{
 
@@ -47,15 +47,15 @@ impl Associative {
             let j = sj.idx;
             let m = sj.mul;
 
-            mu[i] += unbonded[j].ln() * m 
+            df_dn[i] += unbonded[j].ln() * m 
         }   
-        mu
+        df_dn
         
 
 
     }
     
-    pub fn r_helmholtz(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
+    pub fn helmholtz(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
 
         let sites = &self.parameters.sites;
         
@@ -70,43 +70,77 @@ impl Associative {
 
     }
 
-    pub fn r_entropy(&self, t:f64, x:&Array1<f64>, k:&Array2<f64>)->f64{
+    pub fn df_dt(&self, t:f64, x:&Array1<f64>, k:&Array2<f64>, dk_dt:&Array2<f64>)->f64{
 
         // let m = self.sites_mole_frac(x);
         let sites = &self.parameters.sites;
-        let interactions = &self.parameters.interactions;
+        // let interactions = &self.parameters.interactions;
         let unbonded = &self.unbonded_sites_fraction(x, k);
-        let a = self.r_helmholtz(x, unbonded);
-        let mut s = 0.0;
+        // let f = self.r_helmholtz(x, unbonded);
+        let mut df_dt = 0.0;
 
-        // todo: change the combining rule to compute the derivative of Delta in respect to T
-        // because this func. works fo cr1 only
-        for interaction in interactions {
+        dbg!(&unbonded);
+        let s = sites.len();
 
-            let j = interaction.site_j;
-            let l = interaction.site_l;
+        for j in 0..s{
+            for l in 0..s {
+                // let ke_jl = k[(j,l)] * interaction.epsilon;
 
+                let xmj = unbonded[j] * sites[j].mul;
+                let xml = unbonded[l] * sites[l].mul; 
 
-            let ke_jl = k[(j,l)] * interaction.epsilon;
-            let xmj = unbonded[j] * sites[j].mul;
-            let xml = unbonded[l] * sites[l].mul;
-            
-            if j == l {
-                s += ke_jl * xmj * xml
+                df_dt += dk_dt[(j, l)] * xmj * xml 
 
-            } else {
-                s += 2.0 * ke_jl * xmj * xml
             }
-            
         }
-        
-        s /= - 2.0 * R * t ;
 
-        s -= a;
+        df_dt *= - 0.5 ;
+
+        df_dt
+        // - f - t * df_dt
+        // s /= - 2.0 * R * t ;
+
+        // s -= a;
         
-        s
+        // s
 
     }
+    // pub fn r_entropy(&self, t:f64, x:&Array1<f64>, k:&Array2<f64>)->f64{
+
+    //     // let m = self.sites_mole_frac(x);
+    //     let sites = &self.parameters.sites;
+    //     let interactions = &self.parameters.interactions;
+    //     let unbonded = &self.unbonded_sites_fraction(x, k);
+    //     let a = self.r_helmholtz(x, unbonded);
+    //     let mut s = 0.0;
+
+
+    //     for interaction in interactions {
+
+    //         let j = interaction.site_j;
+    //         let l = interaction.site_l;
+
+
+    //         let ke_jl = k[(j,l)] * interaction.epsilon;
+    //         let xmj = unbonded[j] * sites[j].mul;
+    //         let xml = unbonded[l] * sites[l].mul;
+            
+    //         if j == l {
+    //             s += ke_jl * xmj * xml
+
+    //         } else {
+    //             s += 2.0 * ke_jl * xmj * xml
+    //         }
+            
+    //     }
+        
+    //     s /= - 2.0 * R * t ;
+
+    //     s -= a;
+        
+    //     s
+
+    // }
 
     pub fn x_ab_analytic(m1:f64,m2:f64,mult1:f64,mult2:f64,k:f64)->Array1<f64>{
 
@@ -174,7 +208,7 @@ impl Associative {
         h
     }
 
-    pub fn association_constants(&self, t:f64, rho:f64, x:&Array1<f64>, volf:&Array2<f64>)->Array2<f64>{
+    pub fn association_constants(&self, t:f64, rho:f64, x:&Array1<f64>, volf:&Array1<f64>)->Array2<f64>{
 
         let sites = &self.parameters.sites;
         let interactions = &self.parameters.interactions;
@@ -189,14 +223,40 @@ impl Associative {
             let i = sites[j].owner;
             let k = sites[l].owner;
 
-            let f_ii = volf[(i,i)];
-            let f_kk = volf[(k,k)];
+            let f_ii = volf[i];
+            let f_kk = volf[k];
 
             kmat[(j,l)] = interaction.association_strength_jl(t, f_ii, f_kk, sites) * x[i] * x[k] * rho;
             kmat[(l,j)] = kmat[(j,l)]
             
         }
         kmat
+
+    }
+
+    pub fn dk_dt(&self, t:f64, rho:f64, x:&Array1<f64>, volf:&Array1<f64>)->Array2<f64>{
+
+        let sites = &self.parameters.sites;
+        let interactions = &self.parameters.interactions;
+        let s = sites.len();
+        let mut dk_dt = Array2::zeros((s,s));
+
+        for interaction in interactions{
+            
+            let j = interaction.site_j;
+            let l = interaction.site_l;
+
+            let i = sites[j].owner;
+            let k = sites[l].owner;
+
+            let f_ii = volf[i];
+            let f_kk = volf[k];
+
+            dk_dt[(j,l)] = interaction.association_strength_jl_dt(t, f_ii, f_kk, sites) * x[i] * x[k] * rho;
+            dk_dt[(l,j)] = dk_dt[(j,l)]
+            
+        }
+        dk_dt
 
     }
 
@@ -209,7 +269,7 @@ impl Associative {
 
         let mut unbonded =  Array1::from_elem(s,0.2);
 
-        let tol = 1e-10;
+        let tol = 1e-12;
         let max_iter = 1000;  
 
         for i in 0..max_iter {

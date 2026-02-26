@@ -27,42 +27,42 @@ impl ResidualDerivedProperties {
     }
 }
 
-/// API for computing dimensionless residual isovolumetric thermodynamic properties
+/// Derivatives of dimenssionless helmholtz energy F at (T, V, n)
+/// (the input variables are density and composition due convenience)
 pub trait Residual{
 
+    fn helmholtz(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
     
-    fn get_properties(&self)->&Properties;
     
     fn molar_weight(&self)->&Array1<f64>;
+
+    fn df_dv(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
     
-    fn r_entropy(&self,t:f64, d:f64, x:&Array1<f64>)->f64;
+    fn df_dt(&self,t:f64, d:f64, x:&Array1<f64>)->f64;
 
-    fn r_chemical_potential(&self,t:f64,d: f64,x:&Array1<f64>)->Array1<f64>;
+    fn df_dn(&self,t:f64,d: f64,x:&Array1<f64>)->Array1<f64>;
 
-    fn r_helmholtz(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
-
-    fn r_pressure(&self,t:f64,d: f64,x:&Array1<f64>)->f64;
-
-    fn compressibility(&self,t:f64,d:f64,x:&Array1<f64>)->f64{
-        let r_pres = self.r_pressure(t, d, x);
-        r_pres / d
-    }
+    // fn compressibility(&self,t:f64,d:f64,x:&Array1<f64>)->f64{
+    //     let r_pres = self.r_pressure(t, d, x);
+    //     r_pres / d
+    // }
+    fn get_properties(&self)->&Properties;
 
 
     fn max_density(&self,x:&Array1<f64>)->f64;
 
     fn components(&self)->usize;
 
-    fn all_derived_properties(&self,t:f64,d: f64,x:&Array1<f64>)->ResidualDerivedProperties{
+    // fn all_derived_properties(&self,t:f64,d: f64,x:&Array1<f64>)->ResidualDerivedProperties{
 
-        let mut r_properties = ResidualDerivedProperties::default();
-        r_properties.a = self.r_helmholtz(t, d, x);
-        r_properties.dadv = self.r_pressure(t, d, x);
-        r_properties.dadni = self.r_chemical_potential(t, d, x).to_vec();
+    //     let mut r_properties = ResidualDerivedProperties::default();
+    //     r_properties.a = self.r_helmholtz(t, d, x);
+    //     r_properties.dadv = self.r_pressure(t, d, x);
+    //     r_properties.dadni = self.r_chemical_potential(t, d, x).to_vec();
 
-        r_properties
+    //     r_properties
 
-    }
+    // }
 }
 
 

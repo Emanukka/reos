@@ -1,23 +1,23 @@
 use ndarray::Array1;
 use crate::models::associative::Associative;
 use crate::models::associative::parameters::{ AssociativeParameters};
-use crate::models::cpa::rdf::{Rdf, RdfModel};
+use crate::models::cpa::rdf::{RDFcpa};
 use crate::residual::Residual;
 
 
 #[derive(Clone)]
-pub struct AssociativeCPA<R:RdfModel>{
+pub struct AssociativeCPA{
     pub assoc:Associative,
-    pub rdf:Rdf<R>,
+    pub rdf:RDFcpa,
 
 }
 
 
-impl<R:RdfModel> AssociativeCPA<R> {
+impl AssociativeCPA {
     
     pub fn from_parameters(
         parameters:AssociativeParameters,
-        rdf:Rdf<R>
+        rdf:RDFcpa
         )->Self{
         Self
         {
@@ -28,7 +28,7 @@ impl<R:RdfModel> AssociativeCPA<R> {
 }
 
 
-impl<R:RdfModel> Residual for AssociativeCPA<R> {
+impl Residual for AssociativeCPA {
     
     fn get_properties(&self)->&crate::parameters::Properties {
         panic!()
@@ -43,58 +43,52 @@ impl<R:RdfModel> Residual for AssociativeCPA<R> {
     fn max_density(&self,_x:&Array1<f64>)->f64 {
         panic!()
     }
-    fn r_pressure(&self,t:f64,rho:f64,x:&Array1<f64>) -> f64 {
+    fn df_dv(&self,t:f64,rho:f64,x:&Array1<f64>) -> f64 {
 
-        let volf = &self.rdf.bij * self.rdf.g(rho, x);
+        let volf = self.rdf.g(rho, x) * &self.rdf.b;
+    // let volf = assoc.rdf.g(rho, x) * &assoc.rdf.bij;
         let k = &self.assoc.association_constants(t, rho, x, &volf);
         let unbonded = self.assoc.unbonded_sites_fraction(x, k);
         let h = self.assoc.h(x, &unbonded);
 
         let dlng_drho = self.rdf.dlngdrho(rho, x);
 
-        self.assoc.r_pressure(h, rho, dlng_drho)
+        self.assoc.df_dv(h, rho, dlng_drho)
     }
 
-    fn r_chemical_potential(&self,t:f64,rho:f64,x:&Array1<f64>)->Array1<f64>{
+    fn df_dn(&self,t:f64,rho:f64,x:&Array1<f64>)->Array1<f64>{
 
-        let volf = &self.rdf.bij * self.rdf.g(rho, x);
+        let volf = self.rdf.g(rho, x) * &self.rdf.b;
         let k = &self.assoc.association_constants(t, rho, x, &volf);
         let unbonded = &self.assoc.unbonded_sites_fraction(x, k);
         let h = self.assoc.h(x, &unbonded);
 
         let ndlng_dni = &self.rdf.ndlngdni(rho, x);
 
-        self.assoc.r_chemical_potential(h, ndlng_dni, unbonded)
+        self.assoc.df_dn(h, ndlng_dni, unbonded)
     }
     
-    fn r_helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>) -> f64 {
+    fn helmholtz(&self,t:f64,rho:f64,x:&Array1<f64>) -> f64 {
 
-        let volf = &self.rdf.bij * self.rdf.g(rho, x);
+        let volf = self.rdf.g(rho, x) * &self.rdf.b;
         let k = &self.assoc.association_constants(t, rho, x, &volf);
         let unbonded = &self.assoc.unbonded_sites_fraction(x, k);
 
-        self.assoc.r_helmholtz(x, unbonded)
+        self.assoc.helmholtz(x, unbonded)
     }
 
-    fn r_entropy(&self,t:f64, rho:f64, x:&Array1<f64>)->f64 {
+    fn df_dt(&self,t:f64, rho:f64, x:&Array1<f64>)->f64 {
 
-        let volf = &self.rdf.bij * self.rdf.g(rho, x);
+        let volf = self.rdf.g(rho, x) * &self.rdf.b;
         let k = &self.assoc.association_constants(t, rho, x, &volf);
+        let dk_dt = &self.assoc.dk_dt(t, rho, x, &volf);
 
-        self.assoc.r_entropy(t, x ,k)
+        // dbg!(dk_dt);        
+
+        // dbg!(k / rho );
+        self.assoc.df_dt(t, x , k, dk_dt)
         
     }
     
 }
 
-// #[cfg(test)]
-// mod tests{
-//     use std::sync::Arc;
-
-//     use approx::assert_relative_eq;
-//     use ndarray::{Array1, array};
-
-//     use crate::{arr_eq, models::{cpa::{SCPA, parameters::readyto::{from_records, acetic1a, acoh_octane, co2, methanol3b, octane, water4c, water4c_acetic1a, water4c_co2}}, cubic::models::SRK}, state::{E, S, density_solver::DensityInitialization}};
-
-
-// }

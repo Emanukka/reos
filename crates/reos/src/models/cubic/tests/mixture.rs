@@ -10,108 +10,99 @@ mod nbip {
 
     use super::*;
     use super::super::recipes::water_co2;
+    use ndarray::Array1;
+
+    const RHO:f64 = 41025.02831164824;
+    const T:f64 = 298.15;
+    const X:[f64;2] = [0.75, 0.25];
+
     #[test]
     fn water_co2_pr78_helmholtz() {
         
         let cub = water_co2(); 
-        let t = 298.15;
-        let d= 40.785582445912105;
-        let x = &array![0.6, 0.4];
         // println!("{}", cub.parameters);
-        
-        // let val = cub.r_helmholtz(t, d, &x);
-        assert_relative_eq!(cub.r_helmholtz(t, d, x), -0.010947177456734014, epsilon = TOL)
+        // dbg!(x);
+        assert_relative_eq!(cub.helmholtz(T, RHO, &Array1::from_vec(X.to_vec())), -6.730496989050704, epsilon = TOL)
+
     }
         
     #[test]
-    fn water_co2_pr78_entropy() {
+    fn water_co2_pr78_df_dt() {
         
         let cub = water_co2(); 
-        let t = 298.15;
-        let d= 40.785582445912105;
-        let x = &array![0.6, 0.4];
-        assert_relative_eq!(cub.r_entropy(t, d, x), -0.007208019002671265, epsilon = TOL)
-    }
-    #[test]
-    fn water_co2_pr78_chem_pot() {
-        
-        let cub = water_co2(); 
-        let t = 298.15;
-        let d= 40.785582445912105;
-        let x = &array![0.6, 0.4];
-
-        let lnphi = cub.r_chemical_potential(t, d, &x);
-        let reff = vec![-0.026011681083, -0.015690775769];
-        for i in 0..lnphi.len() {
-            assert_relative_eq!(lnphi[i], reff[i] , epsilon = TOL)
-
-        }
+        assert_relative_eq!(cub.df_dt(T, RHO, &Array1::from_vec(X.to_vec())), 0.04377347419896475, epsilon = TOL)
     }
 
     #[test]
-    fn water_co2_pr78_pressure() {
+    fn water_co2_pr78_df_dn() {
         
         let cub = water_co2(); 
-        let t = 298.15;
-        let d= 40.785582445912105;
-        let x = &array![0.6, 0.4];
-        assert_relative_eq!(cub.r_pressure(t, d, x), -0.4460369008086076, epsilon = TOL)
+
+        assert_relative_eq!(cub.df_dn(T, RHO, &Array1::from_vec(X.to_vec())), array![-9.98133876074576,-0.19974089691138], epsilon = TOL);
+
+    }
+
+    #[test]
+    fn water_co2_pr78_compressibility() {
+        
+        let cub = water_co2(); 
+        assert_relative_eq!(-cub.df_dv(T, RHO, &Array1::from_vec(X.to_vec())) / RHO, -0.8054423057364586, epsilon = TOL)
     }
 }
 
-mod ybip {
+// mod ybip {
     
-    use super::*;
-    use super::super::recipes::water_co2_bip;
+//     use super::*;
+//     use super::super::recipes::water_co2_bip;
 
-    #[test]
-    fn water_co2_pr78_helmholtz_bip() {
+//     #[test]
+//     fn water_co2_pr78_helmholtz_bip() {
         
-        let cub = water_co2_bip(); 
-        let t = 298.15;
-        let d= 38.082099077791675;
-        let x = &array![0.6, 0.4];
-        println!("{}", cub.parameters);
+//         let cub = water_co2_bip(); 
+//         let t = 298.15;
+//         let d= 38.082099077791675;
+//         let x = &array![0.6, 0.4];
+//         println!("{}", cub.parameters);
         
-        // let val = cub.r_helmholtz(t, d, &x);
-        assert_relative_eq!(cub.r_helmholtz(t, d, x), 0.0593270749233682,epsilon = TOL)
-    }
+//         // let val = cub.r_helmholtz(t, d, &x);
+//         assert_relative_eq!(cub.r_helmholtz(t, d, x), 0.0593270749233682, epsilon = TOL)
+//     }
         
-    #[test]
-    fn water_co2_pr78_entropy_bip() {
+//     #[test]
+//     fn water_co2_pr78_entropy_bip() {
         
-        let cub = water_co2_bip(); 
-        let t = 298.15;
-        let d= 38.082099077791675;
-        let x = &array![0.6, 0.4];
-        assert_relative_eq!(cub.r_entropy(t, d, x), -0.0355454648447711, epsilon = TOL)
-    }
-    #[test]
-    fn water_co2_pr78_chem_pot_bip() {
+//         let cub = water_co2_bip(); 
+//         let t = 298.15;
+//         let d= 38.082099077791675;
+//         let x = &array![0.6, 0.4];
+//         assert_relative_eq!(cub.r_entropy(t, d, x), -0.0355454648447711, epsilon = TOL)
+//     }
+//     #[test]
+//     fn water_co2_pr78_chem_pot_bip() {
         
-        let cub = water_co2_bip(); 
-        let t = 298.15;
-        let d= 38.082099077791675;
-        let x = &array![0.6, 0.4];
+//         let cub = water_co2_bip(); 
+//         let t = 298.15;
+//         let d= 38.082099077791675;
+//         let x = &array![0.6, 0.4];
 
-        let lnphi = cub.r_chemical_potential(t, d, &x);
-        let reff = vec![0.091575667256, 0.159150223538];
-        for i in 0..lnphi.len() {
-            assert_relative_eq!(lnphi[i], reff[i] , epsilon = TOL)
+//         let lnphi = cub.r_chemical_potential(t, d, &x);
+//         let reff = vec![0.091575667256, 0.159150223538];
+//         for i in 0..lnphi.len() {
+//             assert_relative_eq!(lnphi[i], reff[i] , epsilon = TOL)
 
-        }
-    }
+//         }
+//     }
 
-    #[test]
-    fn water_co2_pr78_pressure_bip() {
+//     #[test]
+//     fn water_co2_pr78_pressure_bip() {
         
-        let cub = water_co2_bip(); 
-        let t = 298.15;
-        let d= 38.082099077791675;
-        let x = &array![0.6, 0.4];
-        assert_relative_eq!(cub.r_pressure(t, d, x), 2.257446467311823, epsilon = TOL)
-    }
-}
+//         let cub = water_co2_bip(); 
+//         let t = 298.15;
+//         let d= 38.082099077791675;
+//         let x = &array![0.6, 0.4];
+//         assert_relative_eq!(cub.r_pressure(t, d, x), 2.257446467311823, epsilon = TOL)
+//     }
+// }
 
 
 

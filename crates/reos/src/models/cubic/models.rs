@@ -74,10 +74,12 @@ impl CubicModel for SRK{
 impl CubicModel for PR76 {
     
     fn omega(&self,)->f64 {
-        0.07780
+        // 0.07780
+        0.07779607390388846
     }
     fn psi(&self)->f64 {
-        0.45724
+        // 0.45724
+        0.4572355289213822
     }
     fn eps(&self)->f64 {
         1.0 - SQRT_2

@@ -206,7 +206,7 @@ impl Residual for Cubic  {
 
     }
 
-    fn r_helmholtz(&self,t:f64, rho:f64, x:&Array1<f64>) -> f64 {
+    fn helmholtz(&self,t:f64, rho:f64, x:&Array1<f64>) -> f64 {
 
         let v = 1. / rho;
         let w = self.parameters.mix.apply(t, v, x, &self.parameters);
@@ -219,7 +219,7 @@ impl Residual for Cubic  {
 
     }
 
-    fn r_entropy(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
+    fn df_dt(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
 
 
         let v = 1. / rho;
@@ -227,24 +227,25 @@ impl Residual for Cubic  {
 
         let dw_dt = self.parameters.mix.dw_dt(t, v, x, &w, &self.parameters);
         let df_dt = DFx::dt(t, v, &w, &dw_dt);
-        let f = F::me(t, v, &w);
+        // let f = F::me(t, v, &w);
 
-        - t * df_dt - f
+        // - t * df_dt - f
+        df_dt
 
     }
 
-    fn r_pressure(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
+    fn df_dv(&self, t:f64, rho:f64, x:&Array1<f64>)->f64 {
 
         let v = 1. / rho;
         let w = self.parameters.mix.apply(t, v, x, &self.parameters);
         let df_dv = DFx::dv(t, v, &w);
 
-        - df_dv
+        df_dv
 
 
     }
 
-    fn r_chemical_potential(&self,t:f64, rho:f64, x:&Array1<f64>)->Array1<f64> {
+    fn df_dn(&self,t:f64, rho:f64, x:&Array1<f64>)->Array1<f64> {
         
         let v = 1. / rho;
         let w = self.parameters.mix.apply(t, v, x, &self.parameters);

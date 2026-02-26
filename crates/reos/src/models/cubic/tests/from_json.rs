@@ -61,7 +61,7 @@ fn water_co2_pr78_from_json() {
     let x = &array![0.6, 0.4];
 
 
-    assert_relative_eq!(cub.r_entropy(t, d, x), reff.r_entropy(t, d, x))
+    assert_relative_eq!(cub.df_dt(t, d, x), reff.df_dt(t, d, x))
     // }
 }
 

@@ -25,46 +25,42 @@ use ndarray::array;
 //     rep - att
     
 // }
+
+const TOL:f64 = 1e-12;
+const RHO:f64 = 1_000.;
+const T:f64 = 298.15;
+
 #[test]
 fn water_pr78_helmholtz() {
     
     let cub = water(); 
-    let t = 298.15;
-    let d= 47087.634250762916;
-    let x = &array![1.];
-    println!("{}", cub.parameters);
+    // println!("{}", cub.parameters);
     
-    // let val = cub.r_helmholtz(t, d, &x);
-    assert_relative_eq!(cub.r_helmholtz(t, d, x), -9.68764867952888, epsilon = 1e-10)
+    assert_relative_eq!(cub.helmholtz(T, RHO, &array![1.]), -0.37074849150969297, epsilon = TOL)
 }
     
 #[test]
-fn water_pr78_entropy() {
+fn water_pr78_df_dt() {
     
     let cub = water(); 
-    let t = 298.15;
-    let d= 47087.634250762916;
     let x = &array![1.];
-    assert_relative_eq!(cub.r_entropy(t, d, x), -7.769961493718528, epsilon = 1e-10)
+
+    assert_relative_eq!(cub.df_dt(T, RHO, x), 0.001913855202265413, epsilon = TOL)
 }
 #[test]
-fn water_pr78_chem_pot() {
+fn water_pr78_df_dn() {
     
     let cub = water(); 
-    let t = 298.15;
-    let d= 47087.634250762916;
     let x = &array![1.];
-    assert_relative_eq!(cub.r_chemical_potential(t, d, &x)[0], -10.686791988676037, epsilon = 1e-10)
+    assert_relative_eq!(cub.df_dn(T, RHO, &x)[0], -0.73422735014086, epsilon = TOL)
 }
 
 #[test]
-fn water_pr78_pressure() {
+fn water_pr78_compressibility() {
     
     let cub = water(); 
-    let t = 298.15;
-    let d= 47087.634250762916;
     let x = &array![1.];
-    assert_relative_eq!(cub.r_pressure(t, d, x), -47047.29470521823, epsilon = 1e-10)
+    assert_relative_eq!( - cub.df_dv(T, RHO, x) / RHO, -0.3634788586311659, epsilon = TOL)
 }
 
 // #[test]
@@ -83,7 +79,7 @@ fn water_pr78_pressure() {
 //     let alpha = param.alpha.alpha(0, tr);
 //     let p_dehlouz = pressure_dehlouz(t, v, a0, alpha, b, c);
     
-//     let p = R * t * (d + cub.r_pressure(t, d, &x));
+//     let p = R * t * (d + cub.df_dv(t, d, &x));
 //     assert_relative_eq!(p / 1e5, p_dehlouz / 1e5, epsilon = 1e-9);
     
 //     assert_relative_eq!(p / 1e5, 2.0070345678300554, epsilon = 1e-9);

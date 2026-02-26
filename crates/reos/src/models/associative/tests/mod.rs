@@ -5,7 +5,7 @@ pub mod recipes {
     
 
 
-    use crate::{models::associative::{Associative, parameters::{AssociationBinaryRecord, AssociationPureRecord, AssociativeParameters}, sites::CombiningRule}, parameters::{BinaryRecord, Parameters, records::PureRecord}};
+    use crate::{models::associative::{Associative, parameters::{AssociationBinaryRecord, AssociationPureRecord, AssociativeParameters}, sites::CombiningRuleOption}, parameters::{BinaryRecord, Parameters, records::PureRecord}};
 
 
     type Pure = PureRecord<AssociationPureRecord>;
@@ -33,7 +33,7 @@ pub mod recipes {
     pub fn water_carbon_dioxide() -> Binary {
 
         BinaryRecord::new(
-            AssociationBinaryRecord {epsilon: None, kappa: Some(0.1836), combining_rule: CombiningRule::default()},
+            AssociationBinaryRecord::CombiningRule(CombiningRuleOption::MCR1 { kappa: 0.1836 }),
             "water",
             "carbon dioxide"
         )
@@ -54,7 +54,7 @@ pub mod recipes {
 
     pub fn water_acetic_acid() -> Binary {
         
-        let b = AssociationBinaryRecord {  epsilon: None, kappa: None, combining_rule: CombiningRule::ECR };
+        let b = AssociationBinaryRecord::default();
         
 
         BinaryRecord::new(b, "water", "acetic_acid")

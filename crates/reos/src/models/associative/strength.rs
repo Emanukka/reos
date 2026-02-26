@@ -1,11 +1,16 @@
 use super::R;
 
-pub fn dimensionless_delta_jl(t:f64,epsilon:f64,kappa:f64)->f64{
+fn dimensionless_delta_jl(t:f64,epsilon:f64,kappa:f64)->f64{
     (epsilon / R / t).exp_m1() * kappa
 }
 
+fn dimensionless_delta_jl_dt(t:f64,epsilon:f64,kappa:f64) -> f64 {
+    
+    - (epsilon / R / t).exp() * epsilon * kappa / R / t.powi(2) 
+    
+}
 
-pub fn elliot_dimensionless_delta_jl(
+fn elliot_dimensionless_delta_jl(
     t:f64,
     epsilon_j:f64,
     kappa_j:f64,
@@ -39,6 +44,19 @@ pub fn cr1_association_strength_jl(
         fik * djl
         
 }
+pub fn cr1_association_strength_jl_dt(
+    t:f64,
+    f_ii:f64,
+    f_kk:f64,
+    epsilon:f64,
+    kappa:f64)->f64 {
+
+        let fik = cr1_factor_ik(f_ii, f_kk);
+        let djl = dimensionless_delta_jl_dt(t, epsilon, kappa);
+
+        fik * djl
+        
+}
 
 pub fn ecr_association_strength_jl(
     t:f64,
@@ -55,4 +73,30 @@ pub fn ecr_association_strength_jl(
         fik * djl
 
 }
+
+pub fn ecr_association_strength_jl_dt(
+    t:f64,
+    f_ii:f64,
+    f_kk:f64,
+    epsilon_j:f64,
+    epsilon_l:f64,
+    kappa_j:f64,
+    kappa_l:f64)->f64 {
+
+
+        let fik = elliot_factor_ik(f_ii, f_kk);
+        
+        let dj =  dimensionless_delta_jl(t, epsilon_j, kappa_j);
+        let dl =  dimensionless_delta_jl(t, epsilon_l, kappa_l);
+        
+        let djl = (dj * dl).sqrt();
+
+        let ddj_dt = dimensionless_delta_jl_dt(t, epsilon_j, kappa_j);
+        let ddl_dt = dimensionless_delta_jl_dt(t, epsilon_l, kappa_l);
+
+
+        fik * 0.5 * ( dj * ddl_dt + dl * ddj_dt) / djl
+
+}
+
 

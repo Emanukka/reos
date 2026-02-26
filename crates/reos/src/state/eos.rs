@@ -47,56 +47,64 @@ impl <R:Residual> EquationOfState<R> {
         d * R * t
     }
 
+    /// Compressibility factor
+    pub fn compressibility(&self,t:f64,d:f64,x:&Array1<f64>)->f64{
+
+        let df_dv= self.residual.df_dv(t, d, x);
+        let z_res =  d * df_dv;
+        1.0 + z_res 
+
+    }
+
     /// Pressure in Pa
     pub fn pressure(&self,t: f64, d: f64,x: &Array1<f64>)->f64{
 
-        let r_pres = self.residual.r_pressure(t, d, x);
-        let r_pig = d;
-        R * t * ( r_pres + r_pig)
+        let z = self.compressibility(t, d, x);
+        R * t * z
+
 
     }
     /// Residual Isovolumetric Helmholtz free energy in J / mol
     pub fn helmholtz_isov(&self,t: f64,d: f64,x: &Array1<f64>)->f64 {
 
-        R * t * self.residual.r_helmholtz(t, d, x)
+        R * t * self.residual.helmholtz(t, d, x)
     }
 
     /// Residual Isovolumetric Entropy in J / mol / K
     pub fn entropy_isov(&self,t: f64,d: f64,x: &Array1<f64>)->f64 {
 
-        R * self.residual.r_entropy(t, d, x)
+        let df_dt = self.residual.df_dt(t, d, x);
+        let f = self.residual.helmholtz(t, d, x);
+        let s = - f - t * df_dt;
+
+        R * s
     }
 
     /// Residual Entropy in J / mol / K
     pub fn entropy(&self,t: f64,d: f64,x: &Array1<f64>)->f64 {
 
-        let isov = self.residual.r_entropy(t, d, x);
-        let z = 1.0 + self.residual.compressibility(t, d, x);
-        let s = isov + z.ln();
+        // let s_isov = self.residual.r_entropy(t, d, x);
+        let z = self.compressibility(t, d, x);
+        let s_isov = self.entropy_isov(t, d, x);
+        s_isov + R * z.ln()
         
-        R * s
         
     }
-    /// Compressibility factor
-    pub fn compressibility(&self,t:f64,d:f64,x:&Array1<f64>)->f64{
 
-        self.pressure(t, d, x) / self.ideal_gas_pressure(t, d)
-
-    }
 
     /// Natural logarithm of the fugacity coefficient
     pub fn lnphi(&self,t:f64,d:f64,x:&Array1<f64>)->Array1<f64>{
 
-        self.residual.r_chemical_potential(t, d, x) - self.compressibility(t, d, x).ln()
+        self.residual.df_dn(t, d, x) - self.compressibility(t, d, x).ln()
         
     }
 
     /// Residual Isovolumetric Chemical potential in J / mol
-    pub fn chem_pot_isov(&self,t:f64, d:f64, x:&Array1<f64>)->Array1<f64> {
+    // pub fn chem_pot_isov(&self,t:f64, d:f64, x:&Array1<f64>)->Array1<f64> {
         
-        R * t * self.residual.r_chemical_potential(t, d, x) 
+        // R * t * self.residual.r_chemical_potential(t, d, x) 
 
-    }
+    // }
 
     /// Residual Chemical potential in J / mol
     pub fn chem_pot(&self,t:f64, d:f64, x:&Array1<f64>)->Array1<f64> {
@@ -109,13 +117,14 @@ impl <R:Residual> EquationOfState<R> {
     /// Residual Gibbs energy in J / mol
     pub fn gibbs(&self, t: f64, d: f64, x: &Array1<f64>) -> f64 {
 
-        let a_res_isov = self.residual.r_helmholtz(t, d, x);
-        let z_res = self.residual.compressibility(t, d, x);
-        let z = 1.0 + z_res;
+        // let a_res_isov = self.residual.r_helmholtz(t, d, x);
+        // let z_res = self.residual.compressibility(t, d, x);
+        // let z = 1.0 + z_res;
 
-        let g = a_res_isov + z_res - z.ln();
+        // let g = a_res_isov + z_res - z.ln();
 
-        R * t * g
+        // R * t * g
+        unimplemented!()
         // R * t * self.residual.r_gibbs(t, d, x)
     }
 

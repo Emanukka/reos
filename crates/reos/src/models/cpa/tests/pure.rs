@@ -1,54 +1,97 @@
 use approx::assert_relative_eq;
 use ndarray::array;
 
-use crate::{models::cpa::SCPA, residual::Residual};
+use crate::{residual::Residual};
 
-pub fn water()->SCPA{
+use super::recipes;
+
+pub fn water()->super::super::CPA{
+
     let water = super::recipes::water4c();
-    super::recipes::scpa(vec![water], vec![]).unwrap()
+    recipes::scpa(vec![water], vec![]).unwrap()
+}
+
+pub fn water_cs()->super::super::CPA{
+
+    let water = super::recipes::water4c();
+    recipes::cpa_cs(vec![water], vec![]).unwrap()
 }
 
 const TOL:f64 = 1e-12;
+
+const T:f64 = 298.15;
+const RHO:f64 = 58_000.;
+
 #[test]
 fn test_scpa_helmholtz() {
     
     let model = water();
-    let t = 298.15;
-    let d= 58_000.;
     let x = array![1.0];
-    let val = model.r_helmholtz(t, d, &x);
+    let val = model.helmholtz(T, RHO, &x);
     assert_relative_eq!(val, -9.705428401736341 , epsilon = TOL)
 }
 #[test]
-fn test_scpa_entropy() {
+fn test_scpa_df_dt() {
     
     let model = water();
-    let t = 298.15;
-    let d= 58_000.;
+    
     let x = array![1.0];
-    let val = model.r_entropy(t, d, &x);
-    assert_relative_eq!(val, -6.954623177034006, epsilon = TOL)
+    let val = model.df_dt(T, RHO, &x);
+    assert_relative_eq!(val, 0.05592847092141594, epsilon = TOL)
 }
 #[test]
-fn test_scpa_chem_pot() {
+fn test_scpa_df_dn() {
     
     let model = water();
-    let t = 298.15;
-    let d= 58_000.;
     let x = array![1.0];
-    let val = model.r_chemical_potential(t, d, &x);
-    assert_relative_eq!(val[0], -9.76898881609111 , epsilon = TOL)
+    let val = model.df_dn(T, RHO, &x);
+    assert_relative_eq!(val[0], -9.76898881609112 , epsilon = TOL)
 }
 
 #[test]
-fn test_scpa_pressure() {
+fn test_scpa_compressibility() {
     
     let model = water();
-    let t = 298.15;
-    let d= 58_000.;
     let x = array![1.0];
-    let val = model.r_pressure(t, d, &x) / d;
+    let val = - model.df_dv(T, RHO, &x) / RHO;
     
     
-    assert_relative_eq!(val, (0.9364395856452267 - 1.) , epsilon = TOL)
+    assert_relative_eq!(val, -0.06356041435477426 , epsilon = TOL)
+}
+
+#[test]
+fn test_cpa_carnahan_starling_helmholtz() {
+    
+    let model = water_cs();
+    let x = array![1.0];
+    let val = model.helmholtz(T, RHO, &x);
+    assert_relative_eq!(val, -9.866702450522459 , epsilon = TOL)
+}
+#[test]
+fn test_cpa_carnahan_starling_df_dt() {
+    
+    let model = water_cs();
+    
+    let x = array![1.0];
+    let val = model.df_dt(T, RHO, &x);
+    assert_relative_eq!(val,  0.056068888300127705, epsilon = TOL)
+}
+#[test]
+fn test_cpa_carnahan_starling_df_dn() {
+    
+    let model = water_cs();
+    let x = array![1.0];
+    let val = model.df_dn(T, RHO, &x);
+    assert_relative_eq!(val[0], -9.96984220269814 , epsilon = TOL)
+}
+
+#[test]
+fn test_scpa_carnahan_starling_compressibility() {
+    
+    let model = water_cs();
+    let x = array![1.0];
+    let val = - model.df_dv(T, RHO, &x) / RHO;
+    
+    
+    assert_relative_eq!(val, -0.10313975217568408 , epsilon = TOL)
 }
