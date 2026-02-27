@@ -12,16 +12,11 @@ pub struct AssociativeCPA{
 
 }
 
-
 impl AssociativeCPA {
     
-    pub fn from_parameters(
-        parameters:AssociativeParameters,
-        rdf:RDFcpa
-        )->Self{
-        Self
-        {
-            assoc: Associative::from_parameters(parameters),
+    pub fn from_parameters(parameters:AssociativeParameters,rdf:RDFcpa) -> Self{
+        Self{
+            assoc: Associative{parameters},
             rdf,
         }
     }

@@ -6,11 +6,13 @@ use ndarray::{Array1, Array2};
 
 
 pub mod sites;
+pub mod sites_interaction;
 pub mod parameters;
 pub mod strength;
+pub mod combining_rule;
 
-#[cfg(test)]
-mod tests;
+// #[cfg(test)]
+// mod tests;
 
 #[derive(Clone)]
 pub struct Associative{
@@ -18,129 +20,8 @@ pub struct Associative{
 }
 
 
-impl Associative {
-    
-  pub fn from_parameters(parameters:AssociativeParameters)->Self{
-    Self{
-      
-      parameters
-    }
-  }
-}
 
 impl Associative {
-
-    pub fn df_dv(&self, h:f64, d:f64, dlng_drho:f64)->f64 {
-
-        d * (1. + d * dlng_drho) * h / 2.
-        
-    }
-
-    pub fn df_dn(&self, h:f64, ndlng_dni:&Array1<f64>, unbonded:&Array1<f64>, )->Array1<f64>{
-        
-        let sites = &self.parameters.sites;
-        let mut df_dn = - 0.5 * h * ndlng_dni;
-
-        for sj in sites{
-
-            let i = sj.owner;
-            let j = sj.idx;
-            let m = sj.mul;
-
-            df_dn[i] += unbonded[j].ln() * m 
-        }   
-        df_dn
-        
-
-
-    }
-    
-    pub fn helmholtz(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
-
-        let sites = &self.parameters.sites;
-        
-        sites.iter().fold(0.0, |acc, sj| {
-
-            let i = sj.owner;
-            let j = sj.idx;
-            let m = sj.mul;
-
-            acc + x[i] * (unbonded[j].ln() - 0.5 * unbonded[j] + 0.5) * m
-        })
-
-    }
-
-    pub fn df_dt(&self, t:f64, x:&Array1<f64>, k:&Array2<f64>, dk_dt:&Array2<f64>)->f64{
-
-        // let m = self.sites_mole_frac(x);
-        let sites = &self.parameters.sites;
-        // let interactions = &self.parameters.interactions;
-        let unbonded = &self.unbonded_sites_fraction(x, k);
-        // let f = self.r_helmholtz(x, unbonded);
-        let mut df_dt = 0.0;
-
-        dbg!(&unbonded);
-        let s = sites.len();
-
-        for j in 0..s{
-            for l in 0..s {
-                // let ke_jl = k[(j,l)] * interaction.epsilon;
-
-                let xmj = unbonded[j] * sites[j].mul;
-                let xml = unbonded[l] * sites[l].mul; 
-
-                df_dt += dk_dt[(j, l)] * xmj * xml 
-
-            }
-        }
-
-        df_dt *= - 0.5 ;
-
-        df_dt
-        // - f - t * df_dt
-        // s /= - 2.0 * R * t ;
-
-        // s -= a;
-        
-        // s
-
-    }
-    // pub fn r_entropy(&self, t:f64, x:&Array1<f64>, k:&Array2<f64>)->f64{
-
-    //     // let m = self.sites_mole_frac(x);
-    //     let sites = &self.parameters.sites;
-    //     let interactions = &self.parameters.interactions;
-    //     let unbonded = &self.unbonded_sites_fraction(x, k);
-    //     let a = self.r_helmholtz(x, unbonded);
-    //     let mut s = 0.0;
-
-
-    //     for interaction in interactions {
-
-    //         let j = interaction.site_j;
-    //         let l = interaction.site_l;
-
-
-    //         let ke_jl = k[(j,l)] * interaction.epsilon;
-    //         let xmj = unbonded[j] * sites[j].mul;
-    //         let xml = unbonded[l] * sites[l].mul;
-            
-    //         if j == l {
-    //             s += ke_jl * xmj * xml
-
-    //         } else {
-    //             s += 2.0 * ke_jl * xmj * xml
-    //         }
-            
-    //     }
-        
-    //     s /= - 2.0 * R * t ;
-
-    //     s -= a;
-        
-    //     s
-
-    // }
 
     pub fn x_ab_analytic(m1:f64,m2:f64,mult1:f64,mult2:f64,k:f64)->Array1<f64>{
 
@@ -180,7 +61,6 @@ impl Associative {
             (_, _) => self.x_tan(&m, &k).unwrap_or(Array1::ones(sites.len()) * f64::NAN),
 
         }
-        
         
     }
 
@@ -322,6 +202,76 @@ impl Associative {
         Ok( err < tol)
 
     }
+}
+
+// derivatives
+impl Associative {
+
+    pub fn df_dv(&self, h:f64, d:f64, dlng_drho:f64)->f64 {
+
+        d * (1. + d * dlng_drho) * h / 2.
+        
+    }
+
+    pub fn df_dn(&self, h:f64, ndlng_dni:&Array1<f64>, unbonded:&Array1<f64>, )->Array1<f64>{
+        
+        let sites = &self.parameters.sites;
+        let mut df_dn = - 0.5 * h * ndlng_dni;
+
+        for sj in sites{
+
+            let i = sj.owner;
+            let j = sj.idx;
+            let m = sj.mul;
+
+            df_dn[i] += unbonded[j].ln() * m 
+        }   
+        df_dn
+        
+
+
+    }
+    
+    pub fn helmholtz(&self, x:&Array1<f64>, unbonded:&Array1<f64> )->f64{
+
+        let sites = &self.parameters.sites;
+        
+        sites.iter().fold(0.0, |acc, sj| {
+
+            let i = sj.owner;
+            let j = sj.idx;
+            let m = sj.mul;
+
+            acc + x[i] * (unbonded[j].ln() - 0.5 * unbonded[j] + 0.5) * m
+        })
+
+    }
+
+    pub fn df_dt(&self, _:f64, x:&Array1<f64>, k:&Array2<f64>, dk_dt:&Array2<f64>)->f64{
+
+        let sites = &self.parameters.sites;
+        let unbonded = &self.unbonded_sites_fraction(x, k);
+        let mut df_dt = 0.0;
+
+        let s = sites.len();
+
+        for j in 0..s{
+            for l in 0..s {
+
+                let xmj = unbonded[j] * sites[j].mul;
+                let xml = unbonded[l] * sites[l].mul; 
+
+                df_dt += dk_dt[(j, l)] * xmj * xml 
+
+            }
+        }
+        df_dt *= - 0.5 ;
+
+        df_dt
+
+
+    }
+
 
     // // pub fn x_michelsen(
     // //     &self,

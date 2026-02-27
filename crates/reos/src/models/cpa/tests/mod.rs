@@ -3,8 +3,9 @@ mod mixture;
 mod association;
 pub mod recipes{
 
-    use crate::{models::{associative::{parameters::{AssociationBinaryRecord, AssociationPureRecord}, sites::CombiningRuleOption}, cpa::{Binary, CPA, Pure, parameters::{CPABinaryRecord, CPAOptions, CPAParameters, CPAPureRecord}, rdf::RDFmodelOption}, cubic::{models::{CubicModelOption, SRK}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
+    use crate::{models::{associative::{parameters::{AssociationBinaryRecord, AssociationPureRecord}}, cpa::{Binary, CPA, Pure, parameters::{CPABinaryRecord, CPAOptions, CPAParameters, CPAPureRecord}, rdf::RDFmodelOption}, cubic::{models::{CubicModelOption, SRK}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
 
+    use crate::models::associative::combining_rule::CombiningRuleOption;
     
     pub fn scpa(pure_records: Vec<Pure>, binary_records: Vec<Binary>)->Result<CPA, Box<dyn std::error::Error>>{
 
