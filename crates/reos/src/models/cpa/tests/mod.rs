@@ -1,9 +1,12 @@
 mod pure;
+
 mod mixture;
+
 mod association;
+
 pub mod recipes{
 
-    use crate::{models::{associative::{parameters::{AssociationBinaryRecord, AssociationPureRecord}}, cpa::{Binary, CPA, Pure, parameters::{CPABinaryRecord, CPAOptions, CPAParameters, CPAPureRecord}, rdf::RDFmodelOption}, cubic::{models::{CubicModelOption, SRK}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
+    use crate::{models::{associative::parameters::{AssociationBinaryRecord, AssociationPureRecord}, cpa::{Binary, CPA, Pure, parameters::{CPABinaryRecord, CPAOptions, CPAParameters, CPAPureRecord}, rdf::RDFmodelOption}, cubic::{models::{CubicModelOption, SRK}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord, Kij}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
 
     use crate::models::associative::combining_rule::CombiningRuleOption;
     
@@ -56,9 +59,9 @@ pub mod recipes{
     pub fn water4c_acetic1a()->Binary{
 
         // let c = CubicBinaryRecord::TemperatureIndependent { kij: -0.222 };
-        let c = CubicBinaryRecord{ kij: -0.222, lij: 0.0 };
+        let c = CubicBinaryRecord{ kij: Kij{a:-0.222, b: 0.}};
         
-        let a = AssociationBinaryRecord::CombiningRule(CombiningRuleOption::ECR);
+        let a = AssociationBinaryRecord::AssocRule(CombiningRuleOption::ECR);
         // let a = AssociationBinaryRecord {  epsilon: None, kappa: None, combining_rule: Some(CombiningRuleOption::ECR) };
         
         let b = CPABinaryRecord::full(c, a);
@@ -84,10 +87,10 @@ pub mod recipes{
 
         // let c = CubicBinaryRecord::TemperatureDependent { aij: -0.15508 , bij: 0.000877 };
         
-        let c = CubicBinaryRecord{ kij: -0.15508 , lij: 0.000877 };
+        let c = CubicBinaryRecord{ kij:Kij{a:-0.15508, b:0.000877}};
         
         // let a = AssociationBinaryRecord {epsilon: None, kappa: Some(0.1836), combining_rule: None };
-        let a = AssociationBinaryRecord::CombiningRule(CombiningRuleOption::MCR1 { kappa: 0.1836 });
+        let a = AssociationBinaryRecord::AssocRule(CombiningRuleOption::MCR1 { kappa: 0.1836 });
         
         let b = CPABinaryRecord::full(c, a);
         
@@ -104,17 +107,17 @@ pub mod recipes{
 
         PureRecord::new(0.0, "octane".to_string(), m)    
     }
-    pub fn acoh_octane()->Binary{
+    // pub fn acoh_octane()->Binary{
 
 
-        // let c = CubicBinaryRecord::TemperatureIndependent { kij: 0.064 };
-        let c = CubicBinaryRecord{ kij: 0.064, lij: 0.0 };
+    //     // let c = CubicBinaryRecord::TemperatureIndependent { kij: 0.064 };
+    //     let c = CubicBinaryRecord{ kij: 0.064, lij: 0.0 };
 
-        let b = CPABinaryRecord::only_c(c);
+    //     let b = CPABinaryRecord::only_c(c);
         
-        BinaryRecord::new(b, "acetic_acid", "octane")    
+    //     BinaryRecord::new(b, "acetic_acid", "octane")    
 
-    } 
+    // } 
     pub fn methanol3b()->Pure{
 
             let c=

@@ -9,62 +9,138 @@ use super::super::parameters::{CubicPureRecord, CubicBinaryRecord, CubicParamete
 use super::super::options::*;
 
 
-use super::recipes::water_co2_bip;
+use super::recipes::{water_co2_bip,water_co2_bip_regressed};
 
 
-#[test]
-fn water_co2_pr78_from_json() {
-
-    let s = r#"{
-    "tc": 647.1,
-    "pc": 220.55e5,
-    "w" : 0.345
-}"#;
-    // println!("{}",s);
+mod from_classic{
     
-    let water: CubicPureRecord = serde_json::from_str(s).unwrap();
-    
-    println!("{}", &water);
+    use super::*;
 
-    let s = r#"{
-    "tc": 304.2,
-    "pc": 73.83e5,
-    "w" : 0.224
-}"#;
-    // println!("{}",s);
-    
-    let co2: CubicPureRecord = serde_json::from_str(s).unwrap();
-    
-    println!("{}", &co2);
+    #[test]
+    fn water_co2_pr78_from_json() {
 
-    let s = r#"{
-    "kij": 0.1,
-    "lij": 0.05
-}"#;
-    let mb: CubicBinaryRecord = serde_json::from_str(s).unwrap();
-    println!("{}",&mb);
+        let s = r#"{
+        "tc": 647.1,
+        "pc": 220.55e5,
+        "w" : 0.345
+    }"#;
+        // println!("{}",s);
+        
+        let water: CubicPureRecord = serde_json::from_str(s).unwrap();
+        
+        println!("{}", &water);
 
-    let pr1 = PureRecord::new(0., "water", water);
-    let pr2 = PureRecord::new(0., "carbon dioxide", co2);
+        let s = r#"{
+        "tc": 304.2,
+        "pc": 73.83e5,
+        "w" : 0.224
+    }"#;
+        // println!("{}",s);
+        
+        let co2: CubicPureRecord = serde_json::from_str(s).unwrap();
+        
+        println!("{}", &co2);
 
-    let br = BinaryRecord::new(mb, "water", "carbon dioxide");
-    
-    // let options = CubicOptions::new(PR78.into(), Alpha::soave(), MixingRule::default());
-    let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+        let s = r#"
+        {
+            "kij": 
+                {
+                    "a" : 0.01,
+                    "b" : 0.0005
+                }
+        }
+        "#;
 
-    let p = CubicParameters::new(vec![pr1, pr2], vec![br], options).unwrap();
+        let mb: CubicBinaryRecord = serde_json::from_str(s).unwrap();
+        println!("{}",&mb);
 
-    let cub = Cubic::from_parameters(p);
-    let reff = water_co2_bip(); 
-    let t = 298.15;
-    let d= 38.082099077791675;
-    let x = &array![0.6, 0.4];
+        let pr1 = PureRecord::new(0., "water", water);
+        let pr2 = PureRecord::new(0., "carbon dioxide", co2);
+
+        let br = BinaryRecord::new(mb, "water", "carbon dioxide");
+        
+        // let options = CubicOptions::new(PR78.into(), Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+
+        let p = CubicParameters::new(vec![pr1, pr2], vec![br], options).unwrap();
+
+        let cub = Cubic::from_parameters(p);
+        let reff = water_co2_bip(); 
+        let t = 298.15;
+        let d= 38.082099077791675;
+        let x = &array![0.6, 0.4];
 
 
-    assert_relative_eq!(cub.df_dt(t, d, x), reff.df_dt(t, d, x))
-    // }
+        assert_relative_eq!(cub.df_dt(t, d, x), reff.df_dt(t, d, x))
+        // }
+    }
+
 }
 
+mod from_regressed{
+    use super::*;
+
+    #[test]
+    fn water_co2_pr78_from_json() {
+
+        let s = r#"{
+            "a0":   0.12277,
+            "b":    0.0145e-3,
+            "c1":   0.6736,
+            "tc":   647.14
+        }"#;
+        
+        let water: CubicPureRecord = serde_json::from_str(s).unwrap();
+        
+        println!("{}", &water);
+
+        let s = r#"{
+            "a0":   0.35079,
+            "b":    0.0272e-3,
+            "c1":   0.7602,
+            "tc":   304.12
+        }"#;
+        // println!("{}",s);
+        
+        let co2: CubicPureRecord = serde_json::from_str(s).unwrap();
+        
+        println!("{}", &co2);
+
+        let s = r#"
+        {
+            "kij": 
+                {
+                    "a" : 0.01,
+                    "b" : 0.0005
+                }
+        }
+        "#;
+
+        let mb: CubicBinaryRecord = serde_json::from_str(s).unwrap();
+        println!("{}",&mb);
+
+        let pr1 = PureRecord::new(0., "water", water);
+        let pr2 = PureRecord::new(0., "carbon dioxide", co2);
+
+        let br = BinaryRecord::new(mb, "water", "carbon dioxide");
+        
+        // let options = CubicOptions::new(PR78.into(), Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+
+        let p = CubicParameters::new(vec![pr1, pr2], vec![br], options).unwrap();
+
+        println!("{}",p);
+        let cub = Cubic::from_parameters(p);
+        let reff = water_co2_bip_regressed(); 
+        let t = 298.15;
+        let d= 38.082099077791675;
+        let x = &array![0.6, 0.4];
+
+
+        assert_relative_eq!(cub.df_dt(t, d, x), reff.df_dt(t, d, x))
+        // }
+    }   
+}
 #[test]
 fn options(){
 

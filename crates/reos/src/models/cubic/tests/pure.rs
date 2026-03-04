@@ -34,7 +34,7 @@ const T:f64 = 298.15;
 fn water_pr78_helmholtz() {
     
     let cub = water(); 
-    // println!("{}", cub.parameters);
+    println!("{}", cub.parameters);
     
     assert_relative_eq!(cub.helmholtz(T, RHO, &array![1.]), -0.37074849150969297, epsilon = TOL)
 }

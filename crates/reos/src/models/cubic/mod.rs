@@ -5,7 +5,7 @@ use crate::models::cubic::models::CubicModel;
 use crate::models::cubic::parameters::CubicParameters;
 use crate::residual::Residual;
 use ndarray::Array1;
-use crate::models::IDEAL_GAS_CONST as R;
+use crate::models::R_GAS;
 
 
 pub const SRK_KAPPA_FACTORS:  [f64; 3] = [0.480000, 1.57400, -0.17600];
@@ -75,7 +75,7 @@ impl F {
         let r = (v + w.d2 * w.b ) / (v + w.d1 * w.b); 
         // let r = (v + c + d2 * b ) / (v + c + d1 * b); 
         
-        r.ln() / R / w.b / d3
+        r.ln() / R_GAS / w.b / d3
     }
 }
 /// Interface for derivatives of F in u = (n, T, V, B, D),
@@ -98,7 +98,7 @@ impl DFu  {
     fn fv(v:f64, w:&W) -> f64 {
 
         // let d3 = w.d2 - w.d1;
-        - 1. / R / (v + w.d1 * w.b) / (v + w.d2 * w.b)
+        - 1. / R_GAS / (v + w.d1 * w.b) / (v + w.d2 * w.b)
     }
 
     fn fb(v:f64, f:f64, fv:f64, w:&W) -> f64 {
@@ -197,12 +197,13 @@ impl Residual for Cubic  {
 
     fn molar_weight(&self)->&Array1<f64> {&self.parameters.properties.molar_weight}
 
-    fn components(&self)->usize {self.parameters.a.len()}
+    fn components(&self)->usize {self.parameters.tc.len()}
 
     fn max_density(&self, x:&Array1<f64>)->f64 {
 
-        let arr = Array1::from_vec(self.parameters.b.clone());
-        1.0 / (arr.dot(x))  
+        // let arr = Array1::from_vec(self.parameters.b.clone());
+        
+        1.0 / (self.parameters.bij.diag().dot(x))  
 
     }
 

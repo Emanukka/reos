@@ -114,7 +114,7 @@ impl SitesInteraction{
 
         match binary {
             
-            AssociationBinaryRecord ::CombiningRule(combining_rule) => {
+            AssociationBinaryRecord ::AssocRule(combining_rule) => {
                 
                 match combining_rule {
 
@@ -212,7 +212,7 @@ impl SitesInteraction{
 impl std::fmt::Display for InteractionParams {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self{
-            InteractionParams::EpsilonKappa{epsilon, kappa} => write!(f,"epsilon={}, kappa={}",epsilon, kappa),
+            InteractionParams::EpsilonKappa{epsilon, kappa} => write!(f,"(epsilon={}, kappa={})",epsilon, kappa),
             InteractionParams::ECR => write!(f,"ECR"),
         }
     }

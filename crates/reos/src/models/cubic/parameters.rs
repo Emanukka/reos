@@ -9,41 +9,28 @@ use super::combining_rule::{CombiningRule,CombiningRuleModel};
 use super::options::*;
 
 
+
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+#[serde(rename_all = "lowercase")]
+/// kij(T) = a + b * T
+pub struct Kij{ 
+    #[serde(default)]
+    pub a:f64,
+    #[serde(default)]
+    pub b:f64   
+}
+
+
 #[derive(Clone,Debug,Serialize, Deserialize)]
 pub struct CubicBinaryRecord{
-    pub kij:f64,
-    #[serde(default)]
-    pub lij:f64
+
+    pub kij: Kij,
+    // pub kij:f64,
+    // #[serde(default)]
+    // pub lij:f64
 }
 
-impl std::fmt::Display for CubicBinaryRecord {
 
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-
-        let mut ret = vec!["("];        
-        let mut kl = vec![];
-
-        if self.kij != 0. {
-            kl.push(format!("kij={}", self.kij));
-        }
-        
-        if self.lij != 0. {
-            kl.push(format!("lij={}", self.lij));
-        }
-        
-        let mut s = kl.join(", ");
-        ret.push(&mut s);
-        ret.push(")");
-        
-
-        write!(f, "{}", ret.join(""))
-    }
-}
-impl Default for CubicBinaryRecord {
-    fn default() -> Self {
-        Self { kij: 0., lij: 0. }
-    }
-} 
 
 #[derive(Clone,Debug,Serialize, Deserialize)]
 pub struct CubicPureRecord{
@@ -66,6 +53,7 @@ pub enum PureParameters{
     },
 
     Regressed{
+        #[serde(alias="a0")]
         a:f64,
         b:f64,
     }
@@ -117,16 +105,17 @@ impl std::fmt::Display for CubicPureRecord {
 
 #[derive(Clone,Debug)]
 pub struct CubicParameters {
-    pub a: Vec<f64>,
-    pub b: Vec<f64>,
+    pub aij: Array2<f64>,
+    pub bij: Array2<f64>,
     pub c: Vec<f64>,
     pub tc:Vec<f64>,
+    pub kij:Array2<Kij>,
     pub model:CubicModels,
     pub combr:CombiningRule,
     pub mix: MixingRule,
     pub alpha:Alpha,
-    pub binary:Array2<CubicBinaryRecord>,
     pub properties: crate::parameters::Properties,
+
 }
 
 
@@ -146,17 +135,18 @@ impl crate::parameters::Parameters for CubicParameters {
         
         let model: CubicModels = opt.cubic_model.into();
         let alpha: Alpha = opt.alpha_model.into();
-        let combr = opt.combining_rule.into();
+        let combr: CombiningRule = opt.combining_rule.into();
         let mix = opt.mixing_rule.into();
         
         let properties = properties.unwrap_or_default();
 
-        let mut a_ = Vec::with_capacity(n);
-        let mut b_ = Vec::with_capacity(n);
+        let [mut a_, mut b_] = [Vec::with_capacity(n), Vec::with_capacity(n)];
+
         let mut c = Vec::with_capacity(n);
         let mut tc= Vec::with_capacity(n);
         let mut alpha_records = Vec::with_capacity(n);
-        let mut binary_ = Array2::default((n,n));
+        // let mut binary_ = Array2::default((n,n));
+        let mut kij = Array2::default((n,n));
 
         for r in pure.into_iter(){
             
@@ -178,25 +168,33 @@ impl crate::parameters::Parameters for CubicParameters {
 
         }
 
+
         binary.into_iter().for_each(|((i,j),b)| {
-            binary_[(i,j)] = b.clone();
-            binary_[(j,i)] = b;
+
+            kij[(i,j)] = b.kij.clone();
+            kij[(j,i)] = b.kij;
+
         });
 
         let alpha = alpha.build(&properties.names, alpha_records, &model)?;
-
+        let [aij, bij] = combr.apply(a_, b_);
+        
         // let options = CubicOptions::new(model, alpha, combr, mix);
         Ok(
         Self{
-            a:a_,
-            b:b_,
+            aij,
+            bij,
+            // a:a_,
+            // b:b_,
+
             c,
             tc,
             model,
             mix,
             combr,
             alpha,
-            binary:binary_,
+            // binary:binary_,
+            kij,
             properties,
         })
 
@@ -205,37 +203,125 @@ impl crate::parameters::Parameters for CubicParameters {
 }
 
 
+impl std::fmt::Display for Kij {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+        write!(f, "({},{})", self.a, self.b)
+        
+    }
+}
+impl std::fmt::Display for CubicBinaryRecord {
+
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        
+        write!(f, "kij={}", self.kij)
+
+    }
+}
+// impl std::fmt::Display for CubicBinaryRecord {
+
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+
+//         unimplemented!()
+//         // let mut ret = vec!["("];        
+//         // let mut kl = vec![];
+
+//         // if self.kij != 0. {
+//         //     kl.push(format!("kij={}", self.kij));
+//         // }
+        
+//         // if self.lij != 0. {
+//         //     kl.push(format!("lij={}", self.lij));
+//         // }
+        
+//         // let mut s = kl.join(", ");
+//         // ret.push(&mut s);
+//         // ret.push(")");
+        
+
+//         // write!(f, "{}", ret.join(""))
+//     }
+// }
+impl Default for Kij {
+    fn default() -> Self {
+        Self { a: 0., b: 0. }
+    }
+} 
+impl Default for CubicBinaryRecord {
+    fn default() -> Self {
+        Self { kij: Kij::default() }
+    }
+} 
+
 impl std::fmt::Display for CubicParameters {
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         
-        if self.a.len() == 1 {
-            write!(f, "CubicParameters(\n\tmodel={:?},\n\tac={:?},\n\tbc={:?},\n\ttc={:?},\n\t{})",
+        
+        if self.tc.len() == 1 {
+            write!(f, "CubicParameters(\n\tmodel={:?},\n\ta={:?},\n\tb={:?},\n\ttc={:?},\n\t{})",
                 self.model.to_string(),
-                self.a,
-                self.b,
-                self.tc,
+                self.aij[(0,0)],
+                self.bij[(0,0)],
+                self.tc[0],
                 self.alpha.to_string(),
             )
 
         } else {
 
-            let sbin = self.binary
-            .rows()
-            .into_iter()
-            .map(|row| row.to_string())
-            .collect::<Vec<_>>()
-            .join("\n\t       ");
+            let mut ab = vec![];
 
-            write!(f, "CubicParameters(\n\tmodel={:?}, mixing_rule={:?}, combining_rule={:?}, \n\ta={:?},\n\tb={:?},\n\ttc={:?},\n\t{},\n\tbinary=[{}]\n)",
+            for mat in [&self.aij, &self.bij] {
+                let s = mat
+                .rows()
+                .into_iter()
+                .map(|row| row.to_string())
+                .collect::<Vec<_>>()
+                .join(",\n\t    ");
+                ab.push(s);
+            }
+
+            let mut kij = vec![];
+
+            for mat in [&self.kij] {
+                let s = mat
+                .rows()
+                .into_iter()
+                .map(|row| row.to_string())
+                .collect::<Vec<_>>()
+                .join(",\n\t    ");
+                kij.push(s);
+
+            }
+            // let sbin = self.kij
+            // .rows()
+            // .into_iter()
+            // .map(|row| row.to_string())
+            // .collect::<Vec<_>>()
+            // .join("\n\t       ");
+            // let saij = self.aij
+            // .rows()
+            // .into_iter()
+            // .map(|row| row.to_string())
+            // .collect::<Vec<_>>()
+            // .join("\n\t       ");
+            // let sbij = self.bij
+            // .rows()
+            // .into_iter()
+            // .map(|row| row.to_string())
+            // .collect::<Vec<_>>()
+            // .join("\n\t       ");
+
+            write!(f, "CubicParameters(\n\tmodel={:?}, mixing_rule={:?}, combining_rule={:?},\n\ttc={:?},\n\t{},\n\taij=[{}],\n\tbij=[{}],\n\tkij=[{}]\n)",
                 self.model.to_string(),
                 self.mix.to_string(),
                 self.combr.to_string(),
-                self.a,
-                self.b,
                 self.tc,
                 self.alpha.to_string(),
-                sbin
+                ab[0],
+                ab[1],
+                kij[0]
             )
 
         }
@@ -243,3 +329,48 @@ impl std::fmt::Display for CubicParameters {
     }
 }
 
+
+#[cfg(test)]
+mod tests{
+    
+    use serde::{Serialize, Deserialize};
+    #[derive(Serialize, Deserialize, Debug, PartialEq)]
+    #[serde(rename = "kij")]
+    struct Kij{
+        a:f64,
+        #[serde(default)]
+        b:f64   
+    }
+
+
+    #[test]
+    fn test1(){
+
+        let kij: Kij = Kij { a: 1., b: 2. };
+
+        let s = r#"
+        {
+            "a":1.0,
+            "b":2.0
+        }
+
+        "#;
+        
+        assert_eq!(serde_json::from_str::<Kij>(s).unwrap(), kij);
+    }   
+    #[test]
+    fn test2(){
+
+        let kij: Kij = Kij { a: 1., b: 0.};
+
+        let s = r#"
+        {
+            "a":1.0
+        }
+
+        "#;
+        
+        assert_eq!(serde_json::from_str::<Kij>(s).unwrap(), kij);
+    }   
+
+}

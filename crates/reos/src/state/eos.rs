@@ -5,7 +5,7 @@ use ndarray::Array1;
 // use ndarray_linalg::error::LinalgError;
 use thiserror::Error;
 
-use crate::{models::IDEAL_GAS_CONST as R, parameters::Properties, residual::Residual};
+use crate::{models::R_GAS, parameters::Properties, residual::Residual};
 
 pub type EosResult<T> = Result<T, EosError>;
 
@@ -13,7 +13,6 @@ pub type EosResult<T> = Result<T, EosError>;
 /// Equation of State API
 pub struct EquationOfState<R>{
     residual:R,
-    // pub properties:Option<PureProperties>
 }
 
 impl<R:Residual> EquationOfState<R> {
@@ -44,14 +43,14 @@ impl <R:Residual> EquationOfState<R> {
     
     /// Ideal gas pressure in Pa
     pub fn ideal_gas_pressure(&self,t: f64,d: f64)->f64{
-        d * R * t
+        d * R_GAS * t
     }
 
     /// Compressibility factor
-    pub fn compressibility(&self,t:f64,d:f64,x:&Array1<f64>)->f64{
+    pub fn compressibility(&self,t:f64, d:f64, x:&Array1<f64>)->f64{
 
         let df_dv= self.residual.df_dv(t, d, x);
-        let z_res =  d * df_dv;
+        let z_res =  - df_dv / d;
         1.0 + z_res 
 
     }
@@ -60,33 +59,33 @@ impl <R:Residual> EquationOfState<R> {
     pub fn pressure(&self,t: f64, d: f64,x: &Array1<f64>)->f64{
 
         let z = self.compressibility(t, d, x);
-        R * t * z
+        z * d * R_GAS * t
 
 
     }
+    
     /// Residual Isovolumetric Helmholtz free energy in J / mol
     pub fn helmholtz_isov(&self,t: f64,d: f64,x: &Array1<f64>)->f64 {
-
-        R * t * self.residual.helmholtz(t, d, x)
+        R_GAS * t * self.residual.helmholtz(t, d, x)
     }
 
     /// Residual Isovolumetric Entropy in J / mol / K
-    pub fn entropy_isov(&self,t: f64,d: f64,x: &Array1<f64>)->f64 {
+    pub fn entropy_isov(&self,t: f64, d: f64,x: &Array1<f64>)->f64 {
 
         let df_dt = self.residual.df_dt(t, d, x);
         let f = self.residual.helmholtz(t, d, x);
         let s = - f - t * df_dt;
 
-        R * s
+        R_GAS * s
     }
 
     /// Residual Entropy in J / mol / K
-    pub fn entropy(&self,t: f64,d: f64,x: &Array1<f64>)->f64 {
+    pub fn entropy(&self,t: f64,d: f64, x: &Array1<f64>)->f64 {
 
         // let s_isov = self.residual.r_entropy(t, d, x);
         let z = self.compressibility(t, d, x);
         let s_isov = self.entropy_isov(t, d, x);
-        s_isov + R * z.ln()
+        s_isov + R_GAS * z.ln()
         
         
     }
@@ -99,33 +98,22 @@ impl <R:Residual> EquationOfState<R> {
         
     }
 
-    /// Residual Isovolumetric Chemical potential in J / mol
-    // pub fn chem_pot_isov(&self,t:f64, d:f64, x:&Array1<f64>)->Array1<f64> {
-        
-        // R * t * self.residual.r_chemical_potential(t, d, x) 
-
-    // }
-
     /// Residual Chemical potential in J / mol
     pub fn chem_pot(&self,t:f64, d:f64, x:&Array1<f64>)->Array1<f64> {
         
         let lnphi = self.lnphi(t, d, x);
-        R * t * lnphi 
+        R_GAS * t * lnphi 
 
     }
 
     /// Residual Gibbs energy in J / mol
     pub fn gibbs(&self, t: f64, d: f64, x: &Array1<f64>) -> f64 {
 
-        // let a_res_isov = self.residual.r_helmholtz(t, d, x);
-        // let z_res = self.residual.compressibility(t, d, x);
-        // let z = 1.0 + z_res;
+        let f = self.residual.helmholtz(t, d, x);
+        let z = self.compressibility(t, d, x);
+        let g = f + z - 1.0 - z.ln();
+        R_GAS * t * g
 
-        // let g = a_res_isov + z_res - z.ln();
-
-        // R * t * g
-        unimplemented!()
-        // R * t * self.residual.r_gibbs(t, d, x)
     }
 
     pub fn max_density(&self, x:&Array1<f64>)->f64{
@@ -149,7 +137,7 @@ impl <R:Residual> EquationOfState<R> {
 pub enum EosError {
     #[error("{0}")]
     NotConverged(String),
-    #[error("Phase must be 'liquid' or 'vapor'.")]
+    #[error("Phase must be 'liquid', 'vapor' or 'stable'")]
     PhaseError,
 
 

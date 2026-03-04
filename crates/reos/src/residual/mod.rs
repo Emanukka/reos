@@ -2,7 +2,7 @@ use approx::assert_relative_eq;
 use ndarray::Array1;
 use serde::{Deserialize, Serialize};
 
-use crate::parameters::Properties;
+use crate::{parameters::Properties, state::eos::EquationOfState};
 
 
 #[derive(Default,Serialize,Deserialize)]
@@ -64,5 +64,6 @@ pub trait Residual{
 
     // }
 }
+
 
 

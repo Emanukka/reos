@@ -7,7 +7,7 @@ use std::{collections::HashMap, env, fs::File, io::{ Read, Write}, iter::zip, pa
 use thiserror::Error;
 use std::error::Error;
 
-#[derive(Error,Debug,PartialEq)]
+#[derive(Clone, Error, Debug,PartialEq)]
 pub enum RecordError {
     
     #[error("component {0} not included in json")]
@@ -90,7 +90,7 @@ fn get_pure_records<M: Clone, A: AsRef<str>>(
 
 }
 
-fn get_binary_records<B:Clone, A: AsRef<str>>(names: &[A], map: BinaryRecords<B>) -> BinaryRecords<B>{
+fn get_binary_records<B:Clone, A: AsRef<str>>(names: &[A], map: Vec<BinaryRecord<B>>) -> Vec<BinaryRecord<B>>{
 
     let n = names.len();
     let hash: HashMap<(&str, &str), usize> = map.iter().enumerate().map(|(i, x)| (x.get_id(), i)).collect();
@@ -184,6 +184,7 @@ pub fn b_from_files<B: DeserializeOwned + Clone, A: AsRef<str> + Clone>(sets: &[
 
     if n_path == 0 { Ok(vec![]) } 
     
+    
     else if n_path == 1  {
 
         let res = b_from_file::<B, A>(&sets.concat(), &bpaths[0]);
@@ -223,20 +224,17 @@ mod tests{
     use super::*;   
     use crate::parameters::Parameters;
 
-    #[cfg(feature = "cpa")]
-    use crate::{models::{associative::sites::CombiningRule, cpa::parameters::readyto::*, cubic::models::CubicModels}};
-
-    #[derive(Serialize,Deserialize, Clone)]
+    #[derive(Serialize,Deserialize, Clone, Debug)]
     pub struct PureModelTest {
         pub x: f64, 
         pub y: f64,
         pub z: f64 
     }
 
-    #[derive(Serialize,Deserialize, Clone)]
+    #[derive(Serialize,Deserialize, Clone, Debug)]
     pub struct BinaryModelTest {
         pub kij: f64,
-        pub lij: f64,
+        pub lij: Option<f64>,
     }
 
     pub struct ParametersTest {
@@ -257,7 +255,7 @@ mod tests{
     }
     impl std::fmt::Display for BinaryModelTest {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "Test(kij={}, lij={})", self.kij, self.lij)
+            write!(f, "Test(kij={}, lij={})", self.kij, self.lij.unwrap_or_default())
         }
     }
     impl Parameters for ParametersTest {
@@ -274,7 +272,10 @@ mod tests{
             })
         }
     }
-    #[cfg(feature = "cpa")]
+    type Pure = PureRecord<PureModelTest>;
+    type Binary =  BinaryRecord<BinaryModelTest>;
+    // type Options = ();
+
     #[test]
     fn file_not_found(){
 
@@ -284,28 +285,33 @@ mod tests{
 
     }
 
-    #[cfg(feature = "cpa")]
+    // #[cfg(feature = "cpa")]
     #[test]
     fn comp_not_found(){
+        // use crate::models::cpa::parameters::CPAPureRecord;
+        //  PureRecord<CPAPureRecord>
+        let path = "src/parameters/dummy_data/parameters1.json";
 
-        let err = p_from_file::<Pure, &str>(&vec!["methane","propanol","co2"],&"src/parameters/tests/cpa/water_co2.json").unwrap_err();
-        let err: &RecordError = err.downcast_ref().unwrap();
-        assert_eq!(err, &RecordError::NotFound("methane, propanol".into(),"src/parameters/tests/cpa/water_co2.json".into()));
-        // dbg!(err);
-        // println!("{err}");
+        let err:Box<dyn Error> = p_from_file::<Pure, &str>(
+            &vec!["methanol", "ethanol", "carbon dioxide"],
+            &path
+        ).unwrap_err();
+
+        let err:Option<&RecordError> = err.downcast_ref();
+        assert_eq!(err.unwrap(), &RecordError::NotFound("methanol, ethanol".into(), path.into()));
 
     }
 
 
 
-    #[cfg(feature = "cpa")]
+    // #[cfg(feature = "cpaa")]
     #[test]
     fn pure_jsons_unmatch_sets(){
 
-        let names1 = vec!["water","co2"];
+        let names1 = vec!["water", "carbon dioxide"];
         let names2 = vec!["methane"];
         let sets = [names1, names2];
-        let ppath1 = "src/parameters/tests/cpa/water_co2.json";
+        let ppath1 = "src/parameters/dummy_data/parameters1.json";
 
         let err = p_from_files::<Pure, &str>(&sets,&[ppath1]).unwrap_err();
 
@@ -320,17 +326,16 @@ mod tests{
 
     }
 
-    #[cfg(feature = "cpa")]
     #[test]
     fn binary_jsons_unmatch_sets(){
 
-        let names1 = vec!["water","co2"];
+        let names1 = vec!["water","carbon dioxide"];
         let names2 = vec!["methane"];
         let sets = &[names1, names2];
 
-        let ppath1 = "src/parameters/tests/cpa/water_co2.json";
+        let ppath1 = "src/parameters/dummy_data/parameters3.json";
 
-        let err = b_from_files::<Binary, &str>(sets,&[ppath1,ppath1,ppath1]).unwrap_err();
+        let err = b_from_files::<Binary, &str>(sets,&[ppath1, ppath1, ppath1]).unwrap_err();
 
         assert!(err.len() == 1);
         let err: &RecordError = err[0].downcast_ref().unwrap();
@@ -343,22 +348,21 @@ mod tests{
     }
 
 
-    #[cfg(feature = "cpa")]
+    // #[cfg(feature = "cpa")]
     #[test]
     fn from_multiple_jsons_comps_not_found(){
 
-        let names1 = vec!["water","co2"];
-        let names2 = vec!["methane","propane","ethane","acetic acid"];
-        // let names = vec![vec![names1], vec![names2]];
+        let names1 = vec!["water", "carbon dioxide"];
+        let names2 = vec!["methane", "propane", "ethane","acetic acid"];
         
         let names = &[names1, names2];
 
-        let ppath1 = "src/parameters/tests/cpa/water_co2.json";
-        let ppath2 = "src/parameters/tests/cpa/acetic_acid.json";
+        let ppath1 = "src/parameters/dummy_data/parameters1.json";
+        let ppath2 = "src/parameters/dummy_data/parameters2.json";
         
 
-        let res = CPAParameters
-        ::from_multiple_jsons(names, &[ppath1,ppath2], None, CubicModels::default());
+        let res = ParametersTest
+        ::from_multiple_jsons(names, &[ppath1,ppath2], None, ());
 
         // let res = CPAParameters::from_multiple_jsons(&names, &[ppath1,ppath2], &[], CubicModels::default());
 
@@ -373,37 +377,77 @@ mod tests{
     }
 
     #[test]
-    fn from_multiple_jsons() {
+    fn from_n_sets() {
 
-        let names1 = vec!["water".into()];
-        let names2 = vec!["methane".into()];
-        let names3 = vec!["propanol".into()];
+        let names1 = vec!["water"];
+        let names2 = vec!["carbon dioxide"];
+        let names3 = vec!["methane"];
 
-        let sets = &[names1, names2, names3];
+        let ppath = "src/parameters/dummy_data/parameters1.json";
+        let bpath = "src/parameters/dummy_data/bin1.json";
 
-        let ppath1 = "src/parameters/tests/foo/water.json";
-        let ppath2 = "src/parameters/tests/foo/methane.json";
-        let ppath3 = "src/parameters/tests/foo/propanol.json";
-        let ppaths = [ppath1, ppath2, ppath3];
-
-        let bpath1 = "src/parameters/tests/foo/bin1.json";
-        let bpath2 = "src/parameters/tests/foo/bin2.json";
-        let bpath3 = "src/parameters/tests/foo/bin3.json";
-
-        let bpaths = [bpath1, bpath2, bpath3];
-
-        let bpaths = Some(bpaths.as_slice());
-
-        let p = ParametersTest::from_multiple_jsons(sets, 
-            &ppaths, 
-            bpaths, 
-            ()).unwrap();
+        let p = ParametersTest::from_multiple_jsons(
+            &[names1, names2, names3], 
+            &[ppath,ppath,ppath], 
+            Some(&[bpath]), 
+            ()
+        ).unwrap();
         
         let water = "Test(x=1, y=2, z=3)".to_string();
-        let methane = "Test(x=4, y=5, z=6)".to_string();
-        let propanol = "Test(x=7, y=8, z=9)".to_string();
+        let carbon_dioxide = "Test(x=4, y=5, z=6)".to_string();
+        let methane = "Test(x=7, y=8, z=9)".to_string();
         
-        let target = vec![water, methane, propanol];
+        let target = vec![water, carbon_dioxide, methane];
+
+        let pure = &p.pure;
+        let bin = &p.bin;
+
+        for i in 0..pure.len(){
+            let s = format!("{}", pure[i]);
+            assert_eq!(s, target[i]);
+        }
+
+        
+        let water_co2 = "Test(kij=1, lij=2)".to_string();
+        let water_methane = "Test(kij=3, lij=4)".to_string();
+        let co2_methane = "Test(kij=5, lij=6)".to_string();
+        let target = vec![water_co2, water_methane, co2_methane];
+
+        assert!(bin.len() == 3);
+
+        for t in target {
+            
+            let (_, b) = bin.iter().find(|&(_, b)| format!("{}", b) == t).unwrap();
+            assert!(format!("{}", b) == t)
+        }
+
+    }
+    
+    #[test]
+    fn from_1_set() {
+
+        let names1 = vec!["water"];
+        let names2 = vec!["carbon dioxide"];
+        let names3 = vec!["methane"];
+
+        let sets = &[names1, names2, names3];
+        let set = sets.concat();
+        
+        let ppath = "src/parameters/dummy_data/parameters1.json";
+        let bpath = "src/parameters/dummy_data/bin1.json";
+        
+        let p = ParametersTest::from_multiple_jsons(
+            &[set], 
+            &[ppath], 
+            Some(&[bpath]), 
+            ()
+        ).unwrap();
+        
+        let water = "Test(x=1, y=2, z=3)".to_string();
+        let carbon_dioxide = "Test(x=4, y=5, z=6)".to_string();
+        let methane = "Test(x=7, y=8, z=9)".to_string();
+        
+        let target = vec![water, carbon_dioxide, methane];
 
         let pure = &p.pure;
         let bin = &p.bin;
@@ -412,180 +456,20 @@ mod tests{
             assert_eq!(s, target[i]);
         }
 
-        let water_methane = "Test(kij=1, lij=2)".to_string();
-        let water_propanol = "Test(kij=3, lij=4)".to_string();
-        let methane_propanol = "Test(kij=5, lij=6)".to_string();
-        let target = vec![water_methane, water_propanol, methane_propanol];
+        let water_co2 = "Test(kij=1, lij=2)".to_string();
+        let water_methane = "Test(kij=3, lij=4)".to_string();
+        let co2_methane = "Test(kij=5, lij=6)".to_string();
+        let target = vec![water_co2, water_methane, co2_methane];
 
-        bin.iter().enumerate().for_each(|(i,((_id1,_id2), model))| {
-            let s = format!("{}", model);
-            assert_eq!(s, target[i]);
-        });
+        assert!(bin.len() == 3);
 
-    }
-    
-    #[cfg(feature = "cpa")]
-    #[test]
-    fn cpa_from_json(){
-
-        let ppath = "src/parameters/tests/cpa/water_co2.json";
-        let bpath = "src/parameters/tests/cpa/bin.json";
-
-        let p = CPAParameters::from_json(&["water","co2"], &ppath, Some(&bpath), CubicModels::default()).unwrap();
-
-        let aij = p.cubic.aij.as_slice().unwrap();
-        let bij = p.cubic.bij.as_slice().unwrap();
-        let interactions= &p.assoc.interactions;
-        dbg!(&p.cubic.aij);
-        assert_eq!(interactions.len(), 2);
-        assert_eq!(interactions[1].epsilon, 166.55e2 /2.);
-        assert_eq!(interactions[1].kappa,   0.1836);
-
-        assert_eq!(aij, &[0.0, -0.15508, -0.15508, 0.0]);
-        assert_eq!(bij, &[0.0, 0.000877, 0.000877, 0.0]);
-
-        let s = p.to_string();
-        println!("{}", s);
-    }
-    
-
-    #[cfg(feature = "cpa")]
-    #[test]
-    fn cpa_from_multiple_jsons(){
-
-        let names1 = vec!["water"];
-        let names2 = vec!["co2"];
-
-        let sets = [names1, names2];
-
-        let ppath1 = "src/parameters/tests/cpa/water_co2.json";
-        let ppath2 = "src/parameters/tests/cpa/co2.json";
-        let ppaths = [ppath1, ppath2];
-        let bpaths = Some(["src/parameters/tests/cpa/bin.json"].as_slice());    
-
-        let p = CPAParameters::from_multiple_jsons(&sets, 
-            &ppaths, 
-            bpaths, 
-            CubicModels::default()).unwrap();
-        
-        let aij = p.cubic.aij.as_slice().unwrap();
-        let bij = p.cubic.bij.as_slice().unwrap();
-        let interactions= &p.assoc.interactions;
-
-        assert_eq!(interactions.len(), 2);
-        assert_eq!(interactions[1].epsilon, 166.55e2 /2.);
-        assert_eq!(interactions[1].kappa,   0.1836);
-
-        assert_eq!(aij, &[0.0, -0.15508, -0.15508, 0.0]);
-        assert_eq!(bij, &[0.0, 0.000877, 0.000877, 0.0]);
-
-        let s = p.to_string();
-        println!("{}", s);
-    }
-
-    #[test]
-    #[cfg(feature = "cpa")]
-    fn cpa_from_multiple_jsons2(){
-
-        let names1 = vec!["water"];
-        let names2 = vec!["acetic acid"];
-
-        let sets = [names1, names2];
-
-        let ppath1 = "src/parameters/tests/cpa/water_co2.json";
-        let ppath2 = "src/parameters/tests/cpa/acetic_acid.json";
-        let ppaths = [ppath1, ppath2];
-        let bpaths = Some(["src/parameters/tests/cpa/bin.json"].as_slice());    
-
-        let p = CPAParameters::from_multiple_jsons(&sets, 
-            &ppaths, 
-            bpaths, 
-            CubicModels::default()).unwrap();
-        
-        // let aij = p.cubic.aij.as_slice().unwrap();
-        // let bij = p.cubic.bij.as_slice().unwrap();
-
-        let interactions= &p.assoc.interactions;
-
-        // assert_eq!(interactions[1].epsilon, 166.55e2 /2.);
-        // assert_eq!(interactions[1].kappa,   0.1836);
-
-        // assert_eq!(aij, &[0.0, -0.15508, -0.15508, 0.0]);
-        // assert_eq!(bij, &[0.0, 0.000877, 0.000877, 0.0]);
-        let s = p.to_string();
-        println!("{}", s);
-
-        let cr = &[CombiningRule::CR1, CombiningRule::ECR, CombiningRule::ECR,CombiningRule::CR1];
-        for (i, interaction) in interactions.iter().enumerate(){
-            assert_eq!(interaction.combining_rule, cr[i]);
+        for t in target {
+            
+            let (_, b) = bin.iter().find(|&(_, b)| format!("{}", b) == t).unwrap();
+            assert!(format!("{}", b) == t)
         }
 
-        // assert_eq!(interactions[1].combining_rule, CombiningRule::ECR);
-
-
     }
-}
     
 
-
- // #[test]
-    // fn test_from_json(){
-    //     let s = r#"
-    //         [
-
-    //             {   
-    //                 "name": "water",
-    //                 "a0":   0.12277,
-    //                 "b":    0.0145e-3, 
-    //                 "c1":   0.6736, 
-    //                 "tc":   647.14,
-    //                 "na":   2,
-    //                 "nb":   2,
-    //                 "epsilon": 166.55e2,
-    //                 "kappa": 0.0692,
-    //                 "molar_weight": 18.01528
-    //             },
-
-    //             {   
-    //                 "name": "co2",
-    //                 "a0":   0.35079, 
-    //                 "b":    0.0272e-3, 
-    //                 "c1":   0.7602, 
-    //                 "tc":   304.12,
-    //                 "nb":   1
-    //             }
-    //         ]
-
-    //     "#;
-        
-    //     let records: Vec<Pure> = serde_json::from_str(s).unwrap();
-        
-    //     let s = r#"[
-    //         {
-    //             "id1": "water",
-    //             "id2": "co2",
-    //             "aij": -0.15508,
-    //             "bij": 0.000877,
-    //             "kappa": 0.1836
-    //         }
-
-    //     ]"#;
-
-    //     let binary: Vec<Binary> = serde_json::from_str(s).unwrap();
-    //     // let bin: Vec<Binary> = s
-    //     let p = CPAParameters::new(records, binary);
-
-    //     let cpa = SCPA::from_parameters(p);
-    //     let c = serde_json::to_string_pretty(&cpa.cubic.parameters).unwrap();
-    //     let a = serde_json::to_string_pretty(&cpa.assoc.assoc.parameters).unwrap();
-
-    //     // println!("{c}");
-    //     // println!("{a}");
-
-    //     let asc = cpa.assoc.assoc.parameters;
-
-    //     assert_eq!(asc.interactions[1].epsilon, 166.55e2 /2.);
-    //     assert_eq!(asc.interactions[1].kappa,   0.1836);
-
-    //     // cpa.assoc.assoc.parameters.interactions[]
-    // }
+}

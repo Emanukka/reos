@@ -1,12 +1,12 @@
-use super::R;
+use crate::models::R_GAS;
 
 fn dimensionless_delta_jl(t:f64,epsilon:f64,kappa:f64)->f64{
-    (epsilon / R / t).exp_m1() * kappa
+    (epsilon / R_GAS / t).exp_m1() * kappa
 }
 
 fn dimensionless_delta_jl_dt(t:f64,epsilon:f64,kappa:f64) -> f64 {
     
-    - (epsilon / R / t).exp() * epsilon * kappa / R / t.powi(2) 
+    - (epsilon / R_GAS / t).exp() * epsilon * kappa / R_GAS / t.powi(2) 
     
 }
 

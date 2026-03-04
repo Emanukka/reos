@@ -6,7 +6,7 @@ use crate::{models::cubic::{Cubic, alpha::{Alpha, AlphaOption}, mixing_rule::Mix
 #[cfg(test)]
 pub mod recipes {
 
-    use crate::models::cubic::models::CubicModelOption;
+    use crate::models::cubic::{models::CubicModelOption, parameters::Kij};
 
     use super::*;
     pub fn water() -> Cubic {
@@ -45,8 +45,8 @@ pub mod recipes {
 
         let pr1 = PureRecord::new(18.02, "water", mr1);
         let pr2 = PureRecord::new(0., "carbon dioxide", mr2);
-
-        let mbr1 = CubicBinaryRecord{kij:0.1, lij:0.05};
+        
+        let mbr1 = CubicBinaryRecord{kij:Kij{a:0.01, b: 0.0005}};
         // println!("{}",mbr1);
         let br1 = BinaryRecord::new(mbr1, "water", "carbon dioxide");
         // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
@@ -59,6 +59,28 @@ pub mod recipes {
         Cubic::from_parameters(p)
 
     }
+    pub fn water_co2_bip_regressed() -> Cubic {
+        
+        let mr1 = CubicPureRecord::regressed_soave(0.12277, 0.0145e-3, 647.14, 0.6736, None);
+        let mr2 = CubicPureRecord::regressed_soave(0.35079, 0.0272e-3, 304.12, 0.7602, None);
+
+        let pr1 = PureRecord::new(18.02, "water", mr1);
+        let pr2 = PureRecord::new(0., "carbon dioxide", mr2);
+        
+        let mbr1 = CubicBinaryRecord{kij:Kij{a:0.01, b: 0.0005}};
+        // println!("{}",mbr1);
+        let br1 = BinaryRecord::new(mbr1, "water", "carbon dioxide");
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        
+        let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+
+        let p = CubicParameters::new(vec![pr1, pr2], vec![br1], options).unwrap();
+        // println!("{}",p);
+        // 
+        Cubic::from_parameters(p)
+
+    }
+
     }
     pub fn nhexane_dehlouz() -> Cubic {
         

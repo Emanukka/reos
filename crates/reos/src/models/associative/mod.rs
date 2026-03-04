@@ -1,4 +1,3 @@
-use crate::models::IDEAL_GAS_CONST as R;
 use crate::models::associative::parameters::AssociativeParameters;
 use crate::state::eos::{EosError, EosResult};
 

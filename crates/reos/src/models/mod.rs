@@ -1,9 +1,11 @@
-
+#[cfg(feature = "cubic")]
 pub mod cubic;
-// #[cfg(feature = "cpa")]
+
+#[cfg(feature = "cpa")]
 pub mod cpa;
-// #[cfg(feature = "associative")]
+
+#[cfg(feature = "association")]
 pub mod associative;
 
-pub const IDEAL_GAS_CONST: f64 = 8.31446261815324;
+pub const R_GAS: f64 = 8.31446261815324;
 

@@ -79,23 +79,23 @@ impl<B:Serialize> BinaryRecord<B> {
     }
 }
 
-#[derive(Debug)]
-pub struct BinaryParameter<M>{
-    pub model_record: M,
-    pub id1: usize,
-    pub id2: usize
-}
+// #[derive(Debug)]
+// pub struct BinaryParameter<M>{
+//     pub model_record: M,
+//     pub id1: usize,
+//     pub id2: usize
+// }
 
-impl<M:Clone> BinaryParameter<M>{
+// impl<M:Clone> BinaryParameter<M>{
 
-    pub fn new(model_record:M,id1:usize,id2:usize,)->Self{
-        BinaryParameter{
-            model_record,
-            id1,
-            id2
-        }
-    }
-}
+//     pub fn new(model_record:M,id1:usize,id2:usize,)->Self{
+//         BinaryParameter{
+//             model_record,
+//             id1,
+//             id2
+//         }
+//     }
+// }
 
 #[derive(Debug,Clone, Serialize)]
 pub struct Properties{
@@ -110,70 +110,4 @@ impl Default for Properties{
         Properties { names: vec![], molar_weight: array![] }
     }
 }
-
-
-#[cfg(test)] 
-mod tests {
-    use std::collections::HashMap;
-
-    struct BinaryId(pub usize, pub usize);
-
-    impl PartialEq for BinaryId {
-        fn eq(&self, other: &Self) -> bool {
-
-            let (i,j) = (self.0,self.1);
-            let (k,l) = (other.0,other.1);
-
-            let left = (i,j) == (k,l);
-            let right = (i,j) == (l,k);
-            dbg!(left,right,i,j,k,l);
-            left || right
-
-        }
-    }
-
-    
-    impl Eq for BinaryId {}
-    #[derive(Clone, PartialEq)]
-    struct MyBinary(f64);
-    
-    impl BinaryId {
-        fn from_ij(i:usize,j:usize)->Self{
-            Self(i, j)
-        }
-    }
-    // struct BinaryParameter<M>{
-    //     pub model_record: M,
-    //     pub id: BinaryId
-    // }
-
-    // impl<M:Clone> BinaryParameter<M>{
-
-    //     pub fn new(model_record:M, id1:usize,id2:usize,)->Self{
-    //         BinaryParameter{
-    //             model_record,
-    //             id: BinaryId(id1, id2)
-    //         }
-    //     }
-    // }
-    // #[test]
-    // fn hash() {
-
-    //     let mut hash: HashMap<BinaryId, MyBinary> = HashMap::new();
-    //     hash.insert(BinaryId::from_ij(0, 1), MyBinary(1.));
-
-    //     let left = hash.get(&BinaryId(1, 0)).unwrap();
-    //     // assert!() == hash.get(&BinaryId(1, 0)  ).unwrap() );
-    //     // hash.insert(BinaryId::from_ij(0, 1), MyBinary(1.));
-    //     // dbg!(hash.)
-    //     // let bin1 = BinaryParameter::new(MyBinary(1.), 0, 1);
-    //     // let bin2 = BinaryParameter::new(MyBinary(1.), 1, 0);
-        
-    //     // let mut set = HashSet::new();
-        
-    //     // set.p
-    // }
-}
-
-
 

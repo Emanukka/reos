@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{models::IDEAL_GAS_CONST, parameters::Parameters, residual::Residual, state::State};
+use crate::{models::R_GAS, parameters::Parameters, residual::Residual, state::State};
 
 
 
@@ -61,7 +61,7 @@ impl<R: Residual> Scaling<R> {
 
     pub fn new(state: &Arc<State<R>>, parameters: ScalingRecord) -> Self {
         
-        let entropy = state.entropy_isov() / IDEAL_GAS_CONST;
+        let entropy = state.entropy_isov() / R_GAS;
         let reference = super::rosenfeld_viscosity(state.t, state.d, state.molar_weight()[0]);
 
         Self { state: Arc::clone(state), entropy, reference, parameters }

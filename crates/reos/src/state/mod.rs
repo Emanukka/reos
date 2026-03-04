@@ -4,7 +4,6 @@ pub mod density_solver;
 use ndarray::{Array1, array};
 use std::sync::Arc;
 
-use crate::models::IDEAL_GAS_CONST;
 use crate::parameters::Properties;
 use crate::residual::Residual;
 use crate::state::eos::{EosError, EquationOfState};
@@ -190,27 +189,6 @@ impl<R:Residual> State<R> {
     
 }
 
-
-// impl<R: Residual> State<R> {
-
-//     pub fn to_string(&self, reduced: bool) -> String {
-
-//         let mut sresv = self.entropy_isov();
-        
-//         if reduced {
-//             sresv /= IDEAL_GAS_CONST
-//         }
-
-//         if self.x.len() == 1 {
-
-//             format!("State(t={} K,\nd={} mol/m³,\np={} Pa,\nSresV={})",self.t,self.d,self.p,sresv)
-            
-//         } else {
-//             format!("State(t={} K,\nd={} mol/m³,\nx={}\np={} Pa,\nSresV={})",self.t,self.d,self.p,&self.x,sresv)
-
-//         }
-//     }
-// }
 impl<R:Residual> std::fmt::Display for State<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         
@@ -219,108 +197,121 @@ impl<R:Residual> std::fmt::Display for State<R> {
             write!(f,"State(t = {:.3} K, p = {:.6} Pa, ρ = {:.6} mol/m³)",self.t,self.p,self.d)
 
         } else {
-            write!(f,"State(t = {:.3} K, p = {:.6} Pa, ρ = {:.6} mol/m³), x= {:.6}",self.t,self.p,self.d, self.x)
+            write!(f,"State(t = {:.3} K, p = {:.6} Pa, ρ = {:.6} mol/m³), x = {:.6}",self.t,self.p,self.d, self.x)
 
         }
     }
 }
 #[cfg(test)]
-#[cfg(feature = "cpa")]
+
 mod tests {
 
     use approx::assert_relative_eq;
     use ndarray::array;
 
-    use crate::{models::{cpa::{CPA, parameters::readyto::*, rdf::Kontogeorgis}, cubic::models::SRK}, parameters::Parameters};
-    use super::*;
-    
+    // use crate::{models::{cpa::{CPA, parameters::readyto::*, rdf::Kontogeorgis}, cubic::models::SRK}, parameters::Parameters};
+    // use super::*;
+    use std::sync::Arc;
+
+    use super::{State, EquationOfState, DensityInitialization::{Liquid, Vapor}};
+
+    #[cfg(feature = "cpa")]
     #[test]
     fn liq_stable() {
 
-        let water = water4c();
+        use crate::models::cpa::tests::recipes::{scpa, water4c};
 
-        let p = CPAParameters::new(vec![water], vec![], SRK.into());
-        let r = CPA::<Kontogeorgis>::from_parameters(p);
+        let pr1 = water4c();
 
-        let eos = EquationOfState::from_residual(r).into();
+        let r = scpa(vec![pr1], vec![]).unwrap();
+
+        let eos: Arc<EquationOfState<crate::models::cpa::CPA>> = EquationOfState::from(r).into();
 
         let t = 298.15;
         let p = 1e5;
-        let x = array![1.0];
-        
-        let stable = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), None).unwrap();
-        let vapor = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), Some(DensityInitialization::Vapor)).unwrap();
-        let liquid = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), Some(DensityInitialization::Liquid)).unwrap();
-        
 
-        assert_relative_eq!(stable.d, liquid.d, epsilon = 1e-10);
-        assert!( vapor.gibbs() > liquid.gibbs() );
+        let stable = State::new_tp(eos.clone(), t, p, None).unwrap();
+        let vapor = State::new_tp(eos.clone(), t, p, Some(Vapor)).unwrap();
+        let liquid = State::new_tp(eos.clone(), t, p, Some(Liquid)).unwrap();
+
+        assert_relative_eq!(liquid.d, 55784.91989, epsilon = 1e-5);
+        assert_relative_eq!(stable.d, liquid.d, epsilon = 1e-15);
+        assert!( vapor.gibbs() > stable.gibbs() );
 
 
     }
 
+    #[cfg(feature = "cpa")]
     #[test]
     fn vap_stable() {
 
-        let water = water4c();
+        use crate::models::cpa::tests::recipes::{scpa, water4c};
 
-        let p = CPAParameters::new(vec![water], vec![], SRK.into());
-        let r = CPA::<Kontogeorgis>::from_parameters(p);
+        let pr1 = water4c();
 
-        let eos = EquationOfState::from_residual(r).into();
+        let r = scpa(vec![pr1], vec![]).unwrap();
+
+        let eos: Arc<EquationOfState<crate::models::cpa::CPA>> = EquationOfState::from(r).into();
+        // let eos = EquationOfState::from_residual(r).into();
 
         let t = 298.15 + 100.;
         let p = 1e5;
-        let x = array![1.0];
-        
-        let stable = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), None).unwrap();
-        let vapor = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), Some(DensityInitialization::Vapor)).unwrap();
-        let liquid = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), Some(DensityInitialization::Liquid)).unwrap();
 
+        let stable = State::new_tp(eos.clone(), t, p, None).unwrap();
+        let vapor = State::new_tp(eos.clone(), t, p, Some(Vapor)).unwrap();
+        let liquid = State::new_tp(eos.clone(), t, p, Some(Liquid)).unwrap();
 
-        assert_relative_eq!(stable.d, vapor.d, epsilon = 1e-10);
-        assert!( vapor.gibbs() < liquid.gibbs() );
+        assert_relative_eq!(stable.d, vapor.d, epsilon = 1e-15);
+        assert!( liquid.gibbs() > stable.gibbs() );
 
     }
 
-    #[test]
-    fn invalid_pressure() {
-            let water = water4c();
+    // #[test]
+    // fn invalid_temperature() {
+    //     use crate::models::cpa::tests::recipes::{scpa, water4c};
 
-        let p = CPAParameters::new(vec![water], vec![], SRK.into());
-        let r = CPA::<Kontogeorgis>::from_parameters(p);
+    //     let pr1 = water4c();
 
-        let eos = EquationOfState::from_residual(r).into();
+    //     let r = scpa(vec![pr1], vec![]).unwrap();
 
-        let t = 298.15;
-        let p = 0.0;
-        let x = array![1.0];
+    //     let eos: Arc<EquationOfState<crate::models::cpa::CPA>> = EquationOfState::from(r).into();
+    //     // let p = CPAParameters::new(vec![water], vec![], SRK.into());
+    //     // let r = CPA::<Kontogeorgis>::from_parameters(p);
+
+    //     // let eos = EquationOfState::from_residual(r).into();
+
+    //     let t = 0. ;
+    //     let p = 1.;
+
+    //     let res = State::new_tp(eos.clone(), t, p, None).unwrap();
+
+    //     println!("{}",res);
+    //     // assert!(res.is_err());
+    //     // if let Err(EosError::NotConverged())
+    //     // println!("{:?}",res.unwrap_err());
+
+    //     // println!("Density = {}", s.d);
         
-        let s = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), Some(DensityInitialization::Vapor));
+    // }
+    // #[test]
+    // fn invalid_frac() {
+    //         let water = water4c();
 
-        assert!(s.is_err());
-        // println!("Density = {}", s.d);
+    //     let p = CPAParameters::new(vec![water], vec![], SRK.into());
+    //     let r = CPA::<Kontogeorgis>::from_parameters(p);
+
+    //     let eos = EquationOfState::from_residual(r).into();
+
+    //     let t = 298.15;
+    //     let p = 1e5;
+    //     let x = array![-12.0];
         
-    }
-    #[test]
-    fn invalid_frac() {
-            let water = water4c();
+    //     let s = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), Some(DensityInitialization::Vapor));
 
-        let p = CPAParameters::new(vec![water], vec![], SRK.into());
-        let r = CPA::<Kontogeorgis>::from_parameters(p);
-
-        let eos = EquationOfState::from_residual(r).into();
-
-        let t = 298.15;
-        let p = 1e5;
-        let x = array![-12.0];
+    //     assert!(s.is_err());
+    //     // println!("Density = {}", s.d);
         
-        let s = State::new_tpx(Arc::clone(&eos), t, p, x.clone(), Some(DensityInitialization::Vapor));
-
-        assert!(s.is_err());
-        // println!("Density = {}", s.d);
-        
-    }
+    // }
 
     
 }

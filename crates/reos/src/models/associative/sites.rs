@@ -140,7 +140,7 @@ mod tests{
 
         let sites = vec![site1,site2,site3];
         
-        let b = AssociationBinaryRecord::CombiningRule(CombiningRuleOption::MCR1 { kappa: wco2 });
+        let b = AssociationBinaryRecord::AssocRule(CombiningRuleOption::MCR1 { kappa: wco2 });
         
         // let b1 = AssociationBinaryRecord::new(None, None, CombiningRuleOption::CR1);
 

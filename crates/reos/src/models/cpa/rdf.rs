@@ -74,7 +74,7 @@ pub enum RDF {
 #[derive(Clone)]
 pub struct RDFcpa{
   pub b:Array1<f64>,
-  pub bij:Array2<f64>,
+//   pub bij:Array2<f64>,
   pub model: RDF
 
 }

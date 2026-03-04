@@ -34,13 +34,16 @@ impl MixingRuleModel for  Quadratic {
     }
     
     fn apply(&self, t:f64, _:f64, x:&Array1<f64>, parameters:&CubicParameters) -> W {
-        let n = parameters.a.len();
+        
+        let n = parameters.tc.len();
+        let [aij_mat, bij_mat] = [&parameters.aij, &parameters.bij];
         // let epsilon = parameters.model.eps();  
         // let sigma = parameters.model.sig();  
-        let bin = &parameters.binary;
+        // let bin = &parameters.binary;
+        let kij_mat = &parameters.kij;
         let alpha = &parameters.alpha.alpha(t, &parameters.tc);
 
-        let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
+        // let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
         let [mut d,mut b, _] = [0.,0.,0.];
         let combr = &parameters.combr;
 
@@ -50,16 +53,17 @@ impl MixingRuleModel for  Quadratic {
 
             for j in 0..n {
 
-                let bi_bj = [bc[i], bc[j]];
-                let ai_aj = [ac[i] * alpha[i], ac[j] * alpha[j]];
+                // let bi_bj = [bc[i], bc[j]];
+                // let ai_aj = [aij[(i,i)] * alpha[i], ac[j] * alpha[j]];
                 
-                let kij = bin[(i,j)].kij + bin[(i,j)].lij * t;
+                let alpha_ij = combr.alpha_ij(alpha[i], alpha[j]);
 
-                let [aij, bij] = combr.apply(ai_aj, bi_bj, kij);
+                let kij = kij_mat[(i,j)].a + kij_mat[(i,j)].b * t;
+                // let [aij, bij] = combr.apply(ai_aj, bi_bj, kij);
                 
 
-                b += x[i] * x[j] * bij;
-                d += x[i] * x[j] * aij;
+                b += x[i] * x[j] * bij_mat[(i,j)];
+                d += x[i] * x[j] * aij_mat[(i,j)] * alpha_ij * (1.0 - kij);
                 
 
             }
@@ -73,11 +77,13 @@ impl MixingRuleModel for  Quadratic {
 
     fn dw_dt(&self, t:f64, _:f64, x:&Array1<f64>, _:&W, parameters:&CubicParameters) -> DwDt{
 
-        let bin = &parameters.binary;
+        let kij_mat = &parameters.kij;
         let alpha = &parameters.alpha.alpha(t, &parameters.tc);
         let dalpha_dt = parameters.alpha.dalpha_dt(t, &parameters.tc);
 
-        let [ac, _, _] = [&parameters.a,&parameters.b,&parameters.c];
+        // let [ac, _, _] = [&parameters.a,&parameters.b,&parameters.c];
+        let [ai] = [&parameters.aij.diag()];
+
         let n = alpha.len();
         let mut dd = 0.;
         let combr = &parameters.combr;
@@ -86,11 +92,11 @@ impl MixingRuleModel for  Quadratic {
         for i in 0..n {
             for j in 0..n{
 
-                let dkij = bin[(i,j)].lij;
-                let kij = bin[(i,j)].kij + dkij * t;
+                let dkij = kij_mat[(i,j)].b;
+                let kij = kij_mat[(i,j)].a + dkij * t;
                  
-                let ai_aj = [ac[i] * alpha[i] , ac[j] * alpha[j]];
-                let dai_daj = [ac[i] * dalpha_dt[i] , ac[j] * dalpha_dt[j]];
+                let ai_aj = [ai[i] * alpha[i] , ai[j] * alpha[j]];
+                let dai_daj = [ai[i] * dalpha_dt[i] , ai[j] * dalpha_dt[j]];
 
                 let daij_dt = combr.dt(ai_aj, dai_daj, kij, dkij);
                 // let sqrt = (ai * aj).sqrt();
@@ -110,10 +116,12 @@ impl MixingRuleModel for  Quadratic {
     fn dw_dni(&self, t:f64, _:f64, x:&Array1<f64>, w:&W, parameters:&CubicParameters) -> DwDni {
 
         let n = x.len();
-        let bin = &parameters.binary;
+        let kij_mat = &parameters.kij;
         let alpha = &parameters.alpha.alpha(t, &parameters.tc);
-        let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
+        // let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
+        let [aij_mat, bij_mat] = [&parameters.aij, &parameters.bij];
 
+        let combr = &parameters.combr;
         let mut db = Vec::with_capacity(n);
         let mut dd = Vec::with_capacity(n);
         
@@ -124,17 +132,18 @@ impl MixingRuleModel for  Quadratic {
 
             for j in 0..n {
                 
-                let bij = 0.5 * (bc[i] + bc[j]);
+                // let bij = 0.5 * (bc[i] + bc[j]);
+                let alpha_ij = combr.alpha_ij(alpha[i], alpha[j]);
 
-                let kij = bin[(i,j)].kij + bin[(i,j)].lij * t;
+                let kij = kij_mat[(i,j)].a + kij_mat[(i,j)].b * t;
 
-                let [ai, aj] = [ac[i] * alpha[i], ac[j] * alpha[j]];
-                let sqrt = (ai * aj).sqrt();
+                // let [ai, aj] = [ac[i] * alpha[i], ac[j] * alpha[j]];
+                // let sqrt = (ai * aj).sqrt();
 
-                let aij = (1. - kij) * sqrt;
+                // let aij = (1. - kij) * sqrt;
 
-                sum_dd += x[j] * aij;
-                sum_db += x[j] * bij;
+                sum_dd += x[j] * aij_mat[(i, j)] * alpha_ij * (1.0 - kij);
+                sum_db += x[j] * bij_mat[(i, j)];
 
             }
 

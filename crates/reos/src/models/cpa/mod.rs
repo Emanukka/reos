@@ -10,8 +10,9 @@ use crate::parameters::records::{BinaryRecord, PureRecord};
 use crate::residual::Residual;
 use core::f64;
 use ndarray::Array1;
+
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 
 pub struct CPA {

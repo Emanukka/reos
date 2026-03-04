@@ -112,10 +112,11 @@ pub struct AssociationPureRecord{
 }
 
 #[derive(Clone,Serialize,Deserialize,Debug)]
+#[serde(rename_all = "snake_case")]
 pub enum AssociationBinaryRecord{
-    
+        
     Set {epsilon:f64, kappa:f64},
-    CombiningRule (CombiningRuleOption)    
+    AssocRule (CombiningRuleOption)    
 
 }
 
@@ -146,7 +147,7 @@ impl AssociationPureRecord {
 impl Default for AssociationBinaryRecord {
 
     fn default() -> Self {
-        Self::CombiningRule(CombiningRuleOption::CR1)
+        Self::AssocRule(CombiningRuleOption::CR1)
     }
 }
 
@@ -169,10 +170,128 @@ impl std::fmt::Display for AssociationBinaryRecord {
                 write!(f, "AssociationBinaryRecord(epsilon={}, kappa={})", epsilon, kappa)
             }
 
-            Self::CombiningRule(combining_rule) => {
+            Self::AssocRule(combining_rule) => {
                 write!(f, "AssociationBinaryRecord({})", combining_rule)
                 
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests{
+
+    use super::*;
+
+    #[test]
+    fn from_json(){
+
+
+        let s = r#"
+        {
+            "name": "water",
+            "molar_weight": 0.0,
+            "epsilon": 166.55e2,
+            "kappa": 0.0692,
+            "na": 2,
+            "nb": 2
+
+        }
+        "#;
+
+        let pr1 = serde_json::from_str(s).unwrap();
+
+        let s = r#"
+        {
+            "name": "carbon dioxide",
+            "molar_weight": 0.0,
+            "nb": 1
+        }
+        "#;
+
+        let pr2 = serde_json::from_str(s).unwrap();
+
+        let s = r#"
+        {
+            "id1": "water",
+            "id2": "carbon dioxide",
+            "assoc_rule": {"mcr1": {"kappa": 0.1836}}
+
+            
+        }
+        "#;
+
+        let bin1: crate::parameters::BinaryRecord<AssociationBinaryRecord> = serde_json::from_str(s).unwrap();
+
+        let s = r#"
+        {
+            "name": "acetic acid",
+            "molar_weight": 0.0,
+            "epsilon": 403.23e2, 
+            "kappa": 4.5e-3,
+            "nc": 1
+        }
+        "#;
+
+        let pr3 = serde_json::from_str(s).unwrap();
+
+        let s = r#"
+        {
+            "id1": "water",
+            "id2": "acetic acid",
+            "assoc_rule": "ecr"
+
+            
+        }
+        "#;
+
+
+        let bin2 = serde_json::from_str(s).unwrap();
+
+        
+        let p = AssociativeParameters::new(vec![pr1, pr3, pr2], vec![bin1, bin2 ], ()).unwrap();
+
+        // println!("{}",p);
+        let int = ndarray::Array1::from_vec(p.interactions);
+
+        let [ew, bw] = [166.55e2, 0.0692];
+        let [eacoh, bacoh] = [403.23e2, 4.5e-3];
+        let wco2 = 0.1836;
+
+        let site1 = Site::new(SiteType::A, 0, 0,2., ew, bw);
+        let site2 = Site::new(SiteType::B, 0, 1,2., ew, bw);
+        let site3 = Site::new(SiteType::C, 1, 2,1., eacoh, bacoh);
+        let site4 = Site::new(SiteType::B, 2, 3,1., 0., 0.);
+
+
+        let b = AssociationBinaryRecord::AssocRule(CombiningRuleOption::MCR1 { kappa: wco2 });
+
+        let sites = vec![site1, site2, site3, site4];
+        
+
+        // let interactions = ndarray::Array1::from_vec(SitesInteraction::new_interactions(&sites, binary));
+
+        
+        let reff = ndarray::array![
+            SitesInteraction::from_sites(&sites[0], &sites[1], &AssociationBinaryRecord::Set { epsilon: ew, kappa: bw }),
+            SitesInteraction::from_sites(&sites[0], &sites[2], &AssociationBinaryRecord::AssocRule(CombiningRuleOption::ECR) ),
+            SitesInteraction::from_sites(&sites[0], &sites[3], &AssociationBinaryRecord::Set { epsilon: 0.5 * ew, kappa: wco2 }),
+            SitesInteraction::from_sites(&sites[1], &sites[2], &AssociationBinaryRecord::AssocRule(CombiningRuleOption::ECR)),
+            SitesInteraction::from_sites(&sites[2], &sites[2], &AssociationBinaryRecord::Set { epsilon: eacoh, kappa: bacoh }),
+
+        ];
+
+        
+        assert_eq!(int.len(), reff.len());
+        assert_eq!(int, reff);
+
+        // for i in 0..reff.len(){
+
+            // assert_eq!()
+        // }
+
+        // ass
+
+
     }
 }

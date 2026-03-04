@@ -8,12 +8,11 @@ use std::{collections::{HashMap, HashSet}, error::Error, fmt::Display, vec};
 
 use serde::de::DeserializeOwned;
 
-pub use crate::parameters::records::{BinaryParameter, BinaryRecord, Properties, PureRecord};
+pub use crate::parameters::records::{ BinaryRecord, Properties, PureRecord};
 
 
 pub trait Parameters: Display {
 
-// pub trait Parameters<Self::Pure:DeserializeOwned + Clone, B:DeserializeOwned + Clone, T>: Display {
     type Pure: DeserializeOwned + Clone;
     type Binary: DeserializeOwned + Clone ;
     type Options;
@@ -113,6 +112,7 @@ fn binary_map<B>(records: Vec<BinaryRecord<B>>, component_map: HashMap<String,us
         let i = *component_map.get(&r.id1).expect("binary should have names belonging to pure records!");
         let j = *component_map.get(&r.id2).expect("binary should have names belonging to pure records!");
         let key: (usize,usize);
+
         if i < j{
             key = (i, j)
 
@@ -147,6 +147,4 @@ fn properties<M>(pure_records: &Vec<PureRecord<M>>)->Properties{
 
         Properties { names, molar_weight: ndarray::Array1::from_vec(molar_weight) }
 }
-
-
 

@@ -1,7 +1,7 @@
 use std::{f64::consts::SQRT_2,};
 
 
-use crate::models::{IDEAL_GAS_CONST as R};
+use crate::models::{R_GAS};
 
 
 pub const SRK_KAPPA_FACTORS:  [f64; 3] = [0.480000, 1.57400, -0.17600];
@@ -27,12 +27,12 @@ pub trait CubicModel{
 
     fn acrit(&self,tc:f64,pc:f64)->f64{
     
-        self.psi() * (R * tc).powf(2.0) / pc
+        self.psi() * (R_GAS * tc).powf(2.0) / pc
     
     }
     fn bcrit(&self, tc:f64, pc:f64)->f64{
 
-        self.omega() * R * tc / pc
+        self.omega() * R_GAS * tc / pc
     
     }
 

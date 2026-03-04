@@ -1,0 +1,21 @@
+[
+    {
+        "id1": "water",
+        "id2": "carbon dioxide",
+        "kij": 1.0,
+        "lij": 2.0
+    },
+
+    {
+        "id1": "water",
+        "id2": "methane",
+        "kij": 3.0,
+        "lij": 4.0
+    },
+    {
+        "id1": "carbon dioxide",
+        "id2": "methane",
+        "kij": 5.0,
+        "lij": 6.0
+    }
+]
