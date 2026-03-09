@@ -44,7 +44,7 @@ pub type Binary = BinaryRecord<CPABinaryRecord>;
 impl From<CPAParameters> for CPA {
     fn from(value: CPAParameters) -> Self {
 
-        let cubic = Cubic::from_parameters(value.cubic);
+        let cubic = Cubic::from(value.cubic);
         let assoc = AssociativeCPA::from_parameters(value.assoc, value.rdf);
 
         Self { cubic, assoc }
@@ -94,20 +94,26 @@ impl Residual for CPA {
 
 impl CPA {
     
-    // pub fn unbonded_sites(&self,t:f64, d:f64, x:&Array1<f64>) -> Array1<f64> {
-    //     // self.model.assoc.unbonded_sites(&self.state)
-    //     let assoc = &self.assoc;
-    //     let volf = &assoc.rdf.bij * assoc.rdf.g(d, x);
-    //     let k = assoc.assoc.association_constants(t, d, x, &volf);
-    //     let u = assoc.assoc.unbonded_sites_fraction(x, &k);
-    //     u
-    // }
+    pub fn assoc_consts(&self, t:f64, d:f64, x:&Array1<f64>) -> ndarray::Array2<f64> {
+        let assoc = &self.assoc;
+        let volf = assoc.rdf.g(d, x) * &assoc.rdf.b;
+        let k = assoc.assoc.association_constants(t, d, x, &volf);
+        k
 
-    // pub fn association_constants(&self,t:f64, d:f64, x:&Array1<f64>) -> ndarray::Array2<f64> {
-    //     let assoc = &self.assoc;
-    //     let volf = &assoc.rdf.bij * assoc.rdf.g(d, x);
-    //     let k = assoc.assoc.association_constants(t, d, x, &volf);
-    //     k
-    // }
+    }
+
+    pub fn unbonded_sites_fraction(&self,x:&Array1<f64>, k: &ndarray::Array2<f64>) -> Array1<f64> {
+
+        self.assoc.assoc.unbonded_sites_fraction(x, &k)
+    }
+
+    pub fn delta_assoc(&self, rho:f64, x:&Array1<f64>, k: &ndarray::Array2<f64>) -> ndarray::Array2<f64> {
+        let m = self.assoc.assoc.sites_mole_frac(x);
+        let mm = ndarray::Array2::from_shape_fn((m.len(),m.len()), |(i, j)| m[i] * m[j]);
+        
+        k / mm / rho 
+
+    }
 }
+
 // pub type SCPA = CPA<Kontogeorgis>;

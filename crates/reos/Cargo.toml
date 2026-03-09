@@ -23,7 +23,7 @@ cubic = []
 association = []
 cpa = ["cubic", "association"]
 
-[dependencies] 
+[dependencies]
 serde = { version = "1.0.228", features = ["derive"] }
 ndarray = { version = "0.16.1", features = ["serde", "approx"] }
 serde_json = "1.0"
@@ -32,5 +32,6 @@ approx = "0.5"
 enum_dispatch =  "0.3.13"
 quantity = "0.13"
 paste = "1.0"
+
 
 

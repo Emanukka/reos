@@ -1,7 +1,6 @@
 use core::f64;
 
 use crate::models::cubic::mixing_rule::MixingRuleModel;
-use crate::models::cubic::models::CubicModel;
 use crate::models::cubic::parameters::CubicParameters;
 use crate::residual::Residual;
 use ndarray::Array1;
@@ -12,6 +11,8 @@ pub const SRK_KAPPA_FACTORS:  [f64; 3] = [0.480000, 1.57400, -0.17600];
 pub const PR76_KAPPA_FACTORS: [f64; 3] = [0.374640, 1.54226, -0.26992];
 pub const PR78_KAPPA_FACTORS: [f64; 4] = [0.374642, 1.48503, -0.164423, 0.016666];
 
+
+
 pub mod models;
 pub mod parameters;
 pub mod alpha;
@@ -21,20 +22,20 @@ pub mod options;
 
 #[cfg(test)]
 pub mod tests;
+
 // #[derive(Clone)]
 pub struct Cubic{
     pub parameters:CubicParameters,
 }
 
-impl Cubic {
-    
-    pub fn from_parameters(parameters:CubicParameters) -> Self {
-        Self { parameters }
+
+impl From<CubicParameters> for Cubic {
+    fn from(value: CubicParameters) -> Self {
+
+
+        Self {parameters: value}
     }
-
 }
-
-
 /// w = (B, D, d1, d2), where B = f(N), D = f(N, T) and d1,d2 are parameters of a generic cubic.
 /// such that  w = u ∩ x
 pub struct W {
@@ -58,10 +59,10 @@ struct F;
 
 impl F {
 
-    fn me(t:f64, v:f64, w:&W) -> f64 {
+    // fn me(t:f64, v:f64, w:&W) -> f64 {
 
-        - Self::g(v, w) - w.d * Self::f(v, w) / t
-    }
+    //     - Self::g(v, w) - w.d * Self::f(v, w) / t
+    // }
 
     fn g(v:f64, w:&W) -> f64 {
 

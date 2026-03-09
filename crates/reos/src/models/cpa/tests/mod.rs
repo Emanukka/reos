@@ -4,9 +4,11 @@ mod mixture;
 
 mod association;
 
+mod from_json;
+
 pub mod recipes{
 
-    use crate::{models::{associative::parameters::{AssociationBinaryRecord, AssociationPureRecord}, cpa::{Binary, CPA, Pure, parameters::{CPABinaryRecord, CPAOptions, CPAParameters, CPAPureRecord}, rdf::RDFmodelOption}, cubic::{models::{CubicModelOption, SRK}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord, Kij}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
+    use crate::{models::{associative::parameters::{AssociationBinaryRecord, AssociationPureRecord}, cpa::{Binary, CPA, Pure, parameters::{CPABinaryRecord, CPAOptions, CPAParameters, CPAPureRecord}, rdf::RDFmodelOption}, cubic::{models::{CubicModelOption}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicPureRecord, Kij}}}, parameters::{BinaryRecord, Parameters, PureRecord}};
 
     use crate::models::associative::combining_rule::CombiningRuleOption;
     

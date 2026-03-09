@@ -9,6 +9,7 @@ from reos.consts import *
 from reos.cpa import CPAParameters
 from reos.eos import EquationOfState
 
+from si_units import RGAS, MOL, JOULE, KELVIN
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("-s","--save", action="store_true")
@@ -51,8 +52,9 @@ dS = SV - SL
 
 dH = dH[::2]
 dS = dS[::2]
-R = Consts.ideal_gas_const()
+R = RGAS * MOL * KELVIN / JOULE
 
+# print(R)
 #%%
 
 Tliq=np.array([
@@ -219,8 +221,12 @@ psat=np.array([
 
 #%%Initializing
 
-parameters = CPAParameters.from_json(["water"], ppath="../../../parameters/cpa/kontogeorgis2006.json",)
-eos = EquationOfState.scpa(parameters)
+parameters = CPAParameters.from_json(["water"], 
+                                     ppath="../../../parameters/cpa/kontogeorgis2006.json", 
+                                     rdf_model="kg", 
+                                     cubic_model="srk")
+
+eos = EquationOfState.cpa(parameters)
 
 #%% Psat calc
 
@@ -240,7 +246,9 @@ def calc_psat(t, p0):
         p0 = p0 * r
         it += 1
 
+    # print(it)
     return p0, s1, s2
+
 
 
 #%% Calc properties
@@ -270,14 +278,14 @@ for (i,t) in enumerate(T):
 
     # entropyL[i] = liq.entropy() 
     # entropyV[i] = vap.entropy() 
-    entropyL[i] = liq.entropy() 
-    entropyV[i] = vap.entropy() 
+    entropyL[i] = liq.tp_entropy() 
+    entropyV[i] = vap.tp_entropy() 
 
     rhoV[i] = vap.density
     rhoL[i] = liq.density
-
-    XL[i] = eos.unbonded_sites_fraction(t, rhoL[i], np.array([1.0]))[0]
-    XV[i] = eos.unbonded_sites_fraction(t, rhoV[i], np.array([1.0]))[0]
+   
+    XL[i] =  eos.get_assoc_calcs(t, rhoL[i], np.array([1.0]))["X"][0]
+    XV[i] =  eos.get_assoc_calcs(t, rhoV[i], np.array([1.0]))["X"][0]
 
 DS = entropyV - entropyL
 DH = T * DS
@@ -294,6 +302,7 @@ density_label = r"$\mathrm{Density / (kg \; m^{-3})}$"
 entropy_label = r"$\mathrm{\Delta S_{vap} / J \; (mol^{-1}} K^{-1})$"
 enthalpy_label = r"$\mathrm{\Delta H_{vap} / kJ \; mol^{-1}}$"
 X_label = r"$X_{A,B}$"
+
 
 #%%
 ax = axs[0, 0]

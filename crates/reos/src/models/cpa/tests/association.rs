@@ -26,8 +26,9 @@ mod kontogeorgis {
         assert_relative_eq!(k,  rho * *(NAV * MOL) * array![[0., 2.2974432513007877e-27],
                                     [2.2974432513007877e-27, 0.]], epsilon = TOL);
 
+        dbg!(&k/rho);
         assert_relative_eq!(assoc.assoc.unbonded_sites_fraction(x, &k), array![0.07588168172556269, 0.07588168172556281], epsilon = TOL);
-    }
+    }   
 
 
     #[test]

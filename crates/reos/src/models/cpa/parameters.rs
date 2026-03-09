@@ -37,12 +37,11 @@ pub struct CPAParameters{
 }
 
 #[derive(Serialize,Deserialize,Clone,Debug)]
-
 pub struct CPABinaryRecord{
     #[serde(flatten)]
-    pub a: Option<AssociationBinaryRecord>,
+    pub association: Option<AssociationBinaryRecord>,
     #[serde(flatten)]
-    pub c: Option<CubicBinaryRecord>
+    pub cubic: Option<CubicBinaryRecord>
 
 }
 #[derive(Serialize,Deserialize)]
@@ -57,7 +56,7 @@ pub struct CPAOptions{
 impl CPABinaryRecord{
 
     pub fn new(c:Option<CubicBinaryRecord>,a:Option<AssociationBinaryRecord>)->Self{
-        Self { c, a }
+        Self { cubic:c, association:a }
     }
 
     pub fn full(c:CubicBinaryRecord, a:AssociationBinaryRecord)->Self{
@@ -99,13 +98,13 @@ impl Parameters for CPAParameters {
         
         for (key, b) in binary{
 
-            if let Some(c) = b.c { 
+            if let Some(c) = b.cubic { 
 
                 c_binary.insert(key,c);
 
             }
 
-            if let Some(a) = b.a {
+            if let Some(a) = b.association {
                 a_binary.insert(key,a);
 
             }
@@ -161,7 +160,7 @@ impl std::fmt::Display for CPABinaryRecord {
         let mut data = String::from_str("CPABinaryRecord(\n").unwrap();
 
 
-        if let Some(c) = &self.c {
+        if let Some(c) = &self.cubic {
             data.push_str(concat!("cubic="));
             data.push_str(c.to_string().as_str());
             // let _ = write!(f, "CPABinaryRecord(cubic={:#?}, assoc={:#?})", c);
@@ -170,7 +169,7 @@ impl std::fmt::Display for CPABinaryRecord {
         }
         data.push_str("\n");
 
-        if let Some(a) = &self.a {
+        if let Some(a) = &self.association {
             data.push_str(concat!(" assoc="));
             data.push_str(a.to_string().as_str());            
         }

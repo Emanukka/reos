@@ -57,6 +57,7 @@ fn reos(m: &Bound<'_, PyModule>) -> PyResult<()> {
     //State module
     add_pymodule!(m.py(), m, "state", 
     [state::PyState])?;
+
     //Cubic module
     add_pymodule!(m.py(), m, "cubic", 
     [
@@ -65,9 +66,9 @@ fn reos(m: &Bound<'_, PyModule>) -> PyResult<()> {
     models::cubic::PyCubicParameters
     ])?;
 
-    //CPA module
+    // CPA module
     add_pymodule!(m.py(), m, "cpa", 
-    [models::cpa::PyCpaPureRecord,
+    [models::cpa::PyCPAPureRecord,
     models::cpa::PyCPABinaryRecord,
     models::cpa::PyCPAParameters,
     

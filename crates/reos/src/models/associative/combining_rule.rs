@@ -16,9 +16,9 @@ impl std::fmt::Display for CombiningRuleOption {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 
         match self{
-            CombiningRuleOption::CR1 => write!(f,"CR1"),
-            CombiningRuleOption::MCR1{kappa} => write!(f,"m-CR1(kappa={kappa}"),
-            CombiningRuleOption::ECR => write!(f,"ECR"),
+            CombiningRuleOption::CR1 => write!(f,"cr1"),
+            CombiningRuleOption::MCR1{kappa} => write!(f,"mcr1(kappa={kappa})"),
+            CombiningRuleOption::ECR => write!(f,"ecr"),
         }
     }
 }

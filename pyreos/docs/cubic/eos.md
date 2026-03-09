@@ -1,11 +1,10 @@
 # Cubic Initializer
 
-
 Initializer for **Cubic EoS**. The implementation of Cubic derive from the generic implementation of a Cubic EoS.
 (See [Martin, 1979](https://doi.org/10.1021/i160070a001))
 
-The specific cubic model is selected when initializing the parameters (see [CubicParameters](./parameters.md)).
-
+The specific cubic model and others model's specifications are selected when initializing the parameters.
+<!-- 
 Example:
 ```py
 name = "water"
@@ -32,4 +31,4 @@ assert(isclose(helmholtz_res_reduced, -0.058144295861, rel_tol=1e-10))
 assert(isclose(entropy_res_reduced, -0.041951593945, rel_tol=1e-10))
 
 
-```
+``` -->

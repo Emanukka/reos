@@ -134,15 +134,15 @@ impl<R:Residual> State<R> {
     }
 
     pub fn helmholtz(&self)->f64{
-        self.eos.helmholtz_isov(self.t, self.d, &self.x)
+        self.eos.helmholtz(self.t, self.d, &self.x)
     }
 
-    pub fn entropy(&self)->f64{
-        self.eos.entropy(self.t, self.d, &self.x)
+    pub fn tp_entropy(&self)->f64{
+        self.eos.tp_entropy(self.t, self.d, &self.x)
     }
 
-    pub fn entropy_isov(&self)->f64{
-        self.eos.entropy_isov(self.t, self.d, &self.x)
+    pub fn tv_entropy(&self)->f64{
+        self.eos.tv_entropy(self.t, self.d, &self.x)
     }
 
 

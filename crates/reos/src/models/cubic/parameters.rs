@@ -12,6 +12,7 @@ use super::options::*;
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "lowercase")]
+#[serde(deny_unknown_fields)]
 /// kij(T) = a + b * T
 pub struct Kij{ 
     #[serde(default)]
@@ -215,34 +216,11 @@ impl std::fmt::Display for CubicBinaryRecord {
 
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         
-        write!(f, "kij={}", self.kij)
+        write!(f, "kij{}", self.kij)
 
     }
 }
-// impl std::fmt::Display for CubicBinaryRecord {
 
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-
-//         unimplemented!()
-//         // let mut ret = vec!["("];        
-//         // let mut kl = vec![];
-
-//         // if self.kij != 0. {
-//         //     kl.push(format!("kij={}", self.kij));
-//         // }
-        
-//         // if self.lij != 0. {
-//         //     kl.push(format!("lij={}", self.lij));
-//         // }
-        
-//         // let mut s = kl.join(", ");
-//         // ret.push(&mut s);
-//         // ret.push(")");
-        
-
-//         // write!(f, "{}", ret.join(""))
-//     }
-// }
 impl Default for Kij {
     fn default() -> Self {
         Self { a: 0., b: 0. }

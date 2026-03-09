@@ -263,8 +263,7 @@ mod tests{
         let site3 = Site::new(SiteType::C, 1, 2,1., eacoh, bacoh);
         let site4 = Site::new(SiteType::B, 2, 3,1., 0., 0.);
 
-
-        let b = AssociationBinaryRecord::AssocRule(CombiningRuleOption::MCR1 { kappa: wco2 });
+        // let b = AssociationBinaryRecord::AssocRule(CombiningRuleOption::MCR1 { kappa: wco2 });
 
         let sites = vec![site1, site2, site3, site4];
         

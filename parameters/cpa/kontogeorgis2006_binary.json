@@ -2,27 +2,27 @@
     {
         "id1": "acetic acid",
         "id2": "water",
-        "kij":  -0.222,
-        "rule": "ecr"
+        "kij": {"a": -0.222},
+        "assoc_rule": "ecr"
     },
     {
         "id1": "acetic acid",
         "id2": "methanol",
-        "kij":  -0.04,
-        "rule": "ecr"
+        "kij": {"a": -0.04},
+        "assoc_rule": "ecr"
     },
 
     {
         "id1": "methanol",
         "id2": "1-octanol",
-        "kij":  -0.025,
-        "rule": "ecr"
+        "kij": {"a": -0.025},
+        "assoc_rule": "ecr"
     },
 
     {
         "id1": "ethanol",
         "id2": "water",
-        "rule": "ecr"
+        "assoc_rule": "ecr"
     }
 
 ]

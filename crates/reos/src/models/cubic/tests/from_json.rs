@@ -64,7 +64,7 @@ mod from_classic{
 
         let p = CubicParameters::new(vec![pr1, pr2], vec![br], options).unwrap();
 
-        let cub = Cubic::from_parameters(p);
+        let cub = Cubic::from(p);
         let reff = water_co2_bip(); 
         let t = 298.15;
         let d= 38.082099077791675;
@@ -130,7 +130,7 @@ mod from_regressed{
         let p = CubicParameters::new(vec![pr1, pr2], vec![br], options).unwrap();
 
         println!("{}",p);
-        let cub = Cubic::from_parameters(p);
+        let cub = Cubic::from(p);
         let reff = water_co2_bip_regressed(); 
         let t = 298.15;
         let d= 38.082099077791675;
@@ -233,7 +233,7 @@ fn options(){
 
 //     // let p = CubicParameters::new(vec![pr1, pr2], vec![br], options);
 
-//     // let cub = Cubic::from_parameters(p);
+//     // let cub = Cubic::from(p);
 //     // let reff = water_co2_bip(); 
 //     // let t = 298.15;
 //     // let d= 38.082099077791675;

@@ -61,7 +61,7 @@ impl<R: Residual> Scaling<R> {
 
     pub fn new(state: &Arc<State<R>>, parameters: ScalingRecord) -> Self {
         
-        let entropy = state.entropy_isov() / R_GAS;
+        let entropy = state.tv_entropy() / R_GAS;
         let reference = super::rosenfeld_viscosity(state.t, state.d, state.molar_weight()[0]);
 
         Self { state: Arc::clone(state), entropy, reference, parameters }

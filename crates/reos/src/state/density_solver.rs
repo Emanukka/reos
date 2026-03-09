@@ -115,7 +115,7 @@ pub fn density<R:Residual>(eos:Arc<E<R>>,t:f64,p:f64,x:Array1<f64>,guess:f64)-> 
 
     };
     
-    let tol = 1e-7;
+    let tol = 1e-8;
     let it_max = 100;
     
     let mut f0: f64;

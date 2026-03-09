@@ -2,14 +2,16 @@
     {
         "id1": "water",
         "id2": "carbon dioxide",
-        "aij": -0.15508,
-        "bij": 0.000877,
-        "kappa": 0.1836
+        "kij": {
+            "a": -0.15508,
+            "b": 0.000877
+        },
+        "assoc_rule": {"mcr1": {"kappa": 0.1836}}
     },
 
     {
         "id1": "carbon dioxide",
         "id2": "methane",
-        "kij": 0.0882
+        "kij": {"a": 0.0882}
     }
 ]

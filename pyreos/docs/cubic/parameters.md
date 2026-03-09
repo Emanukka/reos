@@ -1,15 +1,16 @@
 # CubicParameters Initializer
 
 Initializer for **Cubic EoS parameters**.
-The `opt` argument enables to choose the cubic model to be used.
-This method must receive 3 arguments:
 
 - `pure_records`: **[CubicPureRecord]**,
 - `binary_records`: **[CubicBinaryRecord]**, optional
-- `opt`: optional[str], cubic model option,
-    - Default : **SRK model**
-    - options are:
-        - `"srk"`: Soave-Redlich-Kwong
-        - `"pr76"`: Peng-Robinson 1976
-        - `"pr78"`: Peng-Robinson 1978
-
+- `opt`: kwargs,
+    - fields:
+        - `cubic_model`
+            - `srk`
+            - `pr76`
+            - `pr78`
+        - `alpha_model`
+            - `soave`: uses α(Tᵣ)= [1 + c₁(1 - √Tᵣ)]²
+            - `twu91`: uses α(Tᵣ)= Tᵣᴺ⁽ᴹ⁻¹⁾exp[ L(1 - Tᵣᴹᴺ)]
+            - (default `soave`)

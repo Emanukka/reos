@@ -19,7 +19,7 @@
 //! 
 
 use reos::residual::Residual;
-use reos::models::cpa::rdf::{CS,Kontogeorgis};
+// use reos::models::cpa::rdf::{CS,Kontogeorgis};
 use reos::models::cubic::{Cubic};
 use reos::models::cpa::CPA;
 
@@ -29,12 +29,11 @@ use reos::Array1;
 /// Wrapper enum for the current contribution models.
 /// This object won't be exposed to python.
 // #[derive(Clone)]
+
 pub enum PyContribution{
     
     Cubic(Cubic),
-    SCPA(CPA<Kontogeorgis>),
-    CPA(CPA<CS>),
-    // CPA(CPA<SRK,Kontogeorgis>),
+    CPA(CPA)
 
 } 
 
@@ -52,27 +51,27 @@ macro_rules! impl_contribution {
                     $( $enum::$variant(model) => model.molar_weight(), )+
                 }
             }
-            fn r_pressure(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
+            fn df_dv(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
                 match self {
-                    $( $enum::$variant(model) => model.r_pressure(t,d,x), )+
+                    $( $enum::$variant(model) => model.df_dv(t,d,x), )+
                 }
             }
 
-            fn r_helmholtz(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
+            fn helmholtz(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
                 match self {
-                    $( $enum::$variant(model) => model.r_helmholtz(t,d,x), )+
+                    $( $enum::$variant(model) => model.helmholtz(t,d,x), )+
                 }
             }
             
-            fn r_chemical_potential(&self,t:f64,d:f64,x:&Array1<f64>) -> Array1<f64> {
+            fn df_dn(&self,t:f64,d:f64,x:&Array1<f64>) -> Array1<f64> {
                 match self {
-                    $( $enum::$variant(model) => model.r_chemical_potential(t,d,x), )+
+                    $( $enum::$variant(model) => model.df_dn(t,d,x), )+
                 }
             }
 
-            fn r_entropy(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
+            fn df_dt(&self,t:f64,d:f64,x:&Array1<f64>) -> f64 {
                 match self {
-                    $( $enum::$variant(model) => model.r_entropy(t,d,x), )+
+                    $( $enum::$variant(model) => model.df_dt(t,d,x), )+
                 }
             }
 
@@ -100,6 +99,9 @@ macro_rules! impl_contribution {
 
 impl_contribution!( 
     PyContribution, 
-    {SCPA,CPA,Cubic}
+    {
+        CPA,
+        Cubic
+    }
 );
 

@@ -9,12 +9,26 @@ from reos.cpa import CPAParameters
 from si_units import KELVIN, PASCAL
 from tools import *
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-s","--save", action="store_true")
+parser.add_argument("-p","--plot", action="store_true")
+parser.add_argument("-b","--bench", action="store_true")
+
+args = parser.parse_args()
+
+SAVE = args.save
+PLOT = args.plot
+BENCH = args.bench
+
+# print(PLOT)
 xsize = 3.15
 ysize = 3.15
 
-PLOT = False
-SAVE = False
-BENCH = True
+# PLOT = False
+# SAVE = False
+# BENCH = True
 PLTDIR = "./plots/"
 DATAPATH = "./data/"
 
@@ -40,9 +54,9 @@ def compute(case:dict):
     name1 = case["id1"]
     name2 = case["id2"]
     
-    parameters = CPAParameters.from_json([name1, name2], ppath, bpath)
+    parameters = CPAParameters.from_json([name1, name2], ppath, bpath, rdf_model="kg", cubic_model="srk")
 
-    eos = EquationOfState.scpa(parameters)
+    eos = EquationOfState.cpa(parameters)
 
     fix = case["fix"]
     
@@ -104,6 +118,7 @@ if PLOT:
 
     for i, case in enumerate(cases):
 
+        print(case)
         fig = plt.figure()
 
         content = files[i].split(".")[0]
@@ -128,6 +143,8 @@ if PLOT:
         ax.set_xticks([0.0, 0.25, 0.5, 0.75, 1.0])
         figures.append(fig)
         plt.grid(True)
+        plt.show()
+        # print(plt)
 
 #%%save
 

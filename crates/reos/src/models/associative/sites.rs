@@ -84,6 +84,19 @@ impl std::fmt::Display for SiteType {
 }
 
 
+// impl Into<(String, usize, usize, f64)> for Site {
+
+//     fn into(self) -> (String, usize, usize, f64) {
+        
+//         (
+//             self.typ.to_string(),
+//             self.idx,
+//             self.owner,
+//             self.mul
+
+//         )
+//     }
+// }
 #[cfg(test)]
 mod tests{
 
@@ -170,6 +183,13 @@ mod tests{
 
     }
     
+    #[test]
+
+    fn into_site(){
+
+        // let t = ("A".into(), )
+        // let s = Site::new(SiteType::A, 0, 0 , 2., 0., 0.);
+    }
     #[test]
     fn test_ternary_with_solvation(){
         // let ew = 166.55e2;

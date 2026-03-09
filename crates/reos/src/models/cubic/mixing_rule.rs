@@ -1,7 +1,6 @@
 //! Return w, the vector of mixture parameters (B, D, d1, d2)
 //! and the derivatives in respect to state variables (n, T, V)
 
-use std::{fmt::Debug, str::FromStr};
 
 use enum_dispatch::enum_dispatch;
 use ndarray::Array1;
@@ -11,7 +10,7 @@ use crate::models::cubic::{DwDni, DwDt, W, combining_rule::CombiningRuleModel, m
 
 
 #[enum_dispatch]
-pub trait MixingRuleModel: Clone + Debug{
+pub trait MixingRuleModel: Clone + std::fmt::Debug{
 
     fn apply(&self, t:f64, v:f64, x:&Array1<f64>, parameters:&CubicParameters) -> W ;
 

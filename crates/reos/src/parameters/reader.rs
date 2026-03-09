@@ -236,7 +236,7 @@ mod tests{
         pub kij: f64,
         pub lij: Option<f64>,
     }
-
+    #[derive(Debug)]
     pub struct ParametersTest {
         pub pure: Vec<PureModelTest>,
         pub bin: HashMap<(usize,usize),BinaryModelTest>,
@@ -276,6 +276,12 @@ mod tests{
     type Binary =  BinaryRecord<BinaryModelTest>;
     // type Options = ();
 
+    #[test]
+    fn zero_comps(){
+        
+        dbg!(ParametersTest::new(vec![], vec![], ()));
+        
+    }
     #[test]
     fn file_not_found(){
 

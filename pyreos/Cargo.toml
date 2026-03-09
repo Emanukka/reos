@@ -11,11 +11,17 @@ readme = "README.md"
 name = "reos"
 crate-type = ["cdylib", "lib"]
 
+
+[features]
+
+default = []
+
 [dependencies]
 
 numpy = "0.24"
-reos= {path="../crates/reos"}
+reos= {path="../crates/reos", features = ["default"]}
 serde = { version = "1.0.217", features = ["derive"] }
 pyo3 = { version = "0.24", features = ["multiple-pymethods"] }
 pythonize = "0.24"
 serde_json = "1.0"
+paste = "1.0"

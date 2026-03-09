@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use pyo3::exceptions::{PyRuntimeError};
 use pyo3::prelude::*;
-use numpy::{IntoPyArray, PyArray1, PyArrayMethods, pyarray };
+use numpy::{IntoPyArray, PyArray1, PyArrayMethods,  };
 use reos::{state::{S, State, density_solver::DensityInitialization}};
 
 use crate::eos::{PyEquationOfState, PyProperties};
@@ -123,7 +123,11 @@ impl PyState {
 
 
 
-    /// Computes the logarithmic fugacity coefficient.
+    /// Natural logarithm of the fugacity coefficient, defined as:
+    /// 
+    /// `
+    /// ln(ϕᵢ) = ∂F/∂nᵢ - ln(Z)
+    /// `
     ///
     /// Returns
     /// -------
@@ -144,7 +148,11 @@ impl PyState {
         self.0.max_density()
         }
 
-    /// Gets the Pressure.
+    /// Pressure `[Pa]`, defined as:
+    /// 
+    /// `
+    /// P(T,ρ,x) = ZρRT
+    /// `
     ///
     /// Returns
     /// -------
@@ -154,7 +162,7 @@ impl PyState {
     pub fn pressure(&self) -> f64 {
         self.0.p
     }
-    /// Gets the Temperature.
+    /// Temperature.
     ///
     /// Returns
     /// -------
@@ -222,7 +230,11 @@ impl PyState {
 
         self.0.molar_weight().clone().into_pyarray(py)
     }
-    /// Compressibility factor Z.
+    /// Compressibility factor, defined as:
+    /// 
+    /// `
+    /// Z(T,ρ,x) = Zⁱᵍ + Zʳ = 1 - V∂F/∂V
+    /// `
     ///
     /// Returns
     /// -------
@@ -233,40 +245,52 @@ impl PyState {
 
     }
     
-    /// Residual Gibbs free energy in J / mol
+    /// Residual TP Gibbs energy in `[J / mol]`, defined as:
+    /// 
+    /// `
+    /// Gʳ(T,P,x) = Aʳ + RTZʳ - RTln(Z)
+    /// `
     pub fn gibbs(&self) -> f64 {
 
         self.0.gibbs()
 
     }
 
-    /// Residual Entropy in J / mol / K
-    pub fn entropy(&self) -> f64 {
+    /// Residual TP Entropy `[J / mol / K]`, defined as:
+    /// 
+    /// `
+    /// Sʳ(T,P,x) =  Sʳ(T,ρ,x) + Rln(Z)
+    /// `
+    pub fn tp_entropy(&self) -> f64 {
 
-        self.0.entropy()
+        self.0.tp_entropy()
 
     }
-    pub fn entropy_isov(&self) -> f64 {
+    /// Residual TV Entropy `[J / mol / K]`, defined as:
+    /// 
+    /// `
+    /// Sʳ(T,ρ,x) = R(- F - T∂F/∂T)
+    /// `
+    pub fn tv_entropy(&self) -> f64 {
 
-        self.0.entropy_isov()
+        self.0.tv_entropy()
 
     }
-    /// Residual Helmholtz free energy in J / mol
+    /// Residual TV Helmholtz free energy `[J / mol]`, defined as:
+    /// 
+    /// `
+    /// Aʳ(T,ρ,x) = RT ⋅ F
+    /// ` 
     pub fn helmholtz(&self) -> f64 {
 
-        self.0.eos.helmholtz_isov(self.0.t, self.0.d, &self.0.x)
+        self.0.eos.helmholtz(self.0.t, self.0.d, &self.0.x)
 
     }
 
 
 
     pub fn __repr__(&self) -> PyResult<String> {
-        Ok(format!(
-            "State(t = {:.3} K, p = {:.6} Pa, ρ = {:.6} mol/m³)",
-            self.temperature(),
-            self.pressure(),
-            self.density()
-        ))
+        Ok(self.0.to_string())
     }
 
 

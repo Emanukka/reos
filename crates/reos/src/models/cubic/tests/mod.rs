@@ -6,7 +6,7 @@ use crate::{models::cubic::{Cubic, alpha::{Alpha, AlphaOption}, mixing_rule::Mix
 #[cfg(test)]
 pub mod recipes {
 
-    use crate::models::cubic::{models::CubicModelOption, parameters::Kij};
+    use crate::models::cubic::{alpha::AlphaRecord, models::CubicModelOption, parameters::Kij};
 
     use super::*;
     pub fn water() -> Cubic {
@@ -17,7 +17,23 @@ pub mod recipes {
         let options = CubicOptions::classic_soave(CubicModelOption::PR78);
         
         let p = CubicParameters::new(vec![pr], vec![], options).unwrap();
-        Cubic::from_parameters(p)
+        Cubic::from(p)
+
+        
+    }
+
+    #[test]
+    pub fn a() {
+        // tc = 647.1, pc = 220.55e5, w = 0.345
+        // let mr = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345, None);
+        let mr = CubicPureRecord::classic(647.1, 220.55e5, AlphaRecord::Twu91 { l: 1., m: 1., n: 1. }, None);
+        let pr = PureRecord::new(18.02, "water", mr);
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+        
+        let e = CubicParameters::new(vec![pr], vec![], options).unwrap_err();
+        println!("{}", e.to_string())
+        // Cubic::from(p)
 
         
     }
@@ -35,7 +51,7 @@ pub mod recipes {
         
         let p = CubicParameters::new(vec![pr1, pr2], vec![], options).unwrap();
         
-        Cubic::from_parameters(p)
+        Cubic::from(p)
 
     }
     pub fn water_co2_bip() -> Cubic {
@@ -56,7 +72,7 @@ pub mod recipes {
         let p = CubicParameters::new(vec![pr1, pr2], vec![br1], options).unwrap();
         // println!("{}",p);
         // 
-        Cubic::from_parameters(p)
+        Cubic::from(p)
 
     }
     pub fn water_co2_bip_regressed() -> Cubic {
@@ -77,7 +93,7 @@ pub mod recipes {
         let p = CubicParameters::new(vec![pr1, pr2], vec![br1], options).unwrap();
         // println!("{}",p);
         // 
-        Cubic::from_parameters(p)
+        Cubic::from(p)
 
     }
 
@@ -94,7 +110,7 @@ pub mod recipes {
         //     volt: Some(0.81628 / 1e6)
         // };
         // let pr = PureRecord::new(86.17848, "n-hexane".into(), pr);
-        // Cubic::from_parameters(CubicParameters::new(vec![pr], vec![], CubicModelOption::PR78))
+        // Cubic::from(CubicParameters::new(vec![pr], vec![], CubicModelOption::PR78))
     }
     pub fn water_dehlouz() -> Cubic {
         
@@ -108,7 +124,7 @@ pub mod recipes {
         //     volt: Some(5.27106e-6)
         // };
         // let pr = PureRecord::new(18.01528, "water".into(), pr);
-        // Cubic::from_parameters(CubicParameters::new(vec![pr], vec![], CubicModelOption::PR78))
+        // Cubic::from(CubicParameters::new(vec![pr], vec![], CubicModelOption::PR78))
     }
 
 
@@ -127,6 +143,6 @@ fn alpha_function_unmatch_records(){
 
         }
 
-        // Cubic::from_parameters(p)
+        // Cubic::from(p)
 
 }
