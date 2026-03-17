@@ -35,7 +35,7 @@ impl MixingRuleModel for  Quadratic {
     fn apply(&self, t:f64, _:f64, x:&Array1<f64>, parameters:&CubicParameters) -> W {
         
         let n = parameters.tc.len();
-        let [aij_mat, bij_mat] = [&parameters.aij, &parameters.bij];
+        let [aij_mat, bij_mat, cij_mat] = [&parameters.aij, &parameters.bij, &parameters.cij];
         // let epsilon = parameters.model.eps();  
         // let sigma = parameters.model.sig();  
         // let bin = &parameters.binary;
@@ -43,7 +43,7 @@ impl MixingRuleModel for  Quadratic {
         let alpha = &parameters.alpha.alpha(t, &parameters.tc);
 
         // let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
-        let [mut d,mut b, _] = [0.,0.,0.];
+        let [mut d,mut b, mut c] = [0.,0.,0.];
         let combr = &parameters.combr;
 
         for i in 0..n {
@@ -62,6 +62,7 @@ impl MixingRuleModel for  Quadratic {
                 
 
                 b += x[i] * x[j] * bij_mat[(i,j)];
+                c += x[i] * x[j] * cij_mat[(i,j)];
                 d += x[i] * x[j] * aij_mat[(i,j)] * alpha_ij * (1.0 - kij);
                 
 
@@ -70,7 +71,7 @@ impl MixingRuleModel for  Quadratic {
 
         let d1 = parameters.model.eps();
         let d2 = parameters.model.sig();
-        W{b, d, d1, d2}
+        W{b, c, d, d1, d2}
 
     }
 
@@ -118,15 +119,17 @@ impl MixingRuleModel for  Quadratic {
         let kij_mat = &parameters.kij;
         let alpha = &parameters.alpha.alpha(t, &parameters.tc);
         // let [ac, bc, _] = [&parameters.a,&parameters.b,&parameters.c];
-        let [aij_mat, bij_mat] = [&parameters.aij, &parameters.bij];
+        let [aij_mat, bij_mat, cij_mat] = [&parameters.aij, &parameters.bij, &parameters.cij];
 
         let combr = &parameters.combr;
         let mut db = Vec::with_capacity(n);
+        let mut dc = Vec::with_capacity(n);
         let mut dd = Vec::with_capacity(n);
         
         for i in 0..n {
 
             let mut sum_db = 0.; 
+            let mut sum_dc = 0.; 
             let mut sum_dd = 0.; 
 
             for j in 0..n {
@@ -143,14 +146,18 @@ impl MixingRuleModel for  Quadratic {
 
                 sum_dd += x[j] * aij_mat[(i, j)] * alpha_ij * (1.0 - kij);
                 sum_db += x[j] * bij_mat[(i, j)];
+                sum_dc += x[j] * cij_mat[(i, j)];
+
 
             }
 
             db.push(2. * sum_db - w.b);
+            dc.push(2. * sum_dc - w.c);
             dd.push(2. * sum_dd)
+
         }
 
-        DwDni { b: db, d: dd }
+        DwDni { b: db, c: dc, d: dd }
 
     }
 }

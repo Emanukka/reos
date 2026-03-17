@@ -51,6 +51,7 @@ fn water_pr78_df_dt() {
 fn water_pr78_df_dn() {
     
     let cub = water(); 
+    dbg!(&cub.parameters);
     let x = &array![1.];
     assert_relative_eq!(cub.df_dn(T, RHO, &x)[0], -0.73422735014086, epsilon = TOL)
 }

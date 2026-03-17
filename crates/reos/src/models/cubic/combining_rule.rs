@@ -7,11 +7,9 @@ use serde::{Deserialize, Serialize};
 #[enum_dispatch]
 pub trait CombiningRuleModel {
 
-    fn apply(&self, ai: Vec<f64>, bi:Vec<f64>) -> [Array2<f64>;2];
+    fn apply(&self, ai: Vec<f64>, bi:Vec<f64>, ci:Vec<f64>) -> [Array2<f64>;3];
 
     fn alpha_ij(&self, alphai:f64, alphaj:f64) -> f64;
-
-    // fn apply(&self, ai_aj:[f64;2], bi_bj:[f64;2], kij:f64) -> [f64;2];
 
     fn dt(&self,  ai_aj:[f64;2], dai_daj:[f64;2], kij:f64, dkij:f64) -> f64;
 
@@ -26,20 +24,21 @@ impl CombiningRuleModel for Classic {
         "Classic".into()
     }
 
-    fn apply(&self,a:Vec<f64>,b:Vec<f64>) -> [Array2<f64>;2] {
+    fn apply(&self,a:Vec<f64>,b:Vec<f64>,c:Vec<f64>) -> [Array2<f64>;3] {
         
         let n = a.len();
-        let [mut aij, mut bij] = [Array2::zeros((n,n)), Array2::zeros((n,n))];
+        let [mut aij, mut bij, mut cij] = [Array2::zeros((n,n)), Array2::zeros((n,n)), Array2::zeros((n,n))];
 
         for i in 0..n {
             for j in 0..n {
                 aij[(i, j)] = (a[i] * a[j]).sqrt();
                 bij[(i, j)] = 0.5 * (b[i] + b[j]);
+                cij[(i, j)] = 0.5 * (c[i] + c[j]);
 
             }
         } 
         
-        [aij, bij]
+        [aij, bij, cij]
 
     }
 

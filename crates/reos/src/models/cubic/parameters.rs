@@ -108,7 +108,7 @@ impl std::fmt::Display for CubicPureRecord {
 pub struct CubicParameters {
     pub aij: Array2<f64>,
     pub bij: Array2<f64>,
-    pub c: Vec<f64>,
+    pub cij: Array2<f64>,
     pub tc:Vec<f64>,
     pub kij:Array2<Kij>,
     pub model:CubicModels,
@@ -156,10 +156,12 @@ impl crate::parameters::Parameters for CubicParameters {
                 PureParameters::Classic { pc } => {
                     a_.push(model.acrit(r.tc, pc));
                     b_.push(model.bcrit(r.tc, pc));
+                    // (tc, pc, vc) -> c
                 }
                 PureParameters::Regressed { a, b } => {
                     a_.push(a);
                     b_.push(b);
+
                 }
             }
 
@@ -178,17 +180,14 @@ impl crate::parameters::Parameters for CubicParameters {
         });
 
         let alpha = alpha.build(&properties.names, alpha_records, &model)?;
-        let [aij, bij] = combr.apply(a_, b_);
+        let [aij, bij, cij] = combr.apply(a_, b_, c);
         
         // let options = CubicOptions::new(model, alpha, combr, mix);
         Ok(
         Self{
             aij,
             bij,
-            // a:a_,
-            // b:b_,
-
-            c,
+            cij,
             tc,
             model,
             mix,

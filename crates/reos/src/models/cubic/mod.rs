@@ -40,6 +40,7 @@ impl From<CubicParameters> for Cubic {
 /// such that  w = u ∩ x
 pub struct W {
     pub b:f64,
+    pub c:f64,
     pub d:f64,
     pub d1:f64,
     pub d2:f64
@@ -48,6 +49,7 @@ pub struct W {
 
 pub struct DwDni{
     pub b:Vec<f64>,
+    pub c:Vec<f64>,
     pub d:Vec<f64>
 }
 
@@ -66,20 +68,20 @@ impl F {
 
     fn g(v:f64, w:&W) -> f64 {
 
-        let inner = (v - w.b) / v;
-        // let inner = (v + c - b) / v;
+        // let inner = (v - w.b) / v;
+        let inner = (v + w.c - w.b) / v;
         inner.ln()
     }
     fn f(v:f64, w:&W) -> f64 {
 
         let d3 = w.d2 - w.d1;
-        let r = (v + w.d2 * w.b ) / (v + w.d1 * w.b); 
+        let r = (v + w.c + w.d2 * w.b ) / (v + w.c + w.d1 * w.b); 
         // let r = (v + c + d2 * b ) / (v + c + d1 * b); 
         
         r.ln() / R_GAS / w.b / d3
     }
 }
-/// Interface for derivatives of F in u = (n, T, V, B, D),
+/// Interface for derivatives of F in u = (n, T, V, B, C, D),
 struct DFu ;
 
 // Derivatives of aux. functions g(V, B) and f(V, B) 
@@ -87,27 +89,35 @@ impl DFu  {
 
     fn gv(v:f64, w:&W) -> f64{
 
-        w.b / v / (v - w.b)
+        w.b / v / (v + w.c - w.b)
     }
 
     fn gb(v:f64, w:&W) -> f64{
 
-        - 1. / (v - w.b)
+        - 1. / (v + w.c - w.b)
     }
 
+    fn gc(v:f64, w:&W) -> f64{
+
+        - Self::gb(v, w)
+    }
 
     fn fv(v:f64, w:&W) -> f64 {
 
         // let d3 = w.d2 - w.d1;
-        - 1. / R_GAS / (v + w.d1 * w.b) / (v + w.d2 * w.b)
+        - 1. / R_GAS / (v + w.c + w.d1 * w.b) / (v + w.c + w.d2 * w.b)
     }
 
     fn fb(v:f64, f:f64, fv:f64, w:&W) -> f64 {
 
-        - (f + fv * v) / w.b
+        - (f + fv * (v + w.c) )/ w.b
 
     }
 
+    fn fc(v:f64, w:&W) -> f64 {
+
+        Self::fv(v, w)
+    }
 
 
 }
@@ -128,6 +138,14 @@ impl DFu {
         
         - gb - w.d / t * fb
         // let df_dd = - f / t;
+    }
+    
+    fn dc(t:f64,v:f64, w:&W) -> f64 {
+
+        let gc = Self::gc(v, w);
+        let fc = Self::fc(v, w);
+        
+        - gc - w.d / t * fc
     }
 
     fn dd(t:f64,v:f64, w:&W) -> f64 {
@@ -156,6 +174,7 @@ impl DFx {
         let df_dn = - F::g(v, w);
         let df_db = DFu::db(t, v, w);
         let df_dd = DFu::dd(t, v, w);
+        let df_dc = DFu::dc(t, v, w);
         
         let mut df_dni = Array1::from_elem(n, df_dn);
         
@@ -163,8 +182,10 @@ impl DFx {
 
             df_dni[i] += {
                 
+                dbg!(df_dc, dw_dni.c[i]);
                 df_db * dw_dni.b[i] + 
-                df_dd * dw_dni.d[i]
+                df_dd * dw_dni.d[i] +
+                df_dc * dw_dni.c[i]
             }
         }
 
