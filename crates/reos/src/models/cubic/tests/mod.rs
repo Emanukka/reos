@@ -21,27 +21,56 @@ pub mod recipes {
 
         
     }
-
-    #[test]
-    pub fn a() {
+    pub fn water_vt() -> Cubic {
         // tc = 647.1, pc = 220.55e5, w = 0.345
-        // let mr = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345, None);
-        let mr = CubicPureRecord::classic(647.1, 220.55e5, AlphaRecord::Twu91 { l: 1., m: 1., n: 1. }, None);
+        let mr = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345, Some(0.5 / 1e6));
         let pr = PureRecord::new(18.02, "water", mr);
         // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
         let options = CubicOptions::classic_soave(CubicModelOption::PR78);
         
-        let e = CubicParameters::new(vec![pr], vec![], options).unwrap_err();
-        println!("{}", e.to_string())
-        // Cubic::from(p)
+        let p = CubicParameters::new(vec![pr], vec![], options).unwrap();
+        Cubic::from(p)
 
         
     }
+
+    // #[test]
+    // pub fn a() {
+    //     // tc = 647.1, pc = 220.55e5, w = 0.345
+    //     // let mr = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345, None);
+    //     let mr = CubicPureRecord::classic(647.1, 220.55e5, AlphaRecord::Twu91 { l: 1., m: 1., n: 1. }, None);
+    //     let pr = PureRecord::new(18.02, "water", mr);
+    //     // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+    //     let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+        
+    //     let e = CubicParameters::new(vec![pr], vec![], options).unwrap_err();
+    //     println!("{}", e.to_string())
+    //     // Cubic::from(p)
+
+        
+    // }
 
     pub fn water_co2() -> Cubic {
         
         let mr1 = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345, None);
         let mr2 = CubicPureRecord::classic_soave(304.2, 73.83e5, 0.224, None);
+
+        let pr1 = PureRecord::new(18.02, "water", mr1);
+        let pr2 = PureRecord::new(0., "carbon dioxide", mr2);
+
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+        
+        let p = CubicParameters::new(vec![pr1, pr2], vec![], options).unwrap();
+        
+        Cubic::from(p)
+
+    }
+
+    pub fn water_co2_vt() -> Cubic {
+        
+        let mr1 = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345,Some(0.5 / 1e6));
+        let mr2 = CubicPureRecord::classic_soave(304.2, 73.83e5, 0.224,Some(0.8 / 1e5) );
 
         let pr1 = PureRecord::new(18.02, "water", mr1);
         let pr2 = PureRecord::new(0., "carbon dioxide", mr2);

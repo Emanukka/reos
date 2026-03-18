@@ -103,7 +103,107 @@ mod ybip {
 
 
 
+mod volume_translation {
 
+    const T: f64 = 298.15;
+    const RHO: f64 = 41025.02831164824;
+    use super::{Residual, super::Cubic, super::recipes};
+    use approx::assert_relative_eq;
+    use ndarray::{array, Array1};
+
+    pub enum Derivative {
+        DT,
+        DNi,
+        DV,
+    }
+
+    fn df_du(cub: &Cubic, t:f64, d:f64, x: &ndarray::Array1<f64>, du: Derivative) -> ndarray::Array1<f64> {
+
+        const EPS:f64 = 1e-5;
+
+        match du {
+            Derivative::DT => {
+
+                let fwd = cub.helmholtz(t + EPS, d, x);
+                let bwd = cub.helmholtz(t - EPS, d, x);
+
+                ndarray::array![0.5 * (fwd - bwd) / EPS]
+            }
+            Derivative::DV => {
+
+                let fwd = cub.helmholtz(t, d + EPS * d, x);
+                let bwd = cub.helmholtz(t, d - EPS * d, x);
+
+                let df_drho = 0.5 * (fwd - bwd) / (EPS * d);
+                let df_dv = df_drho * (- d.powi(2));
+
+                ndarray::array![df_dv]
+            }
+
+            Derivative::DNi => {
+                
+                let nc = x.len();
+
+                let [mut x_fwd, mut x_bwd] = [x.clone(), x.clone()];
+                let mut df_dx = Array1::zeros(nc);
+                
+                let df_dv = df_du(cub, t, d, x, Derivative::DV)[0];
+                
+                for i in 0..nc {
+                    x_fwd[i] += EPS / 10.;
+                    x_bwd[i] -= EPS / 10.;
+                    
+                    let df_dx_fwd = cub.helmholtz(t, d, &x_fwd);
+                    let df_dx_bwd = cub.helmholtz(t, d, &x_bwd);
+
+                    df_dx[i] =  0.5 * (df_dx_fwd - df_dx_bwd) / (EPS / 10.);
+                    x_fwd[i] -= EPS / 10.;
+                    x_bwd[i] += EPS / 10.;
+
+                }
+
+                let f = cub.helmholtz(t, d, x);
+                let x_df_dx = x.dot(&df_dx);
+                
+                Array1::from_shape_fn(nc, |i| {
+
+                    f + (- df_dv / d ) + df_dx[i] - x_df_dx
+
+                })
+
+            }
+            }
+        }
+
+    #[test]
+    fn valid_num_diff() {
+
+        let cub = recipes::water_co2(); 
+        let x = &array![0.75, 0.25];
+
+        assert_relative_eq!(df_du(&cub, T, RHO, x, Derivative::DT)[0], cub.df_dt(T, RHO, x), max_relative = 1e-8);
+        assert_relative_eq!(df_du(&cub, T, RHO, x, Derivative::DV)[0], cub.df_dv(T, RHO, x), max_relative = 1e-8);
+        // cub.df_dn(T, RHO, x)[0];
+        assert_relative_eq!(df_du(&cub, T, RHO, x, Derivative::DNi), cub.df_dn(T, RHO, x), max_relative = 1e-7)
+
+    }
+
+    #[test]
+    fn test_volume_translation() {
+
+        let cub = recipes::water_co2_vt(); 
+        let x = &array![0.75, 0.25];
+
+        assert_relative_eq!(df_du(&cub, T, RHO, x, Derivative::DT)[0], cub.df_dt(T, RHO, x), max_relative = 1e-8);
+
+        assert_relative_eq!(df_du(&cub, T, RHO, x, Derivative::DV)[0], cub.df_dv(T, RHO, x), max_relative = 1e-8);
+        
+        assert_relative_eq!(df_du(&cub, T, RHO, x, Derivative::DNi), cub.df_dn(T, RHO, x), max_relative = 1e-8)
+        
+    }
+
+
+}
 // #[test]
 // fn test_volume_translation_tcpr78() {
     

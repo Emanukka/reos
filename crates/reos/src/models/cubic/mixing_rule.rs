@@ -84,7 +84,7 @@ impl MixingRuleModel for  Quadratic {
         // let [ac, _, _] = [&parameters.a,&parameters.b,&parameters.c];
         let [ai] = [&parameters.aij.diag()];
 
-        let n = alpha.len();
+        let n = x.len();
         let mut dd = 0.;
         let combr = &parameters.combr;
 
@@ -134,6 +134,7 @@ impl MixingRuleModel for  Quadratic {
 
             for j in 0..n {
                 
+                // dbg!(n, alpha);
                 // let bij = 0.5 * (bc[i] + bc[j]);
                 let alpha_ij = combr.alpha_ij(alpha[i], alpha[j]);
 

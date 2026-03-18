@@ -89,7 +89,7 @@ impl DFu  {
 
     fn gv(v:f64, w:&W) -> f64{
 
-        w.b / v / (v + w.c - w.b)
+        (w.b - w.c) / v / (v + w.c - w.b)
     }
 
     fn gb(v:f64, w:&W) -> f64{
@@ -182,7 +182,6 @@ impl DFx {
 
             df_dni[i] += {
                 
-                dbg!(df_dc, dw_dni.c[i]);
                 df_db * dw_dni.b[i] + 
                 df_dd * dw_dni.d[i] +
                 df_dc * dw_dni.c[i]
@@ -224,7 +223,6 @@ impl Residual for Cubic  {
     fn max_density(&self, x:&Array1<f64>)->f64 {
 
         // let arr = Array1::from_vec(self.parameters.b.clone());
-        
         1.0 / (self.parameters.bij.diag().dot(x))  
 
     }
