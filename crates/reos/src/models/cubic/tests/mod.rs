@@ -1,6 +1,7 @@
 mod pure;
 mod mixture;
 mod from_json;
+
 use crate::{models::cubic::{Cubic, alpha::{Alpha, AlphaOption}, mixing_rule::MixingRule, models::{CubicModelOption, PR78}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicParameters, CubicPureRecord}}, parameters::{BinaryRecord, Parameters, PureRecord}};
 
 #[cfg(test)]
@@ -34,6 +35,32 @@ pub mod recipes {
         
     }
 
+    pub fn water_vt_jaubert() -> Cubic {
+        // tc = 647.1, pc = 220.55e5, w = 0.345
+        let mr = CubicPureRecord::classic(647.1, 220.55e5, AlphaRecord::Twu91 { l: 0.3865, m: 0.8720, n: 1.9693 }, Some(5.3041 / 1e6));
+
+        let pr = PureRecord::new(18.02, "water", mr);
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic(CubicModelOption::PR78, AlphaOption::Twu91);
+        
+        let p = CubicParameters::new(vec![pr], vec![], options).unwrap();
+        Cubic::from(p)
+
+        
+    }
+    
+    pub fn octane_vt() -> Cubic {
+
+        let mr = CubicPureRecord::classic(568.70, 24.90 * 1e5, AlphaRecord::Twu91 { l: 0.3385, m: 0.8185, n: 2.0747 }, Some(6.4134 / 1e6));
+
+        let pr = PureRecord::new(18.02, "water", mr);
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic(CubicModelOption::PR78, AlphaOption::Twu91);
+        
+        let p = CubicParameters::new(vec![pr], vec![], options).unwrap();
+        Cubic::from(p)
+
+    }
     // #[test]
     // pub fn a() {
     //     // tc = 647.1, pc = 220.55e5, w = 0.345

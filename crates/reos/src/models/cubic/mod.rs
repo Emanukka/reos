@@ -222,8 +222,13 @@ impl Residual for Cubic  {
 
     fn max_density(&self, x:&Array1<f64>)->f64 {
 
-        // let arr = Array1::from_vec(self.parameters.b.clone());
-        1.0 / (self.parameters.bij.diag().dot(x))  
+        let mut v_min = 0.0;
+        
+        for i in 0..x.len(){
+            v_min += x[i] * (self.parameters.bij[(i, i)] - self.parameters.cij[(i, i)] )
+        }
+
+        0.9 / v_min
 
     }
 

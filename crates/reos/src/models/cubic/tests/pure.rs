@@ -1,6 +1,6 @@
 use crate::residual::Residual;
 
-use super::recipes::water;
+use super::recipes;
 
 use approx::assert_relative_eq;
 use ndarray::array;
@@ -33,7 +33,7 @@ pub const T:f64 = 298.15;
 #[test]
 fn water_pr78_helmholtz() {
     
-    let cub = water(); 
+    let cub = recipes::water(); 
     println!("{}", cub.parameters);
     
     assert_relative_eq!(cub.helmholtz(T, RHO, &array![1.]), -0.37074849150969297, epsilon = TOL)
@@ -42,7 +42,7 @@ fn water_pr78_helmholtz() {
 #[test]
 fn water_pr78_df_dt() {
     
-    let cub = water(); 
+    let cub = recipes::water(); 
     let x = &array![1.];
 
     assert_relative_eq!(cub.df_dt(T, RHO, x), 0.001913855202265413, epsilon = TOL)
@@ -50,7 +50,7 @@ fn water_pr78_df_dt() {
 #[test]
 fn water_pr78_df_dn() {
     
-    let cub = water(); 
+    let cub = recipes::water(); 
     dbg!(&cub.parameters);
     let x = &array![1.];
     assert_relative_eq!(cub.df_dn(T, RHO, &x)[0], -0.73422735014086, epsilon = TOL)
@@ -59,7 +59,7 @@ fn water_pr78_df_dn() {
 #[test]
 fn water_pr78_compressibility() {
     
-    let cub = water(); 
+    let cub = recipes::water(); 
     let x = &array![1.];
     assert_relative_eq!( - cub.df_dv(T, RHO, x) / RHO, -0.3634788586311659, epsilon = TOL)
 }
@@ -68,6 +68,8 @@ fn water_pr78_compressibility() {
 mod volume_translation{
 
 
+
+    use crate::{models::cubic::mixing_rule::MixingRuleModel, state::eos::EquationOfState};
 
     use super::{Residual, super::Cubic, super::recipes};
     use approx::assert_relative_eq;
@@ -142,5 +144,100 @@ mod volume_translation{
         
     }
 
+    #[test]
+    fn max_density(){
+
+        let t = 298.15;
+        let x = &array![1.0];
+
+        let cub = recipes::water_vt(); 
+        let w = cub.parameters.mix.apply(t, 0., x, &cub.parameters);
+
+        let eos = EquationOfState::from(cub);
+
+        let wrong_max_density = 1. / w.b;
+        let right_max_density = 1. / (w.b - w.c);
+        dbg!(w.b);
+        let p_wrong = eos.pressure(t, wrong_max_density, x);
+        let p_right = eos.pressure(t, right_max_density, x);
+        
+        println!("p w = {}", p_wrong / 1e5);
+        println!("p r = {}", p_right / 1e5);
+
+// p max density = 36598.08431851066
+    }
+
+    #[test]
+    fn max_density_jaubert(){
+
+        let t = 298.15;
+        let x = &array![1.0];
+
+        let cub = recipes::water_vt_jaubert(); 
+        let w = cub.parameters.mix.apply(t, 0., x, &cub.parameters);
+
+        let eos = EquationOfState::from(cub);
+
+        let wrong_max_density = 1. / w.b;
+        let right_max_density = 1. / (w.b - w.c);
+        dbg!(w.b);
+        let p_wrong = eos.pressure(t, wrong_max_density, x);
+        let p_right = eos.pressure(t, right_max_density, x);
+        
+        println!("p w = {}", p_wrong / 1e5);
+        println!("p r = {}", p_right / 1e5);
+
+// p max density = 36598.08431851066
+    }
+
+}
+
+
+mod density_iteration {
+
+    use std::sync::Arc;
+
+    use ndarray::Array1;
+
+    use crate::state::{State, eos::EquationOfState};
+
+    use super::*;
+
+    #[test]
+    fn octane(){
+        
+        let t = 250.0;
+        let x = array![1.];
+
+        let r = recipes::octane_vt();
+        let p = 1e5;
+        let rhomax = r.max_density(&x);
+
+        let eos = EquationOfState::from(r);
+        dbg!(rhomax);
+        let f = |s:f64| { 
+
+            let rho = s * rhomax;   
+            let p_iter = eos.pressure(t,rho,&x);
+
+            // eprintln!("p_iter:{}", p_iter);
+            (1.0 - s) * (p_iter - p) 
+
+        };
+
+        let s = Array1::logspace(10., 0.0, 1.0, 100);
+        let f_s = s.mapv(f);
+
+        dbg!(s);
+        println!("f_s={:}", f_s);
+        // let eos = EquationOfState::from(r);
+
+        // let p = 1e5;
+        // let liq = State::new_tpx(Arc::new(eos), t, p, x, Some(crate::state::density_solver::DensityInitialization::Liquid)).unwrap();
+
+        // dbg!(liq.d);
+        // dbg!(liq.p);
+
+    }
 
 }

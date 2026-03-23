@@ -93,6 +93,7 @@ pub fn density<R:Residual>(eos:Arc<E<R>>,t:f64,p:f64,x:Array1<f64>,guess:f64)-> 
         let rho = s * rhomax;
         let p_iter = eos.pressure(t,rho,&x);
         
+        eprintln!("p_iter:{}", p_iter);
         (1.0 - s) * (p_iter - p) 
 
     };
@@ -118,8 +119,8 @@ pub fn density<R:Residual>(eos:Arc<E<R>>,t:f64,p:f64,x:Array1<f64>,guess:f64)-> 
     let tol = 1e-8;
     let it_max = 100;
     
-    let mut f0: f64;
-    let mut df_at_s0:f64;
+    let mut f0 = 1.;
+    let mut df_at_s0 = 1.;
     let mut s_min = 0.0;
     let mut s_max = 1.0;
     
@@ -128,7 +129,8 @@ pub fn density<R:Residual>(eos:Arc<E<R>>,t:f64,p:f64,x:Array1<f64>,guess:f64)-> 
     let mut s1 = guess;
 
     while (res.abs() > tol) & (it < it_max) {
-
+        
+        // debug
         let s0 = s1;
         f0 = f(s0);
         df_at_s0 = dfds(s0);
@@ -138,12 +140,15 @@ pub fn density<R:Residual>(eos:Arc<E<R>>,t:f64,p:f64,x:Array1<f64>,guess:f64)-> 
 
         let bis = bissec(s0, s1, f0, &mut s_max, &mut s_min, &mut res);
 
+        eprintln!("Iteration: {}, s1: {}, s_min: {}, s_max: {}, s0: {}, f0: {}, df_at_s0: {}, res: {}", it, s1, s_min, s_max, s0, f0, df_at_s0, res);
+
         match bis{
             Bissection::In=>{continue;}
             Bissection::Out(x)=>{
                 s1 = x
             }
         }
+
     }
     
 
