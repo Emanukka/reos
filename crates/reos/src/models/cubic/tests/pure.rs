@@ -204,38 +204,40 @@ mod density_iteration {
     use super::*;
 
     #[test]
-    fn octane(){
+    fn water(){
         
-        let t = 250.0;
+        let t = 300.0;
         let x = array![1.];
 
-        let r = recipes::octane_vt();
+        let r = recipes::water_vt_jaubert();
         let p = 1e5;
         let rhomax = r.max_density(&x);
 
         let eos = EquationOfState::from(r);
-        dbg!(rhomax);
-        let f = |s:f64| { 
+        // dbg!(rhomax);
+        // let f = |s:f64| { 
 
-            let rho = s * rhomax;   
-            let p_iter = eos.pressure(t,rho,&x);
+        //     let rho = s * rhomax;   
+        //     let p_iter = eos.pressure(t,rho,&x);
 
-            // eprintln!("p_iter:{}", p_iter);
-            (1.0 - s) * (p_iter - p) 
+        //     // eprintln!("p_iter:{}", p_iter);
+        //     (1.0 - s) * (p_iter - p) 
 
-        };
+        // };
 
-        let s = Array1::logspace(10., 0.0, 1.0, 100);
-        let f_s = s.mapv(f);
+        // let s = Array1::logspace(10., 0.0, 1.0, 100);
+        // let f_s = s.mapv(f);
 
-        dbg!(s);
-        println!("f_s={:}", f_s);
-        // let eos = EquationOfState::from(r);
+        // dbg!(s);
+        // println!("f_s={:}", f_s);
 
-        // let p = 1e5;
-        // let liq = State::new_tpx(Arc::new(eos), t, p, x, Some(crate::state::density_solver::DensityInitialization::Liquid)).unwrap();
+        let p = 1e5;
+        let liq = State::new_tpx(Arc::new(eos), t, p, x, Some(crate::state::density_solver::DensityInitialization::Liquid)).unwrap();
 
+        assert!(liq.pressure() > 0.0);
         // dbg!(liq.d);
+
+        // 
         // dbg!(liq.p);
 
     }
