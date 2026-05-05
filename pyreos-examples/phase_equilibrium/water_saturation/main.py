@@ -4,11 +4,15 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 from os import listdir
 from reos.eos import EquationOfState
 from reos.state import State
 from reos.cpa import CPAParameters
-from water_saturation.methods import *
+
+# import water_saturation
+# from water_saturation.methods import *
+from wsat.methods import *
 from si_units import KELVIN, BAR, PASCAL, CELSIUS
 
 # from src.water_saturation.methods import *
@@ -35,9 +39,12 @@ plt.rcParams.update({
     "figure.figsize": (xsize * 1.5, ysize),  
 
 })
-
-pw = CPAParameters.from_json(["water"],"../../../parameters/cpa/tsivintzelis2011.json")
-eosw = EquationOfState.scpa(pw)
+#%%
+pw = CPAParameters.from_json(["water"],
+                             rdf_model="kg",
+                             cubic_model="srk",
+                             ppath="../../../parameters/cpa/tsivintzelis2011.json")
+eosw = EquationOfState.cpa(pw)
 
 def timing(f):
     
@@ -77,9 +84,9 @@ def compute(
     y_dry_gas = np.array(y_dry_gas)
 
 
-    p = CPAParameters.from_json(names, ppath, bpath)
+    p = CPAParameters.from_json(names, ppath, bpath, rdf_model="kg", cubic_model="srk")
     # print(p)
-    eos = EquationOfState.scpa(p)
+    eos = EquationOfState.cpa(p)
     vpressure, yw, vdeveloped, vincipient = linspace_wsat(
         eos, 
         eosw, 
@@ -124,22 +131,32 @@ def nf(filename):
 
 #%%
 
+M = 100
 
 filenames = listdir(DATAPATH)
+nfiles = len(filenames)
+
 casenames = [] 
 pressure = []
 water_content = []
-nfiles = 0
+states_developed = []
+# nfiles = 0
 
-n = len(filenames)
+
 for filename in filenames:
 
-    n += 1
+    # N += 1
     excel = pd.ExcelFile(DATAPATH + filename)
 
     sheet_names = excel.sheet_names
 
     names, fracs, casename = nf(filename)
+    
+    N = len(sheet_names)
+
+    ipressure = np.zeros((M, N))
+    iwater_content = np.zeros((M, N))
+    istates_developed = np.zeros((M, N), dtype=object)
 
     for j, t in enumerate(sheet_names):
 
@@ -147,11 +164,15 @@ for filename in filenames:
 
         t = float(t) * KELVIN
         case = {"names": names, "y_dry_gas": fracs, "t": t}
-        vpressure, yw, vdeveloped, vincipient, _ = compute(case, N = 100)
+        vpressure, yw, vdeveloped, vincipient, _ = compute(case, N = M)
 
-        pressure.append(vpressure * PASCAL / BAR)
-        water_content.append(yw * 1e6)
+        ipressure[:, j] = vpressure * PASCAL / BAR
+        iwater_content[:, j] = yw * 1e6
+        istates_developed[:, j] = vdeveloped
 
+    pressure.append(ipressure)
+    water_content.append(iwater_content)
+    states_developed.append(istates_developed)
 
 #%%
 
@@ -172,12 +193,82 @@ for (i, t) in enumerate(sheet_names):
     plt.tight_layout()
     plt.legend()
 
-    if SAVE:
+    # if SAVE:
 
-        casename = casenames[i]
-        plt.savefig(PLTDIR + casename + '.png', dpi = 300)
+    #     casename = casenames[i]
+    #     plt.savefig(PLTDIR + casename + '.png', dpi = 300)
 
 
+#%%
+p = CPAParameters.from_json(
+    ["water", "carbon dioxide"], 
+    ppath="../../../parameters/cpa/tsivintzelis2011.json", 
+    bpath= "../../../parameters/cpa/tsivintzelis2011_binary.json",
+    rdf_model="kg", cubic_model="srk")
+# print(p)
+eos = EquationOfState.cpa(p)
+ipressure = pressure[0]
+iwater_content = water_content[0]
+istates_developed = states_developed[0]
+
+# N = ipressure.shape[1]
+
+ijpressure = ipressure[:, 0]
+ijstates_developed = istates_developed[:, 0]
+ijwater_content = iwater_content[:, 0]
+#%%
+
+Xmat = np.zeros((M, 3))
+
+for k in range(M):
+    
+    state = ijstates_developed[k]
+    Xmat[k, :] = eos.get_assoc_calcs(state.temperature, state.density, state.composition)["X"]
+#%%
+
+jsheet_name = sheet_names[0]
+jT = float(jsheet_name) * KELVIN
+df = pd.read_excel(excel, jsheet_name)
+p_exp = df["p"]; water_content_exp = df["y"] * 1e6
+
+#%%
+plt.rcParams.update({
+    "text.usetex": True,
+    "font.serif": ["Computer Modern"], 
+    "axes.labelsize": 30,
+    "font.size": 46,
+    "legend.fontsize": 25,
+
+    "xtick.labelsize": 30,
+    "ytick.labelsize": 30,
+
+})
+#%%
+fig1, axes1 = plt.subplots(1, 2, figsize=(14,5), constrained_layout=True)
+
+axes1[0].plot(ijpressure, ijwater_content, "black")
+
+axes1[0].scatter(p_exp, water_content_exp, marker=mk[0], label = f"{jT}", s = 300,facecolors="None", edgecolors="black")
+
+axes1[0].set_xlabel(r"$ P / \mathrm{bar}$")
+axes1[0].set_ylabel(r"$ \mathrm{Water \ content / ppm}$")
+axes1[0].set_ylim(0, 15_000)
+axes1[0].set_xlim(0, 600)
+axes1[0].legend()
+
+Xlabels = [r"$\rm{H_2O \ -}$",r"$\rm{H_2O \ +}$", r"$\rm{CO_2 \ +}$", ]
+colors = ["#3b5b92", "#5fe6d6", "#c44536"]
+
+for k in range(3):
+
+    axes1[1].plot(ijpressure, Xmat[:, k], label = Xlabels[k], color = colors[k])
+
+axes1[1].set_xlabel(r"$ P / \mathrm{bar}$")
+axes1[1].set_ylabel(r"$ X$")
+axes1[1].set_ylim(0, 1)
+axes1[1].set_xlim(0, 600)
+axes1[1].legend()
+# for 1
 #%%Cases
 
 # cases = [
