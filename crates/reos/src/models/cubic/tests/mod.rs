@@ -61,21 +61,6 @@ pub mod recipes {
         Cubic::from(p)
 
     }
-    // #[test]
-    // pub fn a() {
-    //     // tc = 647.1, pc = 220.55e5, w = 0.345
-    //     // let mr = CubicPureRecord::classic_soave(647.1, 220.55e5, 0.345, None);
-    //     let mr = CubicPureRecord::classic(647.1, 220.55e5, AlphaRecord::Twu91 { l: 1., m: 1., n: 1. }, None);
-    //     let pr = PureRecord::new(18.02, "water", mr);
-    //     // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
-    //     let options = CubicOptions::classic_soave(CubicModelOption::PR78);
-        
-    //     let e = CubicParameters::new(vec![pr], vec![], options).unwrap_err();
-    //     println!("{}", e.to_string())
-    //     // Cubic::from(p)
-
-        
-    // }
 
     pub fn water_co2() -> Cubic {
         
@@ -153,10 +138,8 @@ pub mod recipes {
 
     }
 
-    }
     pub fn nhexane_dehlouz() -> Cubic {
         
-        unimplemented!()
         // let pr = CubicPureRecord::Twu91 { 
         //     tc: 507.60, 
         //     pc: 30.25 * 1e5, 
@@ -167,6 +150,14 @@ pub mod recipes {
         // };
         // let pr = PureRecord::new(86.17848, "n-hexane".into(), pr);
         // Cubic::from(CubicParameters::new(vec![pr], vec![], CubicModelOption::PR78))
+        let mr = CubicPureRecord::classic(507.60, 30.25 * 1e5, AlphaRecord::Twu91 { l: 0.28726, m: 0.83405, n: 2.01991 }, Some(0.81628 / 1e6));
+
+        let pr = PureRecord::new(86.17848, "hexane", mr);
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic(CubicModelOption::PR78, AlphaOption::Twu91);
+        
+        let p = CubicParameters::new(vec![pr], vec![], options).unwrap();
+        Cubic::from(p)
     }
     pub fn water_dehlouz() -> Cubic {
         
@@ -183,7 +174,7 @@ pub mod recipes {
         // Cubic::from(CubicParameters::new(vec![pr], vec![], CubicModelOption::PR78))
     }
 
-
+}
 #[test]
 fn alpha_function_unmatch_records(){
 
