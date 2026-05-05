@@ -225,7 +225,7 @@ mod density_iteration {
 
         };
 
-        let s = Array1::logspace(10., 0.0, 1.0, 100);
+        let s = Array1::logspace(10., 1, 1.0, 100);
         let f_s = s.mapv(f);
 
         dbg!(s);
