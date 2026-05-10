@@ -1,0 +1,6 @@
+pyproject.toml
+src/wsat/methods.py
+src/wsat.egg-info/PKG-INFO
+src/wsat.egg-info/SOURCES.txt
+src/wsat.egg-info/dependency_links.txt
+src/wsat.egg-info/top_level.txt

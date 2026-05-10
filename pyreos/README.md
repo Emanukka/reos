@@ -10,50 +10,29 @@ from reos.cpa import CPAParameters, CPAPureRecord
 from reos.eos import EquationOfState
 from reos.state import State
 
-parameters = CPAParameters.from_records([ 
-    CPAPureRecord.new(
-        name = "water",
-        molar_weight = 18.01528,
-        a0 = 0.12277,
-        b = 0.014515e-3,
-        c1 = 0.67359,
-        tc = 647.29,
-        epsilon = 166.55e2,
-        kappa = 0.0692,
-        na = 2,
-        nb = 2
-    )
-])
+parameters = CPAParameters.from_json(["water", "carbon dioxide"], 
+                             rdf_model="kg",
+                             cubic_model="srk",
+                             ppath="../../../parameters/cpa/tsivintzelis2011.json", 
+                             bpath= "../../../parameters/cpa/tsivintzelis2011_binary.json")
 
-# or  CPAParameters.from_json(["water"], "./parameters/cpa/kontogeorgis2006.json")
+eos = EquationOfState.cpa(parameters)
 
-eos = EquationOfState.scpa(parameters)
+# 2. Initialize the state
+T = 323.15; P = 1e5; z = np.array([0.75, 0.25])
+state = State.tpx(eos, T, P, z)
 
-t = 298.15
-p = 1e5
-x = np.array([1.0])
+# 3. Calculate properties
+unbonded_sites_fraction = eos.get_assoc_calcs(state.temperature, state.density, state.composition)["X"]
 
-s = State.tpx(eos, t, p, x) 
-
-print(s)
-
-X = eos.unbonded_sites_fraction(t, s.density, x)
-
-print(f"Unbonded sites fraction = {X}")
-
-```
-
-```bash
-State(t = 298.150 K, p = 100000.000000 Pa, ρ = 55784.919890 mol/m³)
-Unbonded sites fraction = [0.07825138 0.07825138]
 ```
 
 ## Models
 
 | Model | Description |
 |:-----:|:-----------:|
-| CPA   | Cubic Plus Association (srk, pr76, pr78)|
-| cubic | Soave-Redlich-Kwong, Peng-Robinson 1976, Peng-Robinson 1978|
+| CPA   | CPA, SCPA |
+| cubic | SRK, PR76, PR78, Twu-91, volume-translation|
 
 Each model implement its analytical expressions of derived properties of Helmholtz potential.
 
@@ -96,13 +75,20 @@ maturin build --release
 └── pyreos-examples
 ```
 
+- `parameters`: Directory with pure and binary parameters for the current models implemented in Reos
+
 - `crates`: Contains `reos`, which is the Rust package that implement all the core functionalites
+
 - `pyreos`: Rust package that create the Python interface from `reos`
+
 - `pyreos-dev`: Directory used to test functionalites of `reos` in Python
+
 - `pyreos-examples`: Python examples of how to use `reos`
 
 ### Python package
 
 - `reos.eos`: Enables the creation and manipulation of equations of state with different models.
+
 - `reos.state`: Provides tools for working with thermodynamic states, including property calculations and phase equilibria.
+
 - `reos.{model_name}`: Each current model has its own submodule with its name, which contains the **pure model record**, the **binary model record** and the **parameters objects** .
