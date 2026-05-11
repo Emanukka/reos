@@ -11,3 +11,4 @@ Cargo.lock
 /site
 /.vscode
 _*
+*-info
