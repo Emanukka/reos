@@ -68,7 +68,7 @@
     "iso-octane": {
         "molar_weight": 114.2285
     },
-    "n-nonane": {
+    "n-nulle": {
         "molar_weight": 128.2551
     },
     "n-decane": {
@@ -186,19 +186,19 @@
         "molar_weight": 44.009
     },
     "ethylene glycol": {
-        "molar_weight":  62.0678
+        "molar_weight": 62.0678
     },
     "diethylene glycol": {
-        "molar_weight":  106.1204
+        "molar_weight": 106.1204
     },
     "triethylene glycol": {
-        "molar_weight": 150.1730
+        "molar_weight": 150.173
     },
     "monoethanolamine": {
         "molar_weight": 61.0831
     },
     "diethanolamine": {
-        "molar_weight":  105.1356
+        "molar_weight": 105.1356
     },
     "triethanolamine": {
         "molar_weight": 149.1882
@@ -211,5 +211,3080 @@
     },
     "ethane": {
         "molar_weight": 30.07
+    },
+    "1,1-dimethoxyethane": {
+        "molar_weight": null
+    },
+    "1,1-dimethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "1,1-dimethylcyclopentane": {
+        "molar_weight": 98.1861
+    },
+    "1,1-diphenylethane": {
+        "molar_weight": 182.261
+    },
+    "1,2,3,4-tetrahydronaphthalene": {
+        "molar_weight": 132.2023
+    },
+    "1,2,3,4-tetramethylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "1,2,3,4-tetramethylcyclohexane": {
+        "molar_weight": null
+    },
+    "1,2,3,5-tetraethylbenzene": {
+        "molar_weight": 190.3245
+    },
+    "1,2,3,5-tetramethylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "1,2,3,6-tetrahydrobenzaldehyde": {
+        "molar_weight": 110.1537
+    },
+    "1,2,3-trichlorobenzene": {
+        "molar_weight": 181.447
+    },
+    "1,2,3-trichloropropane": {
+        "molar_weight": 147.431
+    },
+    "1,2,3-triethylbenzene": {
+        "molar_weight": null
+    },
+    "1,2,3-trimethyl-4-ethylbenzene": {
+        "molar_weight": 148.2447
+    },
+    "1,2,3-trimethylbenzene": {
+        "molar_weight": 120.1916
+    },
+    "1,2,4,5-tetramethylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "1,2,4-trichlorobenzene": {
+        "molar_weight": 181.447
+    },
+    "1,2,4-triethylbenzene": {
+        "molar_weight": 162.2713
+    },
+    "1,2,4-trimethyl-3-ethylbenzene": {
+        "molar_weight": 148.2447
+    },
+    "1,2,4-trimethyl-5-ethylbenzene": {
+        "molar_weight": 148.2447
+    },
+    "1,2,4-trimethylbenzene": {
+        "molar_weight": null
+    },
+    "1,2-butadiene": {
+        "molar_weight": 54.0904
+    },
+    "1,2-dibromoethane": {
+        "molar_weight": 187.861
+    },
+    "1,2-dibromotetrafluoroethane": {
+        "molar_weight": 259.823
+    },
+    "1,2-dichloro-1,1,2-trifluoroethane": {
+        "molar_weight": 152.931
+    },
+    "1,2-dichlorobutane": {
+        "molar_weight": 127.012
+    },
+    "1,2-dichloroethane": {
+        "molar_weight": 98.959
+    },
+    "1,2-dichloropropane": {
+        "molar_weight": 112.986
+    },
+    "1,2-dichlorotetrafluoroethane": {
+        "molar_weight": 170.921
+    },
+    "1,2-diethoxyethane": {
+        "molar_weight": 118.1742
+    },
+    "1,2-dimethoxyethane": {
+        "molar_weight": 90.121
+    },
+    "1,2-dimethoxypropane": {
+        "molar_weight": 104.1476
+    },
+    "1,2-diphenylethane": {
+        "molar_weight": 182.261
+    },
+    "1,2-epoxy-3-phenoxypropane": {
+        "molar_weight": 150.1745
+    },
+    "1,2-epoxybutane": {
+        "molar_weight": null
+    },
+    "1,2-pentadiene": {
+        "molar_weight": 68.117
+    },
+    "1,2-propanediamine": {
+        "molar_weight": 74.1249
+    },
+    "1,2-propylene oxide": {
+        "molar_weight": null
+    },
+    "1,3,5,7-cyclooctatetraene": {
+        "molar_weight": 104.1491
+    },
+    "1,3,5-trichlorobenzene": {
+        "molar_weight": 181.447
+    },
+    "1,3,5-triethylbenzene": {
+        "molar_weight": 162.2713
+    },
+    "1,3-benzenediol": {
+        "molar_weight": 110.1106
+    },
+    "1,3-butadiene": {
+        "molar_weight": 54.0904
+    },
+    "1,3-butanediol": {
+        "molar_weight": null
+    },
+    "1,3-cyclohexadiene": {
+        "molar_weight": 80.1277
+    },
+    "1,3-dichloro-2-propanol": {
+        "molar_weight": 128.985
+    },
+    "1,3-dichloropropane": {
+        "molar_weight": 112.986
+    },
+    "1,3-dimethyladamantane": {
+        "molar_weight": 164.2872
+    },
+    "1,3-dioxane": {
+        "molar_weight": 88.1051
+    },
+    "1,3-propylene glycol": {
+        "molar_weight": 76.0944
+    },
+    "1,3-propylene oxide": {
+        "molar_weight": 58.0791
+    },
+    "1,4-butanediisocyanate": {
+        "molar_weight": null
+    },
+    "1,4-cyclohexadiene": {
+        "molar_weight": 80.1277
+    },
+    "1,4-dibromobenzene": {
+        "molar_weight": 235.904
+    },
+    "1,4-dichlorobutane": {
+        "molar_weight": 127.012
+    },
+    "1,4-dicyano-2-butene": {
+        "molar_weight": 106.1252
+    },
+    "1,4-dioxane": {
+        "molar_weight": 88.1051
+    },
+    "1,4-di-tert-butylbenzene": {
+        "molar_weight": 190.3245
+    },
+    "1,4-hexadiene": {
+        "molar_weight": 82.1436
+    },
+    "1,4-pentadiene": {
+        "molar_weight": 68.117
+    },
+    "1,5-cyclooctadiene": {
+        "molar_weight": null
+    },
+    "1,5-dichloropentane": {
+        "molar_weight": 141.039
+    },
+    "1,5-hexadiene": {
+        "molar_weight": 82.1436
+    },
+    "1,5-pentanediamine": {
+        "molar_weight": 102.1781
+    },
+    "1,5-pentanediol": {
+        "molar_weight": 104.1476
+    },
+    "1,6-hexanediol": {
+        "molar_weight": 118.1742
+    },
+    "1-amino-2-propanol": {
+        "molar_weight": 75.1097
+    },
+    "1-bromobutane": {
+        "molar_weight": 137.018
+    },
+    "1-bromoheptane": {
+        "molar_weight": 179.098
+    },
+    "1-bromonaphthalene": {
+        "molar_weight": 207.067
+    },
+    "1-bromopropane": {
+        "molar_weight": 122.992
+    },
+    "1-butene": {
+        "molar_weight": 56.1063
+    },
+    "1-chloro-1,1-difluoroethane": {
+        "molar_weight": 100.495
+    },
+    "1-chloronaphthalene": {
+        "molar_weight": 162.616
+    },
+    "1-chloropentane": {
+        "molar_weight": 106.594
+    },
+    "1-cis-2-trans-4-trimethylcyclopentane": {
+        "molar_weight": 112.2126
+    },
+    "1-decanol": {
+        "molar_weight": 158.2811
+    },
+    "1-decyne": {
+        "molar_weight": 138.2499
+    },
+    "1-dodecene": {
+        "molar_weight": 168.319
+    },
+    "1-eicosene": {
+        "molar_weight": 280.5316
+    },
+    "1-ethyl-2-isopropylbenzene": {
+        "molar_weight": 148.2447
+    },
+    "1-ethylcyclohexene": {
+        "molar_weight": 110.1968
+    },
+    "1-ethylnaphthalene": {
+        "molar_weight": 156.2237
+    },
+    "1-heptadecene": {
+        "molar_weight": 238.4519
+    },
+    "1-heptene": {
+        "molar_weight": 98.1861
+    },
+    "1-heptyne": {
+        "molar_weight": 96.1702
+    },
+    "1-hexadecanol": {
+        "molar_weight": null
+    },
+    "1-hexadecene": {
+        "molar_weight": 224.4253
+    },
+    "1-hexanol": {
+        "molar_weight": 102.1748
+    },
+    "1-hexyne": {
+        "molar_weight": 82.1436
+    },
+    "1-isopropoxy-2-propanol": {
+        "molar_weight": 118.1742
+    },
+    "1-methoxy-2-propanol propanoate": {
+        "molar_weight": null
+    },
+    "1-methyl-1-ethylcyclopentane": {
+        "molar_weight": 112.2126
+    },
+    "1-methyl-2-n-propylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "1-methyl-3-hydroxy-5-isopropyl benzene": {
+        "molar_weight": null
+    },
+    "1-methyl-3-n-propylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "1-methyl-4-n-propylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "1-methyl-4-vinylcyclohexene": {
+        "molar_weight": null
+    },
+    "1-methylcyclopentene": {
+        "molar_weight": 82.1436
+    },
+    "1-methylindene": {
+        "molar_weight": 130.1864
+    },
+    "1-methylnaphthalene": {
+        "molar_weight": 142.1971
+    },
+    "1-methylvinyl acetate": {
+        "molar_weight": 100.1158
+    },
+    "1-nitropropane": {
+        "molar_weight": 89.0932
+    },
+    "1-nonadecene": {
+        "molar_weight": 266.505
+    },
+    "1-nullol": {
+        "molar_weight": 144.2545
+    },
+    "1-nonene": {
+        "molar_weight": 126.2392
+    },
+    "1-nonyne": {
+        "molar_weight": 124.2233
+    },
+    "1-octadecanol": {
+        "molar_weight": 270.4937
+    },
+    "1-octadecene": {
+        "molar_weight": 252.4784
+    },
+    "1-octyne": {
+        "molar_weight": 110.1968
+    },
+    "1-pentadecanol": {
+        "molar_weight": 228.414
+    },
+    "1-pentadecene": {
+        "molar_weight": null
+    },
+    "1-pentene": {
+        "molar_weight": 70.1329
+    },
+    "1-pentyne": {
+        "molar_weight": 68.117
+    },
+    "1-phenylnaphthalene": {
+        "molar_weight": 204.2665
+    },
+    "1-propanol": {
+        "molar_weight": 60.095
+    },
+    "1-tetradecanol": {
+        "molar_weight": 214.3874
+    },
+    "1-tetradecene": {
+        "molar_weight": 196.3721
+    },
+    "1-trans-3,5-trimethylcyclohexane": {
+        "molar_weight": 126.2392
+    },
+    "1-tridecanol": {
+        "molar_weight": 200.3608
+    },
+    "1-tridecene": {
+        "molar_weight": 182.3455
+    },
+    "1-undecanol": {
+        "molar_weight": 172.3077
+    },
+    "1-undecene": {
+        "molar_weight": 154.2924
+    },
+    "2-(2-hexoxyethoxy)ethanol": {
+        "molar_weight": null
+    },
+    "2-(2-pentoxyethoxy)ethanol": {
+        "molar_weight": null
+    },
+    "2-(alpha-methylbenzyloxy)-1-propanol": {
+        "molar_weight": null
+    },
+    "2-(difluoromethoxy)-1,1,1-trifluoroethane": {
+        "molar_weight": null
+    },
+    "2,2,3,3-tetramethylbutane": {
+        "molar_weight": 114.2285
+    },
+    "2,2,3,3-tetramethylhexane": {
+        "molar_weight": 142.2817
+    },
+    "2,2,3,3-tetramethylpentane": {
+        "molar_weight": 128.2551
+    },
+    "2,2,3,4-tetramethylpentane": {
+        "molar_weight": 128.2551
+    },
+    "2,2,3-trimethylbutane": {
+        "molar_weight": 100.2019
+    },
+    "2,2,3-trimethylpentane": {
+        "molar_weight": 114.2285
+    },
+    "2,2,4,4,6,8,8-nulle": {
+        "molar_weight": 226.4412
+    },
+    "2,2,4,4-tetramethylpentane": {
+        "molar_weight": 128.2551
+    },
+    "2,2,4-trimethyl-1,3-pentanediol": {
+        "molar_weight": 146.2273
+    },
+    "2,2,5,5-tetramethylhexane": {
+        "molar_weight": 142.2817
+    },
+    "2,2,5-trimethylhexane": {
+        "molar_weight": 128.2551
+    },
+    "2,2-dichloro-1,1,1-trifluoroethane": {
+        "molar_weight": 152.931
+    },
+    "2,2-dimethyl-1-propanol": {
+        "molar_weight": 88.1482
+    },
+    "2,2-dimethyl-3-ethylpentane": {
+        "molar_weight": 128.2551
+    },
+    "2,2-dimethylbutane": {
+        "molar_weight": 86.1754
+    },
+    "2,2-dimethylheptane": {
+        "molar_weight": 128.2551
+    },
+    "2,2-dimethylhexane": {
+        "molar_weight": 114.2285
+    },
+    "2,2-dimethyloctane": {
+        "molar_weight": 142.2817
+    },
+    "2,2-dimethylpentane": {
+        "molar_weight": 100.2019
+    },
+    "2,3,3,3-tetrafluoropropene": {
+        "molar_weight": null
+    },
+    "2,3,3,4-tetramethylpentane": {
+        "molar_weight": 128.2551
+    },
+    "2,3,3-trimethyl-1-butene": {
+        "molar_weight": 98.1861
+    },
+    "2,3,3-trimethylpentane": {
+        "molar_weight": 114.2285
+    },
+    "2,3,4-trimethylpentane": {
+        "molar_weight": 114.2285
+    },
+    "2,3-dichloro-1-propanol": {
+        "molar_weight": 128.985
+    },
+    "2,3-dichloropropene": {
+        "molar_weight": 110.97
+    },
+    "2,3-dihydrofuran": {
+        "molar_weight": 70.0898
+    },
+    "2,3-dimethyl-1,3-butadiene": {
+        "molar_weight": 82.1436
+    },
+    "2,3-dimethyl-1-butene": {
+        "molar_weight": 84.1595
+    },
+    "2,3-dimethyl-1-hexene": {
+        "molar_weight": 112.2126
+    },
+    "2,3-dimethyl-2-butene": {
+        "molar_weight": 84.1595
+    },
+    "2,3-dimethylbutane": {
+        "molar_weight": 86.1754
+    },
+    "2,3-dimethylheptane": {
+        "molar_weight": 128.2551
+    },
+    "2,3-dimethylhexane": {
+        "molar_weight": 114.2285
+    },
+    "2,3-dimethyloctane": {
+        "molar_weight": 142.2817
+    },
+    "2,3-dimethylpentane": {
+        "molar_weight": 100.2019
+    },
+    "2,3-pentadiene": {
+        "molar_weight": 68.117
+    },
+    "2,3-xylenol": {
+        "molar_weight": 122.1644
+    },
+    "2,4,4-trimethyl-1-pentene": {
+        "molar_weight": 112.2126
+    },
+    "2,4,4-trimethyl-2-pentene": {
+        "molar_weight": 112.2126
+    },
+    "2,4,4-trimethylhexane": {
+        "molar_weight": 128.2551
+    },
+    "2,4,6-trimethylpyridine": {
+        "molar_weight": 121.1796
+    },
+    "2,4-diaminotoluene": {
+        "molar_weight": 122.1677
+    },
+    "2,4-dichlorobenzotrifluoride": {
+        "molar_weight": 215.0
+    },
+    "2,4-dichlorotoluene": {
+        "molar_weight": 161.029
+    },
+    "2,4-dimethyl-3-ethylpentane": {
+        "molar_weight": 128.2551
+    },
+    "2,4-dimethyloctane": {
+        "molar_weight": 142.2817
+    },
+    "2,4-dimethylpentane": {
+        "molar_weight": 100.2019
+    },
+    "2,4-toluene diisocyanate": {
+        "molar_weight": 174.1561
+    },
+    "2,4-xylenol": {
+        "molar_weight": 122.1644
+    },
+    "2,5-dihydrofuran": {
+        "molar_weight": 70.0898
+    },
+    "2,5-dimethyl-2,4-hexadiene": {
+        "molar_weight": 110.1968
+    },
+    "2,5-dimethylhexane": {
+        "molar_weight": 114.2285
+    },
+    "2,5-dimethyloctane": {
+        "molar_weight": 142.2817
+    },
+    "2,5-xylenol": {
+        "molar_weight": 122.1644
+    },
+    "2,6-dimethyl-4-heptanol": {
+        "molar_weight": 144.2545
+    },
+    "2,6-dimethylheptane": {
+        "molar_weight": 128.2551
+    },
+    "2,6-dimethylnaphthalene": {
+        "molar_weight": 156.2237
+    },
+    "2,6-dimethyloctane": {
+        "molar_weight": 142.2817
+    },
+    "2,6-dimethylpyridine": {
+        "molar_weight": 107.1531
+    },
+    "2,6-toluene diisocyanate": {
+        "molar_weight": 174.1561
+    },
+    "2,6-xylenol": {
+        "molar_weight": 122.1644
+    },
+    "2,7-dimethylnaphthalene": {
+        "molar_weight": 156.2237
+    },
+    "2,7-dimethyloctane": {
+        "molar_weight": 142.2817
+    },
+    "2-acetoacetoxy ethyl methacrylate": {
+        "molar_weight": null
+    },
+    "2-aminoethoxyethanol": {
+        "molar_weight": 105.1356
+    },
+    "2-bromobutane": {
+        "molar_weight": 137.018
+    },
+    "2-bromopropane": {
+        "molar_weight": 122.992
+    },
+    "2-butoxyethanol": {
+        "molar_weight": 118.1742
+    },
+    "2-butyl-2-ethyl-1,3-propanediol": {
+        "molar_weight": 160.2539
+    },
+    "2-chloro-1,1,1,2-tetrafluoroethane": {
+        "molar_weight": 136.476
+    },
+    "2-chloro-1,1-difluoroethylene": {
+        "molar_weight": 98.479
+    },
+    "2-chloroethanol": {
+        "molar_weight": 80.513
+    },
+    "2-chloropropene": {
+        "molar_weight": 76.525
+    },
+    "2-ethoxyethanol": {
+        "molar_weight": 90.121
+    },
+    "2-ethoxyethyl acetate": {
+        "molar_weight": 132.1577
+    },
+    "2-ethyl butyric acid": {
+        "molar_weight": 116.1583
+    },
+    "2-ethyl-1-butene": {
+        "molar_weight": 84.1595
+    },
+    "2-ethyl-1-hexanol": {
+        "molar_weight": 130.2279
+    },
+    "2-ethyl-1-hexene": {
+        "molar_weight": 112.2126
+    },
+    "2-ethyl-1-pentene": {
+        "molar_weight": 98.1861
+    },
+    "2-ethyl-2-hexenal": {
+        "molar_weight": 126.1962
+    },
+    "2-ethylbenzothiophene": {
+        "molar_weight": null
+    },
+    "2-ethylhexyl acetate": {
+        "molar_weight": 172.2646
+    },
+    "2-ethylhexyl acrylate": {
+        "molar_weight": 184.2753
+    },
+    "2-ethyl-m-xylene": {
+        "molar_weight": 134.2182
+    },
+    "2-ethyl-p-xylene": {
+        "molar_weight": 134.2182
+    },
+    "2-ethyl-tetrahydrothiophene": {
+        "molar_weight": 116.224
+    },
+    "2-heptanol": {
+        "molar_weight": 116.2013
+    },
+    "2-heptanone": {
+        "molar_weight": 114.1855
+    },
+    "2-hexanol": {
+        "molar_weight": 102.1748
+    },
+    "2-hexanone": {
+        "molar_weight": 100.1589
+    },
+    "2-hexoxyethanol": {
+        "molar_weight": 146.2273
+    },
+    "2-hexyne": {
+        "molar_weight": 82.1436
+    },
+    "2-methyl benzothiophene": {
+        "molar_weight": 148.225
+    },
+    "2-methyl-1,3-pentanediol": {
+        "molar_weight": 118.1742
+    },
+    "2-methyl-1-butanol": {
+        "molar_weight": null
+    },
+    "2-methyl-1-butene": {
+        "molar_weight": 70.1329
+    },
+    "2-methyl-1-heptene": {
+        "molar_weight": 112.2126
+    },
+    "2-methyl-1-hexanol": {
+        "molar_weight": 116.2013
+    },
+    "2-methyl-1-hexene": {
+        "molar_weight": 98.1861
+    },
+    "2-methyl-1-nonene": {
+        "molar_weight": 140.2658
+    },
+    "2-methyl-1-octene": {
+        "molar_weight": 126.2392
+    },
+    "2-methyl-1-pentanol": {
+        "molar_weight": 102.1748
+    },
+    "2-methyl-1-pentene": {
+        "molar_weight": 84.1595
+    },
+    "2-methyl-1-propanol": {
+        "molar_weight": 74.1216
+    },
+    "2-methyl-2-aminobutane": {
+        "molar_weight": 87.1634
+    },
+    "2-methyl-2-butanol": {
+        "molar_weight": 88.1482
+    },
+    "2-methyl-2-butene": {
+        "molar_weight": 70.1329
+    },
+    "2-methyl-2-pentenal": {
+        "molar_weight": 98.143
+    },
+    "2-methyl-2-pentene": {
+        "molar_weight": 84.1595
+    },
+    "2-methyl-2-propanol": {
+        "molar_weight": 74.1216
+    },
+    "2-methyl-3-ethylpentane": {
+        "molar_weight": 114.2285
+    },
+    "2-methylbenzofuran": {
+        "molar_weight": 132.1592
+    },
+    "2-methylbutyraldehyde": {
+        "molar_weight": 86.1323
+    },
+    "2-methylnaphthalene": {
+        "molar_weight": 142.1971
+    },
+    "2-nulle": {
+        "molar_weight": 142.2817
+    },
+    "2-methyloctane": {
+        "molar_weight": 128.2551
+    },
+    "2-methylpropanal": {
+        "molar_weight": 72.1057
+    },
+    "2-methylpyridine": {
+        "molar_weight": 93.1265
+    },
+    "2-methyltetrahydrofuran": {
+        "molar_weight": 86.1323
+    },
+    "2-methylthiacyclopentane": {
+        "molar_weight": 102.198
+    },
+    "2-methylthiophene": {
+        "molar_weight": 98.166
+    },
+    "2-nitropropane": {
+        "molar_weight": 89.0932
+    },
+    "2-nullol": {
+        "molar_weight": 144.2545
+    },
+    "2-nullone": {
+        "molar_weight": 142.2386
+    },
+    "2-norbornene": {
+        "molar_weight": 94.1543
+    },
+    "2-octanol": {
+        "molar_weight": null
+    },
+    "2-octanone": {
+        "molar_weight": 128.212
+    },
+    "2-pentanol": {
+        "molar_weight": 88.1482
+    },
+    "2-pentanone": {
+        "molar_weight": 86.1323
+    },
+    "2-pentoxyethanol": {
+        "molar_weight": 132.2007
+    },
+    "2-pentyne": {
+        "molar_weight": 68.117
+    },
+    "2-phenyl-1-propanol": {
+        "molar_weight": 136.191
+    },
+    "2-phenyl-2-propanol": {
+        "molar_weight": 136.191
+    },
+    "3-(methylmercapto)propanal": {
+        "molar_weight": null
+    },
+    "3,3,3-trifluoropropene": {
+        "molar_weight": 96.0511
+    },
+    "3,3,5-trimethylheptane": {
+        "molar_weight": 142.2817
+    },
+    "3,3-diethylpentane": {
+        "molar_weight": 128.2551
+    },
+    "3,3-dimethyl-1-butene": {
+        "molar_weight": 84.1595
+    },
+    "3,3-dimethyl-2-butanone": {
+        "molar_weight": 100.1589
+    },
+    "3,3-dimethylhexane": {
+        "molar_weight": 114.2285
+    },
+    "3,3-dimethylpentane": {
+        "molar_weight": 100.2019
+    },
+    "3,4-dichloroaniline": {
+        "molar_weight": 162.017
+    },
+    "3,4-dimethylhexane": {
+        "molar_weight": 114.2285
+    },
+    "3,4-xylenol": {
+        "molar_weight": 122.1644
+    },
+    "3,5-dimethylbenzothiophene": {
+        "molar_weight": null
+    },
+    "3,5-xylenol": {
+        "molar_weight": 122.1644
+    },
+    "3-amino-1-propanol": {
+        "molar_weight": 75.1097
+    },
+    "3-chloropropene": {
+        "molar_weight": 76.525
+    },
+    "3-chloropropyltrimethoxysilane": {
+        "molar_weight": 198.72
+    },
+    "3-ethyl-1-pentene": {
+        "molar_weight": 98.1861
+    },
+    "3-ethylheptane": {
+        "molar_weight": 128.2551
+    },
+    "3-ethylhexane": {
+        "molar_weight": 114.2285
+    },
+    "3-ethyl-o-xylene": {
+        "molar_weight": 134.2182
+    },
+    "3-ethylpentane": {
+        "molar_weight": 100.2019
+    },
+    "3-heptanol": {
+        "molar_weight": 116.2013
+    },
+    "3-hexanone": {
+        "molar_weight": 100.1589
+    },
+    "3-hexyne": {
+        "molar_weight": 82.1436
+    },
+    "3-methoxypropionitrile": {
+        "molar_weight": null
+    },
+    "3-methyl-1,2-butadiene": {
+        "molar_weight": 68.117
+    },
+    "3-methyl-1,4-pentadiene": {
+        "molar_weight": 82.1436
+    },
+    "3-methyl-1-butanol": {
+        "molar_weight": 88.1482
+    },
+    "3-methyl-1-butene": {
+        "molar_weight": 70.1329
+    },
+    "3-methyl-1-butyne": {
+        "molar_weight": 68.117
+    },
+    "3-methyl-1-hexene": {
+        "molar_weight": 98.1861
+    },
+    "3-methyl-1-pentanol": {
+        "molar_weight": 102.1748
+    },
+    "3-methyl-1-pentene": {
+        "molar_weight": 84.1595
+    },
+    "3-methyl-2-butanol": {
+        "molar_weight": 88.1482
+    },
+    "3-methyl-2-pentanone": {
+        "molar_weight": 100.1589
+    },
+    "3-methyl-3-ethylpentane": {
+        "molar_weight": 114.2285
+    },
+    "3-methyl-cis-2-pentene": {
+        "molar_weight": 84.1595
+    },
+    "3-methylcyclopentene": {
+        "molar_weight": 82.1436
+    },
+    "3-methylheptane": {
+        "molar_weight": 114.2285
+    },
+    "3-methylhexanal": {
+        "molar_weight": 114.1855
+    },
+    "3-methylhexane": {
+        "molar_weight": 100.2019
+    },
+    "3-nulle": {
+        "molar_weight": 142.2817
+    },
+    "3-methyloctane": {
+        "molar_weight": 128.2551
+    },
+    "3-methylpentane": {
+        "molar_weight": 86.1754
+    },
+    "3-methylpyridine": {
+        "molar_weight": 93.1265
+    },
+    "3-methylthiophene": {
+        "molar_weight": 98.166
+    },
+    "3-methyl-trans-2-pentene": {
+        "molar_weight": 84.1595
+    },
+    "3-nitrobenzotrifluoride": {
+        "molar_weight": 191.1074
+    },
+    "3-pentanol": {
+        "molar_weight": 88.1482
+    },
+    "3-pentanone": {
+        "molar_weight": 86.1323
+    },
+    "3-phenyl-1-propanol": {
+        "molar_weight": 136.191
+    },
+    "4-chloro-3-nitrobenzotrifluoride": {
+        "molar_weight": 225.552
+    },
+    "4-ethyl-m-xylene": {
+        "molar_weight": 134.2182
+    },
+    "4-ethyl-o-xylene": {
+        "molar_weight": 134.2182
+    },
+    "4-methyl-1-hexene": {
+        "molar_weight": 98.1861
+    },
+    "4-methyl-1-pentene": {
+        "molar_weight": 84.1595
+    },
+    "4-methyl-2-pentanol": {
+        "molar_weight": 102.1748
+    },
+    "4-methyl-cis-2-pentene": {
+        "molar_weight": 84.1595
+    },
+    "4-methylcyclopentene": {
+        "molar_weight": 82.1436
+    },
+    "4-methylheptane": {
+        "molar_weight": 114.2285
+    },
+    "4-nulle": {
+        "molar_weight": 142.2817
+    },
+    "4-methyloctane": {
+        "molar_weight": 128.2551
+    },
+    "4-methylpyridine": {
+        "molar_weight": 93.1265
+    },
+    "4-methyl-trans-2-pentene": {
+        "molar_weight": 84.1595
+    },
+    "5-ethylidene-2-norbornene": {
+        "molar_weight": 120.1916
+    },
+    "5-ethyl-m-xylene": {
+        "molar_weight": 134.2182
+    },
+    "5-methyl-1-hexene": {
+        "molar_weight": 98.1861
+    },
+    "5-methyl-2-hexanone": {
+        "molar_weight": 114.1855
+    },
+    "5-nulle": {
+        "molar_weight": 142.2817
+    },
+    "5-nullone": {
+        "molar_weight": 142.2386
+    },
+    "6-aminohexanamide": {
+        "molar_weight": null
+    },
+    "6-methyl-1-heptene": {
+        "molar_weight": 112.2126
+    },
+    "7-methyl-1-octene": {
+        "molar_weight": 126.2392
+    },
+    "8-hydroxyquinoline": {
+        "molar_weight": 145.158
+    },
+    "8-methyl-1-nonene": {
+        "molar_weight": 140.2658
+    },
+    "8-methylquinoline": {
+        "molar_weight": 143.1852
+    },
+    "acenaphthene": {
+        "molar_weight": 154.2078
+    },
+    "acetal": {
+        "molar_weight": null
+    },
+    "acetaldoxime": {
+        "molar_weight": 59.0672
+    },
+    "acetonitrile": {
+        "molar_weight": 41.0519
+    },
+    "acetophenone": {
+        "molar_weight": 120.1485
+    },
+    "acetyl chloride": {
+        "molar_weight": 78.498
+    },
+    "acetylene": {
+        "molar_weight": 26.0373
+    },
+    "acridine": {
+        "molar_weight": 179.2173
+    },
+    "acrolein": {
+        "molar_weight": 56.0633
+    },
+    "acrylamide": {
+        "molar_weight": 71.0779
+    },
+    "acrylic acid": {
+        "molar_weight": 72.0627
+    },
+    "air": {
+        "molar_weight": null
+    },
+    "allyl acetate": {
+        "molar_weight": 100.1158
+    },
+    "allyl alcohol": {
+        "molar_weight": 58.0791
+    },
+    "allylamine": {
+        "molar_weight": 57.0944
+    },
+    "alpha-hydroxyisobutyric acid": {
+        "molar_weight": null
+    },
+    "alpha-methylstyrene": {
+        "molar_weight": null
+    },
+    "alpha-pinene": {
+        "molar_weight": null
+    },
+    "ammonia": {
+        "molar_weight": 17.0305
+    },
+    "anethole": {
+        "molar_weight": null
+    },
+    "aniline": {
+        "molar_weight": 93.1265
+    },
+    "anisole": {
+        "molar_weight": 108.1378
+    },
+    "anthracene": {
+        "molar_weight": 178.2292
+    },
+    "anthraquinone": {
+        "molar_weight": 208.2121
+    },
+    "antimony trichloride": {
+        "molar_weight": 228.119
+    },
+    "argon": {
+        "molar_weight": 39.948
+    },
+    "arsine": {
+        "molar_weight": 77.94542
+    },
+    "benzaldehyde": {
+        "molar_weight": 106.1219
+    },
+    "benzanthracene": {
+        "molar_weight": 228.2879
+    },
+    "benzene": {
+        "molar_weight": 78.1118
+    },
+    "benzoic acid": {
+        "molar_weight": 122.1213
+    },
+    "benzophenone": {
+        "molar_weight": 182.2179
+    },
+    "benzothiophene": {
+        "molar_weight": 134.198
+    },
+    "benzotrichloride": {
+        "molar_weight": 195.474
+    },
+    "benzotrifluoride": {
+        "molar_weight": 146.1098
+    },
+    "benzoyl chloride": {
+        "molar_weight": 140.567
+    },
+    "benzyl alcohol": {
+        "molar_weight": 108.1378
+    },
+    "benzyl chloride": {
+        "molar_weight": null
+    },
+    "benzyl dichloride": {
+        "molar_weight": 161.029
+    },
+    "benzyl ethyl ether": {
+        "molar_weight": 136.191
+    },
+    "benzyl mercaptan": {
+        "molar_weight": 124.203
+    },
+    "benzylamine": {
+        "molar_weight": 107.1531
+    },
+    "beta-phellandrene": {
+        "molar_weight": 136.234
+    },
+    "beta-pinene": {
+        "molar_weight": 136.234
+    },
+    "beta-propiolactone": {
+        "molar_weight": 72.0627
+    },
+    "bicyclo[2.2.2]octane": {
+        "molar_weight": 110.1968
+    },
+    "bicyclohexyl": {
+        "molar_weight": 166.3031
+    },
+    "biphenyl": {
+        "molar_weight": 154.2078
+    },
+    "bis(chloromethyl)ether": {
+        "molar_weight": null
+    },
+    "boron trichloride": {
+        "molar_weight": 117.17
+    },
+    "boron trifluoride": {
+        "molar_weight": 67.806
+    },
+    "bromine": {
+        "molar_weight": null
+    },
+    "bromobenzene": {
+        "molar_weight": 157.008
+    },
+    "bromochlorodifluoromethane": {
+        "molar_weight": 165.365
+    },
+    "bromochloromethane": {
+        "molar_weight": 129.384
+    },
+    "bromodifluoromethane": {
+        "molar_weight": 130.919
+    },
+    "bromoethane": {
+        "molar_weight": 108.965
+    },
+    "bromomethane": {
+        "molar_weight": 94.939
+    },
+    "bromotrichloromethane": {
+        "molar_weight": 198.274
+    },
+    "bromotrifluoroethylene": {
+        "molar_weight": 160.921
+    },
+    "bromotrifluoromethane": {
+        "molar_weight": 148.91
+    },
+    "butanal": {
+        "molar_weight": 72.1057
+    },
+    "butyl vinyl ether": {
+        "molar_weight": 100.1589
+    },
+    "butyronitrile": {
+        "molar_weight": 69.1051
+    },
+    "calcium": {
+        "molar_weight": null
+    },
+    "camphor": {
+        "molar_weight": null
+    },
+    "carbon disulfide": {
+        "molar_weight": 76.141
+    },
+    "carbon monoxide": {
+        "molar_weight": 28.0101
+    },
+    "carbon tetrachloride": {
+        "molar_weight": 153.823
+    },
+    "carbon tetrafluoride": {
+        "molar_weight": 88.0043
+    },
+    "carbonyl fluoride": {
+        "molar_weight": null
+    },
+    "carbonyl sulfide": {
+        "molar_weight": 60.075
+    },
+    "chlorine": {
+        "molar_weight": null
+    },
+    "chlorine trifluoride": {
+        "molar_weight": 92.448
+    },
+    "chloroacetaldehyde": {
+        "molar_weight": 78.498
+    },
+    "chloroacetic acid": {
+        "molar_weight": 94.497
+    },
+    "chloroacetyl chloride": {
+        "molar_weight": 112.943
+    },
+    "chlorodifluoromethane": {
+        "molar_weight": 86.468
+    },
+    "chlorofluoromethane": {
+        "molar_weight": 68.478
+    },
+    "chloropentafluoroethane": {
+        "molar_weight": 154.466
+    },
+    "chloroprene": {
+        "molar_weight": 88.535
+    },
+    "chlorotrifluoroethylene": {
+        "molar_weight": 116.47
+    },
+    "chlorotrifluoromethane": {
+        "molar_weight": 104.459
+    },
+    "chrysene": {
+        "molar_weight": 228.2879
+    },
+    "cis-1,2-dichloroethylene": {
+        "molar_weight": 96.943
+    },
+    "cis-1,2-dimethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "cis-1,2-dimethylcyclopentane": {
+        "molar_weight": 98.1861
+    },
+    "cis-1,3-dimethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "cis-1,3-dimethylcyclopentane": {
+        "molar_weight": 98.1861
+    },
+    "cis-1,3-pentadiene": {
+        "molar_weight": 68.117
+    },
+    "cis-1,4-dimethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "cis-1-propenylbenzene": {
+        "molar_weight": 118.1757
+    },
+    "cis-2-butene": {
+        "molar_weight": 56.1063
+    },
+    "cis-2-decene": {
+        "molar_weight": 140.2658
+    },
+    "cis-2-heptene": {
+        "molar_weight": 98.1861
+    },
+    "cis-2-hexene": {
+        "molar_weight": 84.1595
+    },
+    "cis-2-methylcyclohexanol": {
+        "molar_weight": 114.1855
+    },
+    "cis-2-octene": {
+        "molar_weight": 112.2126
+    },
+    "cis-2-pentene": {
+        "molar_weight": 70.1329
+    },
+    "cis-3-heptene": {
+        "molar_weight": 98.1861
+    },
+    "cis-3-hexene": {
+        "molar_weight": 84.1595
+    },
+    "cis-3-octene": {
+        "molar_weight": 112.2126
+    },
+    "cis-4-octene": {
+        "molar_weight": 112.2126
+    },
+    "cis-crotonitrile": {
+        "molar_weight": null
+    },
+    "cis-decahydronaphthalene": {
+        "molar_weight": null
+    },
+    "crotyl glycol ether": {
+        "molar_weight": null
+    },
+    "cumene": {
+        "molar_weight": 120.1916
+    },
+    "cumene hydroperoxide": {
+        "molar_weight": 152.1904
+    },
+    "cyanogen": {
+        "molar_weight": 52.0348
+    },
+    "cyanogen chloride": {
+        "molar_weight": 61.47
+    },
+    "cyclobutane": {
+        "molar_weight": 56.1063
+    },
+    "cycloheptane": {
+        "molar_weight": 98.1861
+    },
+    "cycloheptene": {
+        "molar_weight": 96.1702
+    },
+    "cyclohexanecarboxaldehyde": {
+        "molar_weight": 112.1696
+    },
+    "cyclohexanol": {
+        "molar_weight": 100.1589
+    },
+    "cyclohexanone": {
+        "molar_weight": 98.143
+    },
+    "cyclohexene": {
+        "molar_weight": 82.1436
+    },
+    "cyclohexyl mercaptan": {
+        "molar_weight": 116.224
+    },
+    "cyclohexylamine": {
+        "molar_weight": 99.1741
+    },
+    "cyclohexylbenzene": {
+        "molar_weight": 160.2554
+    },
+    "cyclooctane": {
+        "molar_weight": 112.2126
+    },
+    "cyclooctene": {
+        "molar_weight": 110.1968
+    },
+    "cyclopentadiene": {
+        "molar_weight": 66.1011
+    },
+    "cyclopentane": {
+        "molar_weight": 70.1329
+    },
+    "cyclopentanone": {
+        "molar_weight": 84.1164
+    },
+    "cyclopentene": {
+        "molar_weight": 68.117
+    },
+    "cyclopentylamine": {
+        "molar_weight": 85.1475
+    },
+    "cyclopropane": {
+        "molar_weight": 42.0797
+    },
+    "cyclopropane carboxylic acid": {
+        "molar_weight": 86.0892
+    },
+    "decafluorobutane": {
+        "molar_weight": 238.0268
+    },
+    "decamethylcyclopentasiloxane": {
+        "molar_weight": 370.7697
+    },
+    "decanal": {
+        "molar_weight": 156.2652
+    },
+    "deuterium": {
+        "molar_weight": null
+    },
+    "deuterium oxide": {
+        "molar_weight": null
+    },
+    "di(2-chloroethyl)ether": {
+        "molar_weight": 143.012
+    },
+    "di(2-ethylhexyl)adipate": {
+        "molar_weight": null
+    },
+    "dibenzofuran": {
+        "molar_weight": 168.1913
+    },
+    "dibenzopyrrole": {
+        "molar_weight": 167.2066
+    },
+    "dibenzothiophene": {
+        "molar_weight": 184.257
+    },
+    "diborane": {
+        "molar_weight": 27.67
+    },
+    "dibromomethane": {
+        "molar_weight": 173.835
+    },
+    "dibutyl sebacate": {
+        "molar_weight": 314.4602
+    },
+    "dichloroacetyl chloride": {
+        "molar_weight": 147.388
+    },
+    "dichlorodiethylsilane": {
+        "molar_weight": 157.114
+    },
+    "dichlorodifluoromethane": {
+        "molar_weight": 120.914
+    },
+    "dichlorofluoromethane": {
+        "molar_weight": 102.923
+    },
+    "dichloromethane": {
+        "molar_weight": 84.933
+    },
+    "dichlorosilane": {
+        "molar_weight": 101.007
+    },
+    "dicyclohexyl sulfide": {
+        "molar_weight": 198.368
+    },
+    "dicyclopentadiene": {
+        "molar_weight": 132.2023
+    },
+    "diethyl disulfide": {
+        "molar_weight": 122.252
+    },
+    "diethyl ether": {
+        "molar_weight": 74.1216
+    },
+    "diethyl maleate": {
+        "molar_weight": 172.1785
+    },
+    "diethyl phthalate": {
+        "molar_weight": 222.2372
+    },
+    "diethyl sulfide": {
+        "molar_weight": 90.187
+    },
+    "diethylamine": {
+        "molar_weight": 73.1368
+    },
+    "diethylene glycol diethyl ether": {
+        "molar_weight": 162.2267
+    },
+    "diethylene glycol ethyl ether acetate": {
+        "molar_weight": 176.2102
+    },
+    "diethylene glycol monopropyl ether": {
+        "molar_weight": 148.2001
+    },
+    "diethylsulfite": {
+        "molar_weight": 138.185
+    },
+    "difluoromethane": {
+        "molar_weight": 52.0234
+    },
+    "difluoromethyl trifluoromethyl ether": {
+        "molar_weight": null
+    },
+    "dihexyl adipate": {
+        "molar_weight": 314.4602
+    },
+    "diiodomethane": {
+        "molar_weight": 267.8355
+    },
+    "diisobutyl ketone": {
+        "molar_weight": 142.2386
+    },
+    "diisobutylamine": {
+        "molar_weight": 129.2432
+    },
+    "diisopentylsulfide": {
+        "molar_weight": 174.347
+    },
+    "diketene": {
+        "molar_weight": 84.0734
+    },
+    "dimethyl carbonate": {
+        "molar_weight": 90.0779
+    },
+    "dimethyl disulfide": {
+        "molar_weight": 94.199
+    },
+    "dimethyl succinate": {
+        "molar_weight": 146.1412
+    },
+    "dimethyl sulfide": {
+        "molar_weight": 62.134
+    },
+    "dimethyl sulfoxide": {
+        "molar_weight": 78.133
+    },
+    "dimethyl terephthalate": {
+        "molar_weight": 194.184
+    },
+    "dimethyl-2,6-naphthalenedicarboxylate": {
+        "molar_weight": 244.2427
+    },
+    "dimethylacetylene": {
+        "molar_weight": 54.0904
+    },
+    "dimethylaluminum chloride": {
+        "molar_weight": 92.504
+    },
+    "dimethylamine": {
+        "molar_weight": 45.0837
+    },
+    "dimethylchlorosilane": {
+        "molar_weight": 94.615
+    },
+    "dimethyldichlorosilane": {
+        "molar_weight": 129.061
+    },
+    "dimethyldimethoxysilane": {
+        "molar_weight": 120.2224
+    },
+    "di-n-butyl ether": {
+        "molar_weight": 130.2279
+    },
+    "di-n-butyl phthalate": {
+        "molar_weight": 278.3435
+    },
+    "di-n-butyl sulfone": {
+        "molar_weight": 178.292
+    },
+    "di-n-butylamine": {
+        "molar_weight": 129.2432
+    },
+    "di-n-hexyl ether": {
+        "molar_weight": 186.3342
+    },
+    "di-n-octyl ether": {
+        "molar_weight": 242.4406
+    },
+    "di-n-octylamine": {
+        "molar_weight": 241.4558
+    },
+    "di-n-pentyl ether": {
+        "molar_weight": 158.2811
+    },
+    "di-n-propyl disulfide": {
+        "molar_weight": 150.305
+    },
+    "di-n-propyl ether": {
+        "molar_weight": 102.1748
+    },
+    "di-n-propyl sulfide": {
+        "molar_weight": 118.24
+    },
+    "di-n-propyl sulfone": {
+        "molar_weight": 150.239
+    },
+    "dioctyl adipate": {
+        "molar_weight": null
+    },
+    "diphenyl ether": {
+        "molar_weight": 170.2072
+    },
+    "diphenylamine": {
+        "molar_weight": 169.2224
+    },
+    "diphenyldichlorosilane": {
+        "molar_weight": 253.199
+    },
+    "diphenylmethane": {
+        "molar_weight": 168.2344
+    },
+    "dipropylene glycol monoethyl ether": {
+        "molar_weight": null
+    },
+    "dipropylene glycol n-propyl ether": {
+        "molar_weight": null
+    },
+    "di-sec-butyl ether": {
+        "molar_weight": 130.2279
+    },
+    "disilane": {
+        "molar_weight": 62.2186
+    },
+    "di-tert-butyl ether": {
+        "molar_weight": 130.2279
+    },
+    "divinyl ether": {
+        "molar_weight": 70.0898
+    },
+    "dodecanal": {
+        "molar_weight": 184.3184
+    },
+    "epsilon-caprolactam": {
+        "molar_weight": null
+    },
+    "ethyl acrylate": {
+        "molar_weight": 100.1158
+    },
+    "ethyl aluminum dichloride": {
+        "molar_weight": 126.949
+    },
+    "ethyl benzoate": {
+        "molar_weight": 150.1745
+    },
+    "ethyl chloride": {
+        "molar_weight": 64.514
+    },
+    "ethyl chloroformate": {
+        "molar_weight": 108.524
+    },
+    "ethyl fluoride": {
+        "molar_weight": 48.0595
+    },
+    "ethyl formate": {
+        "molar_weight": 74.0785
+    },
+    "ethyl iodide": {
+        "molar_weight": 155.9656
+    },
+    "ethyl isobutyrate": {
+        "molar_weight": 116.1583
+    },
+    "ethyl isovalerate": {
+        "molar_weight": 130.1849
+    },
+    "ethyl mercaptan": {
+        "molar_weight": 62.134
+    },
+    "ethyl methacrylate": {
+        "molar_weight": 114.1424
+    },
+    "ethyl n-butyrate": {
+        "molar_weight": 116.1583
+    },
+    "ethyl propionate": {
+        "molar_weight": 102.1317
+    },
+    "ethyl propyl sulfide": {
+        "molar_weight": 104.214
+    },
+    "ethyl t-butyl sulfide": {
+        "molar_weight": null
+    },
+    "ethyl tert-butyl disulfide": {
+        "molar_weight": 150.305
+    },
+    "ethyl tert-pentyl ether": {
+        "molar_weight": 116.2013
+    },
+    "ethyl vinyl ether": {
+        "molar_weight": 72.1057
+    },
+    "ethylacetylene": {
+        "molar_weight": 54.0904
+    },
+    "ethylal": {
+        "molar_weight": 104.1476
+    },
+    "ethylamine": {
+        "molar_weight": 45.0837
+    },
+    "ethylchloroacetate": {
+        "molar_weight": 122.55
+    },
+    "ethylcyclopentane": {
+        "molar_weight": 98.1861
+    },
+    "ethylene": {
+        "molar_weight": 28.0532
+    },
+    "ethylene glycol monobutyl ether acetate": {
+        "molar_weight": 160.2108
+    },
+    "ethylene oxide": {
+        "molar_weight": 44.0526
+    },
+    "ethylenediamine": {
+        "molar_weight": 60.0983
+    },
+    "ethyleneimine": {
+        "molar_weight": 43.0678
+    },
+    "ethyltrichlorosilane": {
+        "molar_weight": 163.506
+    },
+    "ethynylbenzene": {
+        "molar_weight": 102.1332
+    },
+    "ferrous chloride": {
+        "molar_weight": null
+    },
+    "fluoranthene": {
+        "molar_weight": 202.2506
+    },
+    "fluorene": {
+        "molar_weight": 166.2185
+    },
+    "fluorine": {
+        "molar_weight": null
+    },
+    "fluorobenzene": {
+        "molar_weight": 96.1023
+    },
+    "formaldehyde": {
+        "molar_weight": 30.026
+    },
+    "formanilide": {
+        "molar_weight": 121.1366
+    },
+    "furan": {
+        "molar_weight": 68.074
+    },
+    "furfural": {
+        "molar_weight": 96.0841
+    },
+    "furfuryl alcohol": {
+        "molar_weight": 98.0999
+    },
+    "gamma-butyrolactone": {
+        "molar_weight": null
+    },
+    "gamma-valerolactone": {
+        "molar_weight": null
+    },
+    "germanium": {
+        "molar_weight": 72.64
+    },
+    "germanium tetrachloride": {
+        "molar_weight": 214.45
+    },
+    "glutaric acid": {
+        "molar_weight": 132.1146
+    },
+    "glutaric anhydride": {
+        "molar_weight": 114.0993
+    },
+    "glyceryl triacetate": {
+        "molar_weight": 218.2039
+    },
+    "halothane": {
+        "molar_weight": 197.382
+    },
+    "helium-4": {
+        "molar_weight": null
+    },
+    "heptanal": {
+        "molar_weight": 114.1855
+    },
+    "hexachlorobenzene": {
+        "molar_weight": 284.782
+    },
+    "hexachloroethane": {
+        "molar_weight": 236.739
+    },
+    "hexaethylbenzene": {
+        "molar_weight": 246.4308
+    },
+    "hexafluoro-1,3-butadiene": {
+        "molar_weight": 162.0332
+    },
+    "hexafluoroacetone": {
+        "molar_weight": 166.0219
+    },
+    "hexafluorobenzene": {
+        "molar_weight": 186.0546
+    },
+    "hexafluoroethane": {
+        "molar_weight": 138.0118
+    },
+    "hexamethylbenzene": {
+        "molar_weight": 162.2713
+    },
+    "hexamethylcyclotrisiloxane": {
+        "molar_weight": 222.4618
+    },
+    "hexamethyldisilazane": {
+        "molar_weight": 161.3928
+    },
+    "hexamethyldisiloxane": {
+        "molar_weight": 162.3775
+    },
+    "hexanal": {
+        "molar_weight": 100.1589
+    },
+    "hexanenitrile": {
+        "molar_weight": 97.1582
+    },
+    "hydrazine": {
+        "molar_weight": 32.0452
+    },
+    "hydrogen": {
+        "molar_weight": null
+    },
+    "hydrogen bromide": {
+        "molar_weight": 80.912
+    },
+    "hydrogen chloride": {
+        "molar_weight": 36.461
+    },
+    "hydrogen cyanide": {
+        "molar_weight": 27.0253
+    },
+    "hydrogen iodide": {
+        "molar_weight": 127.91241
+    },
+    "hydrogen peroxide": {
+        "molar_weight": 34.0147
+    },
+    "hydrogen selenide": {
+        "molar_weight": 80.98
+    },
+    "hydrogen sulfide": {
+        "molar_weight": 34.081
+    },
+    "indane": {
+        "molar_weight": 118.1757
+    },
+    "indene": {
+        "molar_weight": 116.1598
+    },
+    "indole": {
+        "molar_weight": 117.1479
+    },
+    "iodine": {
+        "molar_weight": null
+    },
+    "iodobenzene": {
+        "molar_weight": 204.0084
+    },
+    "iron": {
+        "molar_weight": 55.845
+    },
+    "iron pentacarbonyl": {
+        "molar_weight": 195.895
+    },
+    "isobutane": {
+        "molar_weight": 58.1222
+    },
+    "isobutene": {
+        "molar_weight": 56.1063
+    },
+    "isobutyl chloride": {
+        "molar_weight": 92.567
+    },
+    "isobutyl formate": {
+        "molar_weight": 102.1317
+    },
+    "isobutyl isobutyrate": {
+        "molar_weight": 144.2114
+    },
+    "isobutyl mercaptan": {
+        "molar_weight": 90.187
+    },
+    "isobutyl methacrylate": {
+        "molar_weight": 142.1956
+    },
+    "isobutylamine": {
+        "molar_weight": 73.1368
+    },
+    "isobutylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "iso-butylcyclohexane": {
+        "molar_weight": 140.2658
+    },
+    "isobutyl-tert-butyl ether": {
+        "molar_weight": 130.2279
+    },
+    "isobutyric acid": {
+        "molar_weight": 88.1051
+    },
+    "isobutyric anhydride": {
+        "molar_weight": 158.195
+    },
+    "isobutyronitrile": {
+        "molar_weight": 69.1051
+    },
+    "isopentane": {
+        "molar_weight": 72.1488
+    },
+    "isopentyl isovalerate": {
+        "molar_weight": 172.2646
+    },
+    "isophthaloyl chloride": {
+        "molar_weight": 203.022
+    },
+    "isoprene": {
+        "molar_weight": 68.117
+    },
+    "isopropanol": {
+        "molar_weight": 60.095
+    },
+    "isopropyl acetate": {
+        "molar_weight": 102.1317
+    },
+    "isopropyl butyl ether": {
+        "molar_weight": null
+    },
+    "isopropyl chloride": {
+        "molar_weight": 78.541
+    },
+    "isopropyl iodide": {
+        "molar_weight": 169.9922
+    },
+    "isopropyl mercaptan": {
+        "molar_weight": 76.161
+    },
+    "isopropyl myristate": {
+        "molar_weight": 270.4507
+    },
+    "isopropylamine": {
+        "molar_weight": 59.1103
+    },
+    "isopropylcyclohexane": {
+        "molar_weight": 126.2392
+    },
+    "isopropylcyclopentane": {
+        "molar_weight": 112.2126
+    },
+    "isoquinoline": {
+        "molar_weight": 129.1586
+    },
+    "isovaleric acid": {
+        "molar_weight": 102.1317
+    },
+    "isoxazole": {
+        "molar_weight": 69.062
+    },
+    "ketene": {
+        "molar_weight": 42.0367
+    },
+    "krypton": {
+        "molar_weight": 83.798
+    },
+    "lithium": {
+        "molar_weight": 6.941
+    },
+    "lithium iodide": {
+        "molar_weight": 133.845
+    },
+    "l-menthol": {
+        "molar_weight": null
+    },
+    "maleonitrile": {
+        "molar_weight": null
+    },
+    "m-chloroaniline": {
+        "molar_weight": 127.572
+    },
+    "m-chloronitrobenzene": {
+        "molar_weight": 157.554
+    },
+    "m-chlorophenol": {
+        "molar_weight": 128.556
+    },
+    "m-cresol": {
+        "molar_weight": 108.1378
+    },
+    "m-cymene": {
+        "molar_weight": 134.2182
+    },
+    "m-dibromobenzene": {
+        "molar_weight": 235.904
+    },
+    "m-dichlorobenzene": {
+        "molar_weight": 147.002
+    },
+    "m-diethylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "m-diisopropylbenzene": {
+        "molar_weight": 162.2713
+    },
+    "m-divinylbenzene": {
+        "molar_weight": 130.1864
+    },
+    "mercury": {
+        "molar_weight": 200.59
+    },
+    "mesityl oxide": {
+        "molar_weight": 98.143
+    },
+    "mesitylene": {
+        "molar_weight": 120.1916
+    },
+    "methacrolein": {
+        "molar_weight": 70.0898
+    },
+    "methacrylonitrile": {
+        "molar_weight": 67.0892
+    },
+    "methyl acrylate": {
+        "molar_weight": 86.0892
+    },
+    "methyl alpha-methoxyisobutyrate": {
+        "molar_weight": null
+    },
+    "methyl benzoate": {
+        "molar_weight": 136.1479
+    },
+    "methyl chloride": {
+        "molar_weight": 50.488
+    },
+    "methyl chloroacetate": {
+        "molar_weight": 108.524
+    },
+    "methyl chloroformate": {
+        "molar_weight": 94.497
+    },
+    "methyl dichlorosilane": {
+        "molar_weight": null
+    },
+    "methyl diethanolamine": {
+        "molar_weight": null
+    },
+    "methyl dodecanoate": {
+        "molar_weight": 214.3443
+    },
+    "methyl ethyl ether": {
+        "molar_weight": 60.095
+    },
+    "methyl ethyl ketone": {
+        "molar_weight": 72.1057
+    },
+    "methyl ethyl sulfide": {
+        "molar_weight": 76.161
+    },
+    "methyl fluoride": {
+        "molar_weight": 34.0329
+    },
+    "methyl iodide": {
+        "molar_weight": 141.939
+    },
+    "methyl isobutyl ether": {
+        "molar_weight": 88.1482
+    },
+    "methyl isobutyrate": {
+        "molar_weight": 102.1317
+    },
+    "methyl isopropenyl ketone": {
+        "molar_weight": 84.1164
+    },
+    "methyl isopropyl ether": {
+        "molar_weight": 74.1216
+    },
+    "methyl isopropyl ketone": {
+        "molar_weight": 86.1323
+    },
+    "methyl isopropyl sulfide": {
+        "molar_weight": 90.187
+    },
+    "methyl mercaptan": {
+        "molar_weight": null
+    },
+    "methyl methacrylate": {
+        "molar_weight": 100.1158
+    },
+    "methyl n-butyl ether": {
+        "molar_weight": 88.1482
+    },
+    "methyl n-butyl sulfide": {
+        "molar_weight": 104.214
+    },
+    "methyl n-butyrate": {
+        "molar_weight": 102.1317
+    },
+    "methyl n-pentyl ether": {
+        "molar_weight": null
+    },
+    "methyl n-propyl ether": {
+        "molar_weight": 74.1216
+    },
+    "methyl n-propyl sulfide": {
+        "molar_weight": null
+    },
+    "methyl propionate": {
+        "molar_weight": 88.1051
+    },
+    "methyl sec-butyl ether": {
+        "molar_weight": 88.1482
+    },
+    "methyl silicate": {
+        "molar_weight": 152.2212
+    },
+    "methyl stearate": {
+        "molar_weight": 298.5038
+    },
+    "methyl t-butyl sulfide": {
+        "molar_weight": 104.214
+    },
+    "methyl tert-butyl ether": {
+        "molar_weight": 88.1482
+    },
+    "methyl tert-pentyl ether": {
+        "molar_weight": 102.1748
+    },
+    "methyl t-pentyl sulfide": {
+        "molar_weight": null
+    },
+    "methyl trichlorosilane": {
+        "molar_weight": 149.479
+    },
+    "methyl vinyl dichlorosilane": {
+        "molar_weight": 141.071
+    },
+    "methyl vinyl ether": {
+        "molar_weight": 58.0791
+    },
+    "methylacetylene": {
+        "molar_weight": 40.0639
+    },
+    "methylal": {
+        "molar_weight": 76.0944
+    },
+    "methylamine": {
+        "molar_weight": 31.0571
+    },
+    "methylcyclohexane": {
+        "molar_weight": 98.1861
+    },
+    "methylcyclopentane": {
+        "molar_weight": 84.1595
+    },
+    "m-ethyltoluene": {
+        "molar_weight": 120.1916
+    },
+    "m-methylstyrene": {
+        "molar_weight": 118.1757
+    },
+    "monochlorobenzene": {
+        "molar_weight": 112.557
+    },
+    "morpholine": {
+        "molar_weight": 87.1204
+    },
+    "m-phenylenediamine": {
+        "molar_weight": 108.1411
+    },
+    "m-tolualcohol": {
+        "molar_weight": null
+    },
+    "m-toluidine": {
+        "molar_weight": 107.1531
+    },
+    "n,n-diethylaniline": {
+        "molar_weight": 149.2328
+    },
+    "n,n-diethylhydroxylamine": {
+        "molar_weight": 89.1362
+    },
+    "n,n-dimethylacetamide": {
+        "molar_weight": 87.1204
+    },
+    "n,n-dimethylaniline": {
+        "molar_weight": 121.1796
+    },
+    "n,n-dimethylformamide": {
+        "molar_weight": 73.0938
+    },
+    "n-aminoethyl ethanolamine": {
+        "molar_weight": null
+    },
+    "naphthalene": {
+        "molar_weight": 128.1705
+    },
+    "n-butyl acrylate": {
+        "molar_weight": 128.169
+    },
+    "n-butyl chloride": {
+        "molar_weight": 92.567
+    },
+    "n-butyl formate": {
+        "molar_weight": 102.1317
+    },
+    "n-butyl mercaptan": {
+        "molar_weight": 90.187
+    },
+    "n-butyl n-butyrate": {
+        "molar_weight": 144.2114
+    },
+    "n-butyl nulloate": {
+        "molar_weight": 214.3443
+    },
+    "n-butyl propionate": {
+        "molar_weight": 130.1849
+    },
+    "n-butyl stearate": {
+        "molar_weight": 340.5836
+    },
+    "n-butyl valerate": {
+        "molar_weight": null
+    },
+    "n-butylamine": {
+        "molar_weight": 73.1368
+    },
+    "n-butylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "n-butylcyclohexane": {
+        "molar_weight": 140.2658
+    },
+    "n-butylcyclopentane": {
+        "molar_weight": 126.2392
+    },
+    "n-butyric acid": {
+        "molar_weight": 88.1051
+    },
+    "n-decyl mercaptan": {
+        "molar_weight": 174.347
+    },
+    "n-decylamine": {
+        "molar_weight": 157.2963
+    },
+    "n-decylbenzene": {
+        "molar_weight": 218.3776
+    },
+    "n-decylcyclohexane": {
+        "molar_weight": 224.4253
+    },
+    "n-docosane": {
+        "molar_weight": 310.6006
+    },
+    "n-dodecanoic acid": {
+        "molar_weight": 200.3178
+    },
+    "n-dotriacontane": {
+        "molar_weight": 450.8664
+    },
+    "neon": {
+        "molar_weight": 20.1797
+    },
+    "neopentane": {
+        "molar_weight": 72.1488
+    },
+    "n-heneicosane": {
+        "molar_weight": 296.5741
+    },
+    "n-heptadecane": {
+        "molar_weight": 240.4677
+    },
+    "n-heptanoic acid": {
+        "molar_weight": 130.1849
+    },
+    "n-heptyl acetate": {
+        "molar_weight": 158.238
+    },
+    "n-heptyl formate": {
+        "molar_weight": 144.2114
+    },
+    "n-heptyl mercaptan": {
+        "molar_weight": 132.267
+    },
+    "n-heptylamine": {
+        "molar_weight": 115.2166
+    },
+    "n-heptylbenzene": {
+        "molar_weight": 176.2979
+    },
+    "n-hexacosane": {
+        "molar_weight": 366.707
+    },
+    "n-hexatriacontane": {
+        "molar_weight": 506.9728
+    },
+    "n-hexyl acetate": {
+        "molar_weight": 144.2114
+    },
+    "n-hexyl formate": {
+        "molar_weight": 130.1849
+    },
+    "n-hexyl mercaptan": {
+        "molar_weight": 118.24
+    },
+    "n-hexylamine": {
+        "molar_weight": 101.19
+    },
+    "n-hexylbenzene": {
+        "molar_weight": 162.2713
+    },
+    "nitric oxide": {
+        "molar_weight": 30.0061
+    },
+    "nitrogen": {
+        "molar_weight": null
+    },
+    "nitrogen trifluoride": {
+        "molar_weight": 71.0019
+    },
+    "nitromethane": {
+        "molar_weight": 61.04
+    },
+    "nitrosyl chloride": {
+        "molar_weight": 65.459
+    },
+    "nitrous oxide": {
+        "molar_weight": 44.0128
+    },
+    "n-methyl-2-pyrrolidone": {
+        "molar_weight": 99.1311
+    },
+    "n-methylaniline": {
+        "molar_weight": 107.1531
+    },
+    "n-methylformamide": {
+        "molar_weight": 59.0672
+    },
+    "n-methylpyrrole": {
+        "molar_weight": 81.1158
+    },
+    "n-methylpyrrolidine": {
+        "molar_weight": 85.1475
+    },
+    "n-nonyl mercaptan": {
+        "molar_weight": 160.32
+    },
+    "n-nonylamine": {
+        "molar_weight": 143.2697
+    },
+    "n-octacosane": {
+        "molar_weight": 394.7601
+    },
+    "n-octanoic acid": {
+        "molar_weight": 144.2114
+    },
+    "n-octyl formate": {
+        "molar_weight": 158.238
+    },
+    "n-octyl mercaptan": {
+        "molar_weight": 146.294
+    },
+    "n-octylamine": {
+        "molar_weight": 129.2432
+    },
+    "n-octylbenzene": {
+        "molar_weight": 190.3245
+    },
+    "nullal": {
+        "molar_weight": 142.2386
+    },
+    "n-pentacosane": {
+        "molar_weight": 352.6804
+    },
+    "n-pentadecane": {
+        "molar_weight": 212.4146
+    },
+    "n-pentanoic acid": {
+        "molar_weight": 102.1317
+    },
+    "n-pentyl acetate": {
+        "molar_weight": 130.1849
+    },
+    "n-pentyl mercaptan": {
+        "molar_weight": 104.214
+    },
+    "n-pentylamine": {
+        "molar_weight": 87.1634
+    },
+    "n-pentylbenzene": {
+        "molar_weight": 148.2447
+    },
+    "n-propyl acetate": {
+        "molar_weight": 102.1317
+    },
+    "n-propyl acrylate": {
+        "molar_weight": 114.1424
+    },
+    "n-propyl benzoate": {
+        "molar_weight": 164.2011
+    },
+    "n-propyl formate": {
+        "molar_weight": 88.1051
+    },
+    "n-propyl iodide": {
+        "molar_weight": 169.9922
+    },
+    "n-propyl isobutyrate": {
+        "molar_weight": 130.1849
+    },
+    "n-propyl mercaptan": {
+        "molar_weight": 76.161
+    },
+    "n-propyl methacrylate": {
+        "molar_weight": 128.169
+    },
+    "n-propyl n-butyrate": {
+        "molar_weight": 130.1849
+    },
+    "n-propyl propionate": {
+        "molar_weight": 116.1583
+    },
+    "n-propylamine": {
+        "molar_weight": 59.1103
+    },
+    "n-propylbenzene": {
+        "molar_weight": 120.1916
+    },
+    "n-propylcyclohexane": {
+        "molar_weight": 126.2392
+    },
+    "n-propylcyclopentane": {
+        "molar_weight": 112.2126
+    },
+    "n-tetracosane": {
+        "molar_weight": 338.6538
+    },
+    "n-tricosane": {
+        "molar_weight": 324.6272
+    },
+    "n-tridecane": {
+        "molar_weight": 184.3614
+    },
+    "n-tridecanoic acid": {
+        "molar_weight": 214.3443
+    },
+    "n-tridecylbenzene": {
+        "molar_weight": 260.4574
+    },
+    "n-undecylbenzene": {
+        "molar_weight": 232.4042
+    },
+    "o-chloroaniline": {
+        "molar_weight": 127.572
+    },
+    "o-chlorotoluene": {
+        "molar_weight": 126.583
+    },
+    "o-cresol": {
+        "molar_weight": 108.1378
+    },
+    "octafluoro-2-butene": {
+        "molar_weight": 200.03
+    },
+    "octafluorocyclobutane": {
+        "molar_weight": 200.03
+    },
+    "octafluoropropane": {
+        "molar_weight": 188.0193
+    },
+    "octamethylcyclotetrasiloxane": {
+        "molar_weight": 296.6158
+    },
+    "octanal": {
+        "molar_weight": 128.212
+    },
+    "o-cymene": {
+        "molar_weight": 134.2182
+    },
+    "o-dichlorobenzene": {
+        "molar_weight": null
+    },
+    "o-diethylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "o-ethylphenol": {
+        "molar_weight": 122.1644
+    },
+    "o-ethyltoluene": {
+        "molar_weight": 120.1916
+    },
+    "o-methylstyrene": {
+        "molar_weight": 118.1757
+    },
+    "o-nitrotoluene": {
+        "molar_weight": 137.136
+    },
+    "o-phenylenediamine": {
+        "molar_weight": 108.1411
+    },
+    "o-terphenyl": {
+        "molar_weight": 230.3038
+    },
+    "o-tolualcohol": {
+        "molar_weight": null
+    },
+    "o-toluic acid": {
+        "molar_weight": 136.1479
+    },
+    "o-toluidine": {
+        "molar_weight": 107.1531
+    },
+    "oxygen": {
+        "molar_weight": null
+    },
+    "o-xylene": {
+        "molar_weight": 106.165
+    },
+    "ozone": {
+        "molar_weight": 47.9982
+    },
+    "palustric acid": {
+        "molar_weight": null
+    },
+    "p-aminoazobenzene": {
+        "molar_weight": 197.2358
+    },
+    "p-aminodiphenylamine": {
+        "molar_weight": 184.2371
+    },
+    "paraldehyde": {
+        "molar_weight": 132.1577
+    },
+    "p-bromotoluene": {
+        "molar_weight": 171.034
+    },
+    "p-chlorobenzotrifluoride": {
+        "molar_weight": 180.555
+    },
+    "p-chloronitrobenzene": {
+        "molar_weight": 157.554
+    },
+    "p-chlorophenol": {
+        "molar_weight": 128.556
+    },
+    "p-chlorotoluene": {
+        "molar_weight": 126.583
+    },
+    "p-cresol": {
+        "molar_weight": 108.1378
+    },
+    "p-cumylphenol": {
+        "molar_weight": 212.2869
+    },
+    "p-cymene": {
+        "molar_weight": 134.2182
+    },
+    "p-dichlorobenzene": {
+        "molar_weight": 147.002
+    },
+    "p-diethylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "p-diisopropylbenzene": {
+        "molar_weight": 162.2713
+    },
+    "p-dimethylaminobenzaldehyde": {
+        "molar_weight": 149.1897
+    },
+    "pentachloroethane": {
+        "molar_weight": 202.294
+    },
+    "pentaethylbenzene": {
+        "molar_weight": 218.3776
+    },
+    "pentafluoroethane": {
+        "molar_weight": 120.0214
+    },
+    "pentafluorophenol": {
+        "molar_weight": 184.0636
+    },
+    "pentamethylbenzene": {
+        "molar_weight": 148.2447
+    },
+    "pentanal": {
+        "molar_weight": 86.1323
+    },
+    "pentylcyclohexane": {
+        "molar_weight": 154.2924
+    },
+    "perchloryl fluoride": {
+        "molar_weight": 102.45
+    },
+    "perfluorobutanoic acid": {
+        "molar_weight": 214.0384
+    },
+    "perfluoromethylcyclopentane": {
+        "molar_weight": 300.045
+    },
+    "perfluoro-n-heptane": {
+        "molar_weight": 388.0494
+    },
+    "perfluoro-n-hexane": {
+        "molar_weight": 338.0418
+    },
+    "perfluoro-n-octane": {
+        "molar_weight": null
+    },
+    "perfluoro-n-pentane": {
+        "molar_weight": 288.0343
+    },
+    "p-ethylphenol": {
+        "molar_weight": 122.1644
+    },
+    "p-ethyltoluene": {
+        "molar_weight": 120.1916
+    },
+    "nullthrene": {
+        "molar_weight": 178.2292
+    },
+    "phenetole": {
+        "molar_weight": 122.1644
+    },
+    "phenol": {
+        "molar_weight": null
+    },
+    "phenyl isocyanate": {
+        "molar_weight": 119.1207
+    },
+    "phenyl mercaptan": {
+        "molar_weight": 110.177
+    },
+    "phenylacetonitrile": {
+        "molar_weight": 117.1479
+    },
+    "phenylmethyldichlorosilane": {
+        "molar_weight": 191.13
+    },
+    "phenyltrichlorosilane": {
+        "molar_weight": 211.548
+    },
+    "phosgene": {
+        "molar_weight": 98.916
+    },
+    "phosphine": {
+        "molar_weight": 33.99758
+    },
+    "phosphorus oxychloride": {
+        "molar_weight": 153.332
+    },
+    "phosphorus trichloride": {
+        "molar_weight": 137.333
+    },
+    "phosphorus trifluoride": {
+        "molar_weight": 87.968972
+    },
+    "phthalan": {
+        "molar_weight": 120.1485
+    },
+    "p-hydroxybenzaldehyde": {
+        "molar_weight": 122.1213
+    },
+    "piperazine": {
+        "molar_weight": null
+    },
+    "piperidine": {
+        "molar_weight": 85.1475
+    },
+    "p-methylstyrene": {
+        "molar_weight": 118.1757
+    },
+    "p-nitrotoluene": {
+        "molar_weight": 137.136
+    },
+    "potassium": {
+        "molar_weight": 39.0983
+    },
+    "p-phenylenediamine": {
+        "molar_weight": 108.1411
+    },
+    "propadiene": {
+        "molar_weight": 40.0639
+    },
+    "propanal": {
+        "molar_weight": 58.0791
+    },
+    "propargyl alcohol": {
+        "molar_weight": 56.0633
+    },
+    "propenyl cyclohexene": {
+        "molar_weight": null
+    },
+    "propionic anhydride": {
+        "molar_weight": 130.1418
+    },
+    "propionitrile": {
+        "molar_weight": 55.0785
+    },
+    "propyl chloride": {
+        "molar_weight": 78.541
+    },
+    "propylene": {
+        "molar_weight": 42.0797
+    },
+    "propylene glycol 1-tert-butyl ether": {
+        "molar_weight": null
+    },
+    "propylene glycol alpha-methylbenzyl ether": {
+        "molar_weight": null
+    },
+    "propylene glycol ethyl ether acetate": {
+        "molar_weight": null
+    },
+    "propylene glycol monomethyl ether acetate": {
+        "molar_weight": 132.1577
+    },
+    "propylene glycol n-propyl ether": {
+        "molar_weight": 118.1742
+    },
+    "p-terphenyl": {
+        "molar_weight": 230.3038
+    },
+    "p-tert-butylphenol": {
+        "molar_weight": 150.2176
+    },
+    "p-tert-octylphenol": {
+        "molar_weight": 206.3239
+    },
+    "p-tolualdehyde": {
+        "molar_weight": 120.1485
+    },
+    "p-toluidine": {
+        "molar_weight": 107.1531
+    },
+    "pyrazine": {
+        "molar_weight": 80.088
+    },
+    "pyrazole": {
+        "molar_weight": 68.0773
+    },
+    "pyrene": {
+        "molar_weight": 202.2506
+    },
+    "pyridine": {
+        "molar_weight": 79.0999
+    },
+    "pyrimidine": {
+        "molar_weight": 80.088
+    },
+    "pyrrole": {
+        "molar_weight": 67.0892
+    },
+    "pyrrolidine": {
+        "molar_weight": 71.121
+    },
+    "quinaldine": {
+        "molar_weight": 143.1852
+    },
+    "quinoline": {
+        "molar_weight": 129.1586
+    },
+    "quinone": {
+        "molar_weight": 108.0948
+    },
+    "radon": {
+        "molar_weight": 222.0
+    },
+    "rdx": {
+        "molar_weight": 222.1163
+    },
+    "sec-butenyl acetate": {
+        "molar_weight": null
+    },
+    "sec-butyl acetate": {
+        "molar_weight": 116.1583
+    },
+    "sec-butyl chloride": {
+        "molar_weight": 92.567
+    },
+    "sec-butyl formate": {
+        "molar_weight": 102.1317
+    },
+    "sec-butyl mercaptan": {
+        "molar_weight": 90.187
+    },
+    "sec-butylamine": {
+        "molar_weight": null
+    },
+    "sec-butylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "sec-butyl-tert-butyl ether": {
+        "molar_weight": 130.2279
+    },
+    "silane": {
+        "molar_weight": 32.1173
+    },
+    "styrene": {
+        "molar_weight": 104.1491
+    },
+    "succinimide": {
+        "molar_weight": 99.088
+    },
+    "sulfur dichloride": {
+        "molar_weight": 102.971
+    },
+    "sulfur dioxide": {
+        "molar_weight": 64.064
+    },
+    "sulfur hexafluoride": {
+        "molar_weight": 146.055
+    },
+    "sulfuryl chloride": {
+        "molar_weight": 134.97
+    },
+    "terephthaldehyde": {
+        "molar_weight": 134.132
+    },
+    "tert-butyl acetate": {
+        "molar_weight": 116.1583
+    },
+    "tert-butyl chloride": {
+        "molar_weight": 92.567
+    },
+    "tert-butyl ethyl ether": {
+        "molar_weight": 102.1748
+    },
+    "tert-butyl mercaptan": {
+        "molar_weight": 90.187
+    },
+    "tert-butyl methacrylate": {
+        "molar_weight": 142.1956
+    },
+    "tert-butylamine": {
+        "molar_weight": 73.1368
+    },
+    "tert-butylbenzene": {
+        "molar_weight": 134.2182
+    },
+    "tert-butylformamide": {
+        "molar_weight": 101.1469
+    },
+    "tert-nonyl mercaptan": {
+        "molar_weight": 160.32
+    },
+    "tert-octyl mercaptan": {
+        "molar_weight": 146.294
+    },
+    "tetrachloroethylene": {
+        "molar_weight": 165.833
+    },
+    "tetrachlorosilane": {
+        "molar_weight": 169.898
+    },
+    "tetraethoxysilane": {
+        "molar_weight": 208.3275
+    },
+    "tetraethyl lead": {
+        "molar_weight": 323.4
+    },
+    "tetraethyl silane": {
+        "molar_weight": 144.3299
+    },
+    "tetraethylenepentamine": {
+        "molar_weight": 189.3017
+    },
+    "tetrafluoroethylene": {
+        "molar_weight": 100.015
+    },
+    "tetrafluorohydrazine": {
+        "molar_weight": 104.007
+    },
+    "tetrahydrofuran": {
+        "molar_weight": 72.1057
+    },
+    "tetrahydropyran": {
+        "molar_weight": 86.1323
+    },
+    "tetrahydrothiophene": {
+        "molar_weight": 88.171
+    },
+    "tetramethylsilane": {
+        "molar_weight": 88.2236
+    },
+    "thiacyclopropane": {
+        "molar_weight": 60.118
+    },
+    "thionyl chloride": {
+        "molar_weight": 118.97
+    },
+    "thiophene": {
+        "molar_weight": 84.14
+    },
+    "thymol": {
+        "molar_weight": 150.2176
+    },
+    "tin(iv) chloride": {
+        "molar_weight": 260.522
+    },
+    "toluene": {
+        "molar_weight": 92.1384
+    },
+    "trans,trans-2,4-hexadiene": {
+        "molar_weight": 82.1436
+    },
+    "trans-1,2-dichloroethylene": {
+        "molar_weight": 96.943
+    },
+    "trans-1,2-dimethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "trans-1,2-dimethylcyclopentane": {
+        "molar_weight": 98.1861
+    },
+    "trans-1,3,3,3-tetrafluoropropene": {
+        "molar_weight": 114.0416
+    },
+    "trans-1,3-dimethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "trans-1,3-dimethylcyclopentane": {
+        "molar_weight": 98.1861
+    },
+    "trans-1,3-pentadiene": {
+        "molar_weight": 68.117
+    },
+    "trans-1,4-dimethylcyclohexane": {
+        "molar_weight": 112.2126
+    },
+    "trans-2,n-hexyl-decahydronaphthalene": {
+        "molar_weight": null
+    },
+    "trans-2-butene": {
+        "molar_weight": 56.1063
+    },
+    "trans-2-dodecene": {
+        "molar_weight": 168.319
+    },
+    "trans-2-eicosene": {
+        "molar_weight": null
+    },
+    "trans-2-heptene": {
+        "molar_weight": 98.1861
+    },
+    "trans-2-hexene": {
+        "molar_weight": 84.1595
+    },
+    "trans-2-octene": {
+        "molar_weight": 112.2126
+    },
+    "trans-2-pentene": {
+        "molar_weight": 70.1329
+    },
+    "trans-3-heptene": {
+        "molar_weight": 98.1861
+    },
+    "trans-3-hexene": {
+        "molar_weight": 84.1595
+    },
+    "trans-3-octene": {
+        "molar_weight": 112.2126
+    },
+    "trans-4-octene": {
+        "molar_weight": 112.2126
+    },
+    "trans-crotonitrile": {
+        "molar_weight": null
+    },
+    "trans-decahydronaphthalene": {
+        "molar_weight": 138.2499
+    },
+    "trans-stilbene": {
+        "molar_weight": 180.2451
+    },
+    "tribromomethane": {
+        "molar_weight": 252.731
+    },
+    "trichloroacetic acid": {
+        "molar_weight": 163.387
+    },
+    "trichloroacetyl chloride": {
+        "molar_weight": 181.833
+    },
+    "trichloroethylene": {
+        "molar_weight": 131.388
+    },
+    "trichlorofluoromethane": {
+        "molar_weight": 137.368
+    },
+    "trichlorosilane": {
+        "molar_weight": 135.452
+    },
+    "tridecafluoroheptanoic acid": {
+        "molar_weight": 364.0609
+    },
+    "tridecanal": {
+        "molar_weight": 198.3449
+    },
+    "triethylamine": {
+        "molar_weight": 101.19
+    },
+    "triethylenediamine": {
+        "molar_weight": 112.1729
+    },
+    "trifluoroacetamide": {
+        "molar_weight": 113.0386
+    },
+    "trifluoromethane": {
+        "molar_weight": 70.0138
+    },
+    "trimethylaluminum": {
+        "molar_weight": 72.0851
+    },
+    "trimethylamine": {
+        "molar_weight": 59.1103
+    },
+    "trimethylchlorosilane": {
+        "molar_weight": 108.642
+    },
+    "trimethylene sulfide": {
+        "molar_weight": 74.145
+    },
+    "trimethylgallium": {
+        "molar_weight": 114.827
+    },
+    "tri-n-butylamine": {
+        "molar_weight": 185.3495
+    },
+    "trioxane": {
+        "molar_weight": 90.0779
+    },
+    "triphenylmethane": {
+        "molar_weight": 244.3303
+    },
+    "tripropylene glycol monoethyl ether": {
+        "molar_weight": 220.3059
+    },
+    "tris(2-methoxyethoxy)vinylsilane": {
+        "molar_weight": 280.3902
+    },
+    "undecanal": {
+        "molar_weight": 170.2918
+    },
+    "undecyl mercaptan": {
+        "molar_weight": 188.373
+    },
+    "valeronitrile": {
+        "molar_weight": 83.1317
+    },
+    "vanadium": {
+        "molar_weight": 50.9415
+    },
+    "vinyl chloride": {
+        "molar_weight": 62.498
+    },
+    "vinyl fluoride": {
+        "molar_weight": 46.0436
+    },
+    "vinyl formate": {
+        "molar_weight": 72.0627
+    },
+    "vinyl propionate": {
+        "molar_weight": 100.1158
+    },
+    "vinylacetonitrile": {
+        "molar_weight": 67.0892
+    },
+    "vinylacetylene": {
+        "molar_weight": 52.0746
     }
 }
