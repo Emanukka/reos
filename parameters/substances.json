@@ -92,6 +92,9 @@
     "n-nonadecane": {
         "molar_weight": 268.5209
     },
+    "n-nonane":{
+        "molar_weight": 128.2551
+    },
     "n-eicosane": {
         "molar_weight": 282.5475
     },
