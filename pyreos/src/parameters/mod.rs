@@ -76,11 +76,13 @@ macro_rules! impl_py_binary_record {
     }
 }
 
+
 #[macro_export]
 macro_rules! impl_py_parameters {
     ($pyname:literal, $name: ident, $docdir: expr) => {
 
         use reos::parameters::Parameters;
+        use reos::parameters::writer::to_json_vec;
 
         paste::paste!{
             #[derive(Clone)]
@@ -152,6 +154,36 @@ macro_rules! impl_py_parameters {
 
                 }
 
+                /// Initialize Parameters from JSON files.
+                /// 
+                /// Parameters
+                /// ----------
+                /// name: str,
+                ///     Name of the json's file.
+                /// vec: List[PureRecord],
+                ///     List of pure records to be written in the JSON file.
+                /// build: bool, optional
+                ///     If True, the JSON file is built and saved in the current directory.
+                /// Returns
+                /// -------
+                ///     JSON string representing the pure records.
+                #[staticmethod]
+                #[pyo3(text_signature = "(name, vec, build = False)")]
+                #[pyo3(signature = (name, vec, build=false) )]
+                fn to_json_vec(name: String, vec: Vec<[<Py $name PureRecord>]>, build:bool) -> pyo3::PyResult<String> {
+                    
+                    let vec = vec.into_iter()
+                        .map(|r|r.0)
+                        .collect();
+
+                    let res = to_json_vec(&name, vec, build);
+
+                    match res {
+                        Ok(x) => Ok(x),
+                        Err(e) => Err(pyo3::PyErr::new::<pyo3::exceptions::PyException, _>(e.to_string()))
+                    }
+
+                }
 
                 /// Initialize Parameters from multiple JSON files.
                 /// 
