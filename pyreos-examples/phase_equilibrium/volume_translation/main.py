@@ -106,11 +106,25 @@ parameter2 = CubicParameters.from_records(
     ], 
     cubic_model = "pr78", alpha_model = "twu91")
 
+#%%
+parameter3 = CubicParameters.from_json(
+    ["n-octane"], 
+    "../../../parameters/tcpr78/jaubert2016.json",
+    cubic_model = "pr78", alpha_model = "twu91")
+
+#%%
 models = [
     EquationOfState.cubic(parameter1),
-    EquationOfState.cubic(parameter2)
+    EquationOfState.cubic(parameter2),
+    EquationOfState.cubic(parameter3)
 ]
 # eos = EquationOfState.cubic(parameters)
+
+#%%
+a=State.tpx(models[0], 298.15, 1e5, np.array([1.0]), 'vapor')
+b=State.tpx(models[1], 298.15, 1e5, np.array([1.0]), 'vapor')
+c=State.tpx(models[2], 298.15, 1e5, np.array([1.0]), 'vapor')
+print(a.density, b.density, c.density)
 
 #%%
 

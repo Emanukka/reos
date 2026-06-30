@@ -97,9 +97,12 @@ colors = ["#3b5b92", "#5fe6d6", "#c44536"]
 for k in range(3):
 
     axes1[1].plot(vpressure/1e5, Xmat[:, k], label = Xlabels[k], color = colors[k])
-
+axes1[0].set_title("{}",fontsize=30)
+axes1[1].set_title("{}",fontsize=30)
 axes1[1].set_xlabel(r"$ P / \mathrm{bar}$")
-axes1[1].set_ylabel(r"$ X$")
-axes1[1].set_ylim(0, 1)
+axes1[1].set_ylabel(r"$X_i$")
+axes1[1].set_ylim(0, 1.1)
 axes1[1].set_xlim(0, 600)
 axes1[1].legend()
+
+#%%
