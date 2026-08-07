@@ -237,10 +237,11 @@ impl std::fmt::Display for CubicParameters {
         
         
         if self.tc.len() == 1 {
-            write!(f, "CubicParameters(\n\tmodel={:?},\n\ta={:?},\n\tb={:?},\n\ttc={:?},\n\t{})",
+            write!(f, "CubicParameters(\n\tmodel={:?},\n\ta={:?},\n\tb={:?},\n\tc={:?},\n\ttc={:?},\n\t{})",
                 self.model.to_string(),
                 self.aij[(0,0)],
                 self.bij[(0,0)],
+                self.cij[(0,0)],
                 self.tc[0],
                 self.alpha.to_string(),
             )
