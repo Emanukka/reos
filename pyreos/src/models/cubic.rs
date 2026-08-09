@@ -7,15 +7,11 @@ use crate::impl_py_parameters;
 use crate::impl_py_pure_record;
 use reos::models::cubic::Cubic;
 use reos::models::cubic::{parameters::{CubicParameters,CubicBinaryRecord, CubicPureRecord}};
-
+use numpy::{PyArray1, PyArrayMethods, ToPyArray};
+use pyo3::{Bound, PyAny, PyErr, PyResult, Python, types::{IntoPyDict, PyDict, PyFloat, PyInt, PyList, PyString}};
 // use crate::{contribution::PyContribution, eos::PyEquationOfState};
 use reos::state::eos::EquationOfState;
 // use reos::parameters::{Parameters,PureRecord,BinaryRecord};
-
-
-
-
-
 
 impl_py_pure_record!("CubicPureRecord", Cubic, "../../docs/cubic/pr.md");
 
@@ -25,6 +21,53 @@ impl_py_parameters!("CubicParameters", Cubic, "../../docs/cubic/parameters.md");
 
 impl_eos!(Cubic, "../../docs/cubic/eos.md");
 
+#[pyo3::pymethods]
+impl PyCubicParameters {
+
+    #[getter]    
+    pub fn aij<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
+
+        Ok(self.0.aij.to_pyarray(py))
+
+    }
+    #[getter]    
+    pub fn bij<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
+
+        Ok(self.0.bij.to_pyarray(py))
+
+    }
+
+    #[getter]    
+    pub fn cij<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
+
+        Ok(self.0.cij.to_pyarray(py))
+    }
+
+    #[getter]    
+    pub fn kij_a<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
+
+        let k_ij = &self.0.kij;
+        let n = k_ij.len();
+        let k_ij_a = ndarray::Array2::from_shape_fn((n, n), |(i,j)| {
+            k_ij[(i,j)].a
+        });
+        
+        Ok(k_ij_a.to_pyarray(py))
+    }
+
+    #[getter]    
+    pub fn kij_b<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
+
+        let k_ij = &self.0.kij;
+        let n = k_ij.len();
+        let k_ij_b = ndarray::Array2::from_shape_fn((n, n), |(i,j)| {
+            k_ij[(i,j)].b
+        });
+        
+        Ok(k_ij_b.to_pyarray(py))
+    }
+    
+}
 
 // use super::parameters::*;
 
