@@ -5,8 +5,12 @@ use  crate::impl_eos;
 use crate::impl_py_binary_record;
 use crate::impl_py_parameters;
 use crate::impl_py_pure_record;
+
+// reos
 use reos::models::cubic::Cubic;
-use reos::models::cubic::{parameters::{CubicParameters,CubicBinaryRecord, CubicPureRecord}};
+use reos::models::cubic::{parameters::{CubicParameters,CubicBinaryRecord, CubicPureRecord},alpha::Alpha};
+
+// pyo3
 use numpy::{PyArray1, PyArrayMethods, ToPyArray};
 use pyo3::{Bound, PyAny, PyErr, PyResult, Python, types::{IntoPyDict, PyDict, PyFloat, PyInt, PyList, PyString}};
 // use crate::{contribution::PyContribution, eos::PyEquationOfState};
@@ -25,6 +29,16 @@ impl_eos!(Cubic, "../../docs/cubic/eos.md");
 impl PyCubicParameters {
 
     #[getter]    
+    pub fn tc<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+
+        Ok(self.0.tc.to_pyarray(py))
+    }
+    #[getter]    
+    pub fn pc<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+
+        Ok(self.0.pc.to_pyarray(py))
+    }
+    #[getter]    
     pub fn aij<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
 
         Ok(self.0.aij.to_pyarray(py))
@@ -36,13 +50,11 @@ impl PyCubicParameters {
         Ok(self.0.bij.to_pyarray(py))
 
     }
-
     #[getter]    
     pub fn cij<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
 
         Ok(self.0.cij.to_pyarray(py))
     }
-
     #[getter]    
     pub fn kij_a<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
 
@@ -54,7 +66,6 @@ impl PyCubicParameters {
         
         Ok(k_ij_a.to_pyarray(py))
     }
-
     #[getter]    
     pub fn kij_b<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
 
@@ -66,7 +77,30 @@ impl PyCubicParameters {
         
         Ok(k_ij_b.to_pyarray(py))
     }
-    
+    #[getter]    
+    pub fn alpha_parameters<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
+
+        let alpha = &self.0.alpha;
+        let n = self.0.tc.len();
+
+        match alpha {
+            Alpha::Soave(inner) => {
+
+                let parameters = &inner.0;
+                let arr = ndarray::Array2::from_shape_fn((n, 1), |(i, _)| {parameters[i]});
+                Ok(arr.to_pyarray(py))
+
+            }
+            Alpha::Twu91(inner) => {
+                let parameters = &inner.0;
+                let arr = ndarray::Array2::from_shape_fn((n, 3), |(i, j)| {
+                    parameters[i][j]
+                });
+                Ok(arr.to_pyarray(py))
+
+            }
+        }
+    }
 }
 
 // use super::parameters::*;

@@ -37,9 +37,12 @@ for index, row in csv_jaubert2016.iterrows():
         molar_weight=molar_weight, 
         tc = row.tc,
         pc = row.pc * 1e5,
-        l = row.L,
-        m = row.M,
-        n = row.N,
+        alpha = {
+            'type': 'twu91',
+            'l': row.L,
+            'm': row.M,
+            'n': row.N,    
+        },
         c = float(row.c) * 1e-6
         )
     

@@ -11,7 +11,10 @@ impl AlphaModel for Soave {
     fn tag() -> Self {
         Soave(vec![])
     }
-    
+    // fn parameters(&self) -> super::AlphaParameters<'_> {
+    //     // self.0.into()
+    //     super::AlphaParameters::Soave(&self.0)
+    // }
     fn build<A: AsRef<str>>(names:&[A], records:Vec<AlphaRecord>, model: &CubicModels) -> Result<Alpha, AlphaError> {
         // let mut errors = vec![];
         let mut errors = vec![];
@@ -24,7 +27,7 @@ impl AlphaModel for Soave {
                 kappa.push(model.kappa_from_w(w))
             }
 
-            else if let AlphaRecord::SoaveRegressed { c1 } = r {
+            else if let AlphaRecord::SoaveCPA { c1 } = r {
 
                 kappa.push(c1)
 

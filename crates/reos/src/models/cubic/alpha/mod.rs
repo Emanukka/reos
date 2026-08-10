@@ -25,14 +25,20 @@ pub trait AlphaModel {
     
     fn to_string(&self) -> String;
 
+    // fn parameters(&self) -> AlphaParameters<'_>;
 }   
 
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
-#[serde(untagged)]
+#[serde(rename_all = "snake_case")]
+#[serde(tag = "type")] //nice
+// #[serde(untagged)]
 pub enum AlphaRecord {
     Soave{w:f64},
-    SoaveRegressed{c1:f64},
-    Twu91{l:f64, m:f64, n:f64} 
+    SoaveCPA{c1:f64},
+    // SoaveCPA{c1:f64},
+    Twu91{l:f64, m:f64, n:f64},
+    // Twu91AcentricFactor{l:f64, m:f64, n:f64} 
 }
 
 impl std::fmt::Display for AlphaRecord {
@@ -42,8 +48,9 @@ impl std::fmt::Display for AlphaRecord {
         match self {
             
             Self::Soave { w } => write!(f, "w={w}"),
-            Self::SoaveRegressed { c1 } => write!(f, "c1={c1}"),
+            Self::SoaveCPA { c1 } => write!(f, "c1={c1}"),
             Self::Twu91 { l, m, n } => write!(f, "L={l}, M={m}, N={n}")
+            // Self::Twu91AcentricFactor { l, m, n } => write!(f, "L={l}, M={m}, N={n}")
 
         }
     }
@@ -83,13 +90,18 @@ macro_rules! impl_alpha {
                     $(Alpha::$var(variant) => variant.dalpha_dt(t, tc),)*
                 }
             }
-            
+
             pub fn to_string(&self) -> String {
                 match &self {
                     $(Alpha::$var(variant) => variant.to_string(),)*
                 }
             }
-            
+            // pub fn parameters(&self) -> AlphaParameters<'_> {
+            //     match &self {
+            //         $(Alpha::$var(variant) => variant.parameters(),)*
+            //     }
+            // }
+
             paste! {
                     $(
                         pub fn [<$var:lower>]() -> Alpha{
@@ -105,8 +117,28 @@ macro_rules! impl_alpha {
 }
 
 impl_alpha!{Soave, Twu91}
+// #[derive(Debug)]
+// pub enum AlphaParameters<'a> {
+//     Soave(&'a [f64]),
+//     Twu91(&'a [[f64; 3]]),
+// }
+// impl AlphaParameters<'_> {
 
+//     pub fn soave(self) -> Option<Vec<f64>> {
+//         match self {
+//             Self::Soave(values) => Some(values.into()),
+//             _ => None,
+//         }
+//     }
 
+//     pub fn twu91(self) -> Option<Vec<[f64; 3]>> {
+//         match self {
+//             Self::Twu91(values) => Some(values.into()),
+//             _ => None,
+//         }
+//     }
+// }
+// impl
 #[derive(Clone,Debug,Serialize,Deserialize,PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum AlphaOption {
@@ -138,6 +170,18 @@ impl From<AlphaOption> for Alpha {
 mod tests {
 
     use super::*;
+
+    // #[test]
+    // fn get_parameters(){
+
+    //     use super::super::models::SRK;
+    //     let soave = Alpha::soave();
+    //     let cubic_model = &SRK.into();
+    //     let alpha = soave.build(&["foo"],vec![AlphaRecord::Soave { w: 1.0 }], cubic_model).unwrap();
+    //     // let p = alpha.parameters();
+    //     // p;
+    //     // dbg!(p.parameters());
+    // }
 
     #[test]
     fn assert_model_parse() {

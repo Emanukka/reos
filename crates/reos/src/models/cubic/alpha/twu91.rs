@@ -10,6 +10,9 @@ impl AlphaModel for Twu91 {
     fn tag() -> Self {
         Self(vec![])
     }
+    // fn parameters(&self) -> AlphaParameters<'_> {
+    //     AlphaParameters::Twu91(&self.0)
+    // }
 
     fn build<A: AsRef<str>>(names:&[A], records:Vec<AlphaRecord>, _: &CubicModels) -> Result<Alpha, AlphaError> {
 

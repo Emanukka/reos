@@ -31,8 +31,17 @@ pub struct CubicBinaryRecord{
     // pub lij:f64
 }
 
-
-
+// #[derive(Clone,Debug,Serialize, Deserialize)]
+// pub struct CubicPureRecord{
+// 
+    // pub tc:f64,
+    // pub pc:Option<f64>,
+    // pub a:Option<f64>,
+    // pub b:Option<f64>,
+    // pub c:Option<f64>,
+    // pub alpha:AlphaRecord
+// 
+// }
 #[derive(Clone,Debug,Serialize, Deserialize)]
 pub struct CubicPureRecord{
 
@@ -40,7 +49,7 @@ pub struct CubicPureRecord{
     pub c:Option<f64>, //Volume translation 
     #[serde(flatten)]
     pub parameters: PureParameters,
-    #[serde(flatten)]
+    // #[serde(flatten)]
     pub alpha:AlphaRecord,
 
 }
@@ -88,7 +97,7 @@ impl CubicPureRecord {
     }
 
     pub fn regressed_soave(a:f64, b:f64, tc:f64, c1:f64, c:Option<f64>) -> Self {
-        Self::regressed(a, b, tc, AlphaRecord::SoaveRegressed { c1 }, c)
+        Self::regressed(a, b, tc, AlphaRecord::SoaveCPA { c1 }, c)
     }
     
 }
@@ -110,6 +119,7 @@ pub struct CubicParameters {
     pub bij: Array2<f64>,
     pub cij: Array2<f64>,
     pub tc:Vec<f64>,
+    pub pc:Vec<f64>,
     pub kij:Array2<Kij>,
     pub model:CubicModels,
     pub combr:CombiningRule,
@@ -145,6 +155,7 @@ impl crate::parameters::Parameters for CubicParameters {
 
         let mut c = Vec::with_capacity(n);
         let mut tc= Vec::with_capacity(n);
+        let mut pc_= Vec::with_capacity(n); 
         let mut alpha_records = Vec::with_capacity(n);
         // let mut binary_ = Array2::default((n,n));
         let mut kij = Array2::default((n,n));
@@ -154,11 +165,13 @@ impl crate::parameters::Parameters for CubicParameters {
             match r.parameters {
 
                 PureParameters::Classic { pc } => {
+                    pc_.push(pc);
                     a_.push(model.acrit(r.tc, pc));
                     b_.push(model.bcrit(r.tc, pc));
                     // (tc, pc, vc) -> c
                 }
                 PureParameters::Regressed { a, b } => {
+                    pc_.push(f64::NAN);
                     a_.push(a);
                     b_.push(b);
 
@@ -181,7 +194,6 @@ impl crate::parameters::Parameters for CubicParameters {
 
         let alpha = alpha.build(&properties.names, alpha_records, &model)?;
         let [aij, bij, cij] = combr.apply(a_, b_, c);
-        
         // let options = CubicOptions::new(model, alpha, combr, mix);
         Ok(
         Self{
@@ -189,11 +201,11 @@ impl crate::parameters::Parameters for CubicParameters {
             bij,
             cij,
             tc,
+            pc:pc_,
             model,
             mix,
             combr,
             alpha,
-            // binary:binary_,
             kij,
             properties,
         })
@@ -306,7 +318,6 @@ impl std::fmt::Display for CubicParameters {
 
     }
 }
-
 
 #[cfg(test)]
 mod tests{
