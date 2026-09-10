@@ -6,8 +6,11 @@ use crate::impl_py_binary_record;
 use crate::impl_py_parameters;
 use crate::impl_py_pure_record;
 
+use pyo3::exceptions::PyRuntimeError;
+use pyo3::pyfunction;
 // reos
 use reos::models::cubic::Cubic;
+use reos::models::cubic::models::CubicModel;
 use reos::models::cubic::{parameters::{CubicParameters,CubicBinaryRecord, CubicPureRecord},alpha::Alpha};
 
 // pyo3
@@ -27,6 +30,17 @@ impl_eos!(Cubic, "../../docs/cubic/eos.md");
 
 #[pyo3::pymethods]
 impl PyCubicParameters {
+    
+    #[getter]    
+    pub fn molar_weight<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
+
+        Ok(self.0.properties.molar_weight.to_pyarray(py))
+    }
+    
+    #[getter]    
+    pub fn component<'py>(&self, py: Python<'py>) -> Bound<'py, PyList> { 
+        PyList::new(py, &self.0.properties.names).unwrap()
+    }
 
     #[getter]    
     pub fn tc<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray1<f64>>> {
@@ -59,7 +73,8 @@ impl PyCubicParameters {
     pub fn kij_a<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
 
         let k_ij = &self.0.kij;
-        let n = k_ij.len();
+        // let n = k_ij.len();
+        let n = self.0.tc.len();
         let k_ij_a = ndarray::Array2::from_shape_fn((n, n), |(i,j)| {
             k_ij[(i,j)].a
         });
@@ -70,7 +85,8 @@ impl PyCubicParameters {
     pub fn kij_b<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, numpy::PyArray2<f64>>> {
 
         let k_ij = &self.0.kij;
-        let n = k_ij.len();
+        // let n = k_ij.len();
+        let n = self.0.tc.len();
         let k_ij_b = ndarray::Array2::from_shape_fn((n, n), |(i,j)| {
             k_ij[(i,j)].b
         });
@@ -100,6 +116,30 @@ impl PyCubicParameters {
 
             }
         }
+    }
+    // #[getter]
+    // gambiarra
+    pub fn m_function(&self, w:f64) -> f64 {
+
+        self.0.model.kappa_from_w(w)
+        // let alpha = &self.0.alpha;
+        // let n = self.0.tc.len();
+
+        // match alpha {
+        //     Alpha::Soave(_) => {
+
+                
+        //         // let parameters = &inner.0;
+        //         // let arr = ndarray::Array2::from_shape_fn((n, 1), |(i, _)| {parameters[i]});
+        //         // Ok(arr.to_pyarray(py))
+
+        //     }
+        //     _ => {
+        //         Err(PyErr::new::<PyRuntimeError, _>("only available for Soave"))
+        //         // unimplemented!()
+        //     }
+
+        // }
     }
 }
 
