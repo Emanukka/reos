@@ -9,6 +9,6 @@ Cargo.lock
 **/venv
 **/markdown_examples
 /site
-/.vscode
+**/.vscode
 _*
 *-info

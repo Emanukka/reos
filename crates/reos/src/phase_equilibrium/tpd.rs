@@ -30,14 +30,16 @@ impl <R:Residual> State<R> {
         let z = &self.x;
         let hy = Array1::from_shape_fn(z.len(), |i| ln_phiy[i] + z[i].ln() );
 
-        let guess = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), Some(xphase))?;
+        // let guess = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), Some(xphase))?;
        
         let mut x = x;
-        let mut dens = guess.d;
+        // let mut dens = guess.d;
 
         for it in 0..max {
 
-            if self.min_tpd_step(&mut dens, &mut x, &hy, tol)? {
+            // println!("TPD min iteration: {:}, dens: {:}, x: {:}, sumx: {:?}", it, dens, x, x.sum());
+            // if self.min_tpd_step(&mut dens, &mut x, &hy, tol,)? {
+            if self.min_tpd_step(&mut x, &hy, tol, xphase)? {
                 
                 break;
             } 
@@ -48,7 +50,9 @@ impl <R:Residual> State<R> {
             }
         }
 
-        let x_phase = State::new_trx(Arc::clone(&self.eos), self.t, dens, x.clone());
+        // let x_phase = State::new_trx(Arc::clone(&self.eos), self.t, dens, x.clone());
+        // let x_phase = State::new_trx(Arc::clone(&self.eos), self.t, dens, x.clone());
+        let x_phase = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), Some(xphase))?;
         let ln_phix = x_phase.lnphi(); 
         let mut dg = 0.0;
 
@@ -64,17 +68,21 @@ impl <R:Residual> State<R> {
     
     fn min_tpd_step(
         &self,
-        dens: &mut f64,
+        // dens: &mut f64,
         x:    &mut Array1<f64>, 
         hy:   &Array1<f64>, 
-        tol:  f64
+        tol:  f64,
+        xphase: DensityInitialization
         )->Result<bool, EosError> {
 
             let n = x.len();
-            let s = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), Some(DensityInitialization::Guess(*dens)) )?;
+            // println!("guess rho: {}", dens);
 
-            *dens = s.d;
-            
+            let s = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), Some(xphase) )?;
+            // let s = State::new_tpx(Arc::clone(&self.eos), self.t, self.p, x.clone(), Some(DensityInitialization::Guess(*dens)) )?;
+
+            // println!("State_trial: {:}", s);
+            // *dens = s.d;
             let ln_phi = s.lnphi();
             let ww = Array1::from_shape_fn(n, |i| (hy[i] - ln_phi[i]).exp());
             
@@ -176,3 +184,40 @@ pub mod tests{
 
 }
 
+#[cfg(test)]
+pub mod debug{
+    use std::sync::Arc;
+
+    use approx::assert_relative_eq;
+    use ndarray::{array, Array1};
+    use crate::{phase_equilibrium::PhaseEquilibrium, state::E};
+    // use crate::{ models::{cpa::{SCPA, parameters::readyto::{acetic1a, water4c, water4c_acetic1a}}, cubic::models::SRK}, phase_equilibrium::PhaseEquilibrium, state::{E, State, density_solver::DensityInitialization::{Liquid, Vapor}}};
+    
+    use crate::state::{State, density_solver::DensityInitialization::{Liquid, Vapor}};
+
+    // use crate::models::cubic::tests::recipes;
+    #[test]
+    #[cfg(feature = "cubic")]
+    fn oil_scaling(){
+
+        let model = crate::models::cubic::tests::recipes::oil_iuri();
+        let eos = E::from(model);
+        let eos = Arc::new(eos);
+        let t = 500.;
+        let p = 100e5;
+        let z = array![1.96039992e-04, 6.86139973e-02, 4.90099980e-02, 9.80199961e-02, 1.47029994e-01, 4.90099980e-01, 1.47029994e-01];
+
+        let zphase = State::new_tpx(Arc::clone(&eos), t, p, z.clone(), Some(Liquid)).unwrap();
+        // println!("zphase: {:}", zphase); ok
+
+        let trial_liq = array![1.42836738e-04, 1.42836738e-01, 1.42836738e-01, 1.42836738e-01, 1.42836738e-01, 2.85673475e-01, 1.42836738e-01];
+        // let foo = State::new_tpx(Arc::clone(&eos), t, p, trial_liq.clone(), Some(Liquid)).unwrap();
+        // println!("foo: {:}", foo); //ok
+
+        let (dg_l, state_l) = zphase.min_tpd(Liquid, trial_liq, Some(1e-9), Some(100)).unwrap().into();
+
+        println!("dg_l: {:}, state_l: {:}", dg_l, state_l); //ok
+
+    }
+    // let model = oil_iuri();
+}

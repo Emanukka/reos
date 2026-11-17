@@ -1,6 +1,6 @@
 [package]
 name = "pyreos"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 repository="https://github.com/Emanukka/reos"
 readme = "README.md"
@@ -19,6 +19,7 @@ default = []
 [dependencies]
 
 numpy = "0.24"
+ndarray = { version = "0.16.1"}
 reos= {path="../crates/reos", features = ["default"]}
 serde = { version = "1.0.217", features = ["derive"] }
 pyo3 = { version = "0.24", features = ["multiple-pymethods"] }

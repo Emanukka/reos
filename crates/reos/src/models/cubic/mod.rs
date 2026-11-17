@@ -228,7 +228,7 @@ impl Residual for Cubic  {
             v_min += x[i] * (self.parameters.bij[(i, i)] - self.parameters.cij[(i, i)] )
         }
 
-        0.9 / v_min
+        0.99 / v_min
 
     }
 

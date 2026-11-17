@@ -243,3 +243,68 @@ mod density_iteration {
     // }
 
 }
+
+
+#[cfg(test)]
+mod tcpr78_twu91{
+
+    // use std::sync::Arc;
+
+    // use crate::state::{State, eos::EquationOfState};
+
+    use super::*;
+    pub const TOL:f64 = 1e-12;
+    pub const RHO:f64 = 7852.494504077694; // 100 bar
+    pub const T:f64 = 298.15;
+
+    #[test]
+    fn hexane_pr78_helmholtz() {
+        
+        let cub = recipes::hexane_pr78_twu91(); 
+        println!("{}", cub.parameters);
+        
+        assert_relative_eq!(cub.helmholtz(T, RHO, &array![1.]), -5.875619055725602, epsilon = TOL)
+    }
+        
+    #[test]
+    fn hexane_pr78_df_dt() {
+        
+        let cub = recipes::hexane_pr78_twu91(); 
+        let x = &array![1.];
+
+        assert_relative_eq!(cub.df_dt(T, RHO, x), 0.03981770569134605, epsilon = TOL)
+    }
+    #[test]
+    fn hexane_pr78_df_dn() {
+        
+        let cub = recipes::hexane_pr78_twu91(); 
+        // dbg!(&cub.parameters);
+        let x = &array![1.];
+        assert_relative_eq!(cub.df_dn(T, RHO, &x)[0], -6.422060070100823, epsilon = TOL)
+    }
+
+    #[test]
+    fn hexane_pr78_compressibility() {
+        
+        let cub = recipes::hexane_pr78_twu91(); 
+        let x = &array![1.];
+        assert_relative_eq!( - cub.df_dv(T, RHO, x) / RHO, -0.546441014375219, epsilon = TOL)
+    }
+
+    // #[test]
+    // fn density_given_tp(){
+        
+    //     // let cub = recipes::hexane_pr78_twu91_unt(); 
+    //     let cub = recipes::hexane_pr78_twu91(); 
+    //     let eos = EquationOfState::from_residual(cub);
+    //     let t = 298.15;
+    //     let p = 100e5;
+
+    //     let liq = State::new_tp(Arc::new(eos), t, p, Some(crate::state::density_solver::DensityInitialization::Liquid)).unwrap();
+
+    //     assert_relative_eq!(liq.density(), RHO, max_relative = 1e-8);
+    //     // let liq = State::new_tpx(Arc::new(eos), t, p, x, Some(crate::state::density_solver::DensityInitialization::Liquid)).unwrap();
+
+    //     // assert!(liq.pressure() > 0.0);
+    // }
+}

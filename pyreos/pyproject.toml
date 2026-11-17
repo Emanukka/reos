@@ -6,7 +6,8 @@ build-backend = "maturin"
 name = "reos"
 authors=[
     {name = "Emanuel", email = "emanuka@eq.ufrj.br"}
-]
+]a
+
 description = "ℜeos: A Rust Library for Equations Of State and Thermodynamics"
 requires-python = ">=3.8"
 repository="https://github.com/Emanukka/reos"

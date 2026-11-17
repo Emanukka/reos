@@ -1,6 +1,7 @@
 mod pure;
 mod mixture;
 mod from_json;
+mod parameters;
 
 use crate::{models::cubic::{Cubic, alpha::{Alpha, AlphaOption}, mixing_rule::MixingRule, models::{CubicModelOption, PR78}, options::CubicOptions, parameters::{CubicBinaryRecord, CubicParameters, CubicPureRecord}}, parameters::{BinaryRecord, Parameters, PureRecord}};
 
@@ -159,22 +160,68 @@ pub mod recipes {
         let p = CubicParameters::new(vec![pr], vec![], options).unwrap();
         Cubic::from(p)
     }
-    pub fn water_dehlouz() -> Cubic {
+    pub fn hexane_pr78_twu91() -> Cubic {
+        // species;Mw;Tc;Pc;acentricfactor;L;M;N;v_shift
+// 
+// hexane~|~n-hexane;86.17536;507.6;3.025e6;0.301261;0.287261195704866;0.834050543996051;2.01990552851337;8.1627905356359e-7
+
+        let mr = CubicPureRecord::classic(507.60, 30.25 * 1e5, AlphaRecord::Twu91 { l: 0.287261195704866, m:0.834050543996051, n:2.01990552851337 }, Some(8.1627905356359e-7));
+
+        let pr = PureRecord::new(86.17848, "hexane", mr);
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic(CubicModelOption::PR78, AlphaOption::Twu91);
         
-        unimplemented!()
-        // let pr = CubicPureRecord::Twu91 { 
-        //     tc: 507.60, 
-        //     pc: 220.60e5, 
-        //     l: 0.38720, 
-        //     n: 1.96692, 
-        //     m: 0.87198, 
-        //     volt: Some(5.27106e-6)
-        // };
-        // let pr = PureRecord::new(18.01528, "water".into(), pr);
-        // Cubic::from(CubicParameters::new(vec![pr], vec![], CubicModelOption::PR78))
+        let p = CubicParameters::new(vec![pr], vec![], options).unwrap();
+        Cubic::from(p)
+    }
+
+    pub fn hexane_octane_tcpr78_twu91() -> Cubic {
+        
+        let mr1 = CubicPureRecord::classic(507.60, 30.25 * 1e5, AlphaRecord::Twu91 { l: 0.287261195704866, m:0.834050543996051, n:2.01990552851337 }, Some(8.1627905356359e-7));
+        // octane~|~n-octane;114.22852;568.7;2.49e6;0.399552;0.357003591909609;0.817165588467549;1.99996173995883;6.42842482682732e-6
+
+        let mr2 = CubicPureRecord::classic(568.7, 2.49e6, AlphaRecord::Twu91 { l: 0.357003591909609, m:0.817165588467549, n:1.99996173995883 }, Some(6.42842482682732e-6));
+
+        let pr1 = PureRecord::new(1., "hexane", mr1);
+        let pr2 = PureRecord::new(0., "octane", mr2);
+
+        // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let options = CubicOptions::classic(CubicModelOption::PR78, AlphaOption::Twu91);
+        
+        let p = CubicParameters::new(vec![pr1, pr2], vec![], options).unwrap();
+        
+        Cubic::from(p)
+
+    }
+    pub fn oil_iuri()-> Cubic{
+
+        // let mr1 = CubicPureRecord::regressed_soave(0.12277, 0.0145e-3, 647.14, 0.6736, None);
+        // let mr2 = CubicPureRecord::regressed_soave(0.35079, 0.0272e-3, 304.12, 0.7602, None);
+
+        // let pr1 = PureRecord::new(18.02, "water", mr1);
+        // let pr2 = PureRecord::new(0., "carbon dioxide", mr2);
+        
+        // let mbr1 = CubicBinaryRecord{kij:Kij{a:0.01, b: 0.0005}};
+        // // println!("{}",mbr1);
+        // let br1 = BinaryRecord::new(mbr1, "water", "carbon dioxide");
+        // // let options = CubicOptions::new(CubicModelOption::PR78, Alpha::soave(), MixingRule::default());
+        let names = vec!["asph", "resin", "c13_c19", "c6_c12", "c2_c5", "c1", "co2"];
+        let ppath = "../../../scaling/dl/dl/oil_scaling.json";
+        let options = CubicOptions::classic_soave(CubicModelOption::PR78);
+
+        let p = CubicParameters::from_json(&names, &ppath, None, options).unwrap();
+        // println!("{}",p);
+
+        Cubic::from(p)
+        // let p = CubicParameters::new(vec![pr1, pr2], vec![br1], options).unwrap();
+        // println!("{}",p);
+        // 
+        // unimplemented!()
     }
 
 }
+
+
 #[test]
 fn alpha_function_unmatch_records(){
 

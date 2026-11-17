@@ -15,7 +15,6 @@ pub use super::mixing_rule::MixingRuleOption;
 // }
 
 #[derive(Clone, Debug, Serialize, Deserialize,PartialEq)]
-
 pub struct CubicOptions{
     pub cubic_model:CubicModelOption,
     #[serde(default)]
